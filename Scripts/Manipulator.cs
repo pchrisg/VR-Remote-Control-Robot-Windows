@@ -13,5 +13,6 @@ public class Manipulator : MonoBehaviour
     {
         gameObject.transform.position = m_EndEffector.transform.position;
         gameObject.transform.rotation = m_EndEffector.transform.rotation;
+        gameObject.transform.SetParent(m_EndEffector);
     }
 }

@@ -4,12 +4,12 @@ using Valve.VR;
 
 public class ManipulationMode : MonoBehaviour
 {
-    //[SerializeField] private GameObject m_Manipulator;
-    [SerializeField] private SDOFWidget m_SDOFWidget;
-    //[SerializeField] private ManipulatorPublisher m_rosPublisher;
+    [SerializeField] private SDOFWidget m_SDOFWidget = null;
+    [SerializeField] private PlanningRobot m_PlanningRobot = null;
 
-    private Planner m_Planner;
+    //private Planner m_Planner;
 
+    private bool m_Planning;
     private bool m_SDOFManipulating;
 
     // Variables required for Controller Actions
@@ -27,14 +27,13 @@ public class ManipulationMode : MonoBehaviour
         m_Grip.AddOnStateDownListener(GripGrabbed, SteamVR_Input_Sources.Any);
 
         m_SDOFManipulating = false;
-        m_Planner = gameObject.GetComponent<Planner>();
     }
 
     private void MenuPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
     {
         Debug.Log("MenuPressed");
-        if (m_Planner.isPlanning)
-            m_Planner.ExecuteTrajectory();
+        if (m_PlanningRobot.isPlanning)
+            m_PlanningRobot.ExecuteTrajectory();
     }
 
     private void TrackpadPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
@@ -51,29 +50,13 @@ public class ManipulationMode : MonoBehaviour
 
     public void TogglePlanner()
     {
-        if (!m_Planner.isPlanning)
-        {
-            m_Planner.SetUpPlanningRobot();
-        }
-        else
-        {
-            m_Planner.DestroyPlanningRobot();
-        }
+        m_Planning = !m_Planning;
+        m_PlanningRobot.Show(m_Planning);
     }
 
     public void ToggleWidget()
     {
         m_SDOFManipulating = !m_SDOFManipulating;
-        /*if (m_SDOFManipulation)
-        {
-            SetUpWidget();
-        }
-        else
-        {
-            m_Manipulator.transform.parent = null;
-            Destroy(m_Widget);
-        }*/
-
         m_SDOFWidget.Show(m_SDOFManipulating);
     }
 

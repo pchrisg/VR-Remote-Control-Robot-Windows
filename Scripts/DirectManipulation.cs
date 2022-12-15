@@ -14,13 +14,13 @@ public class DirectManipulation : MonoBehaviour
     [Tooltip("When detaching the object, should it return to its original parent?")]
     public bool restoreOriginalParent = false;
 
-    [SerializeField] private Planner m_Planner;
-    [SerializeField] private ManipulatorPublisher m_ManipulationPublisher;
+    [SerializeField] private PlanningRobot m_PlanningRobot = null;
+    [SerializeField] private ManipulatorPublisher m_ManipulationPublisher = null;
 
     protected bool attached = false;
-    protected float attachTime;
-    protected Vector3 attachPosition;
-    protected Quaternion attachRotation;
+    protected float attachTime = 0.0f;
+    protected Vector3 attachPosition = Vector3.zero;
+    protected Quaternion attachRotation = Quaternion.identity;
 
     public UnityEvent onPickUp;
     public UnityEvent onDetachFromHand;
@@ -99,14 +99,14 @@ public class DirectManipulation : MonoBehaviour
         onDetachFromHand.Invoke();
 
         hand.HoverUnlock(null);
-        if (m_Planner.isPlanning)
+        if (m_PlanningRobot.isPlanning)
             m_ManipulationPublisher.PublishTrajectoryRequest();
     }
 
     //-------------------------------------------------
     protected virtual void HandAttachedUpdate(Hand hand)
     {
-        if (hand.IsGrabEnding(this.gameObject))
+        if (hand.IsGrabEnding(gameObject))
         {
             hand.DetachObject(gameObject);
         }
@@ -114,7 +114,7 @@ public class DirectManipulation : MonoBehaviour
         if (onHeldUpdate != null)
             onHeldUpdate.Invoke(hand);
 
-        if (!m_Planner.isPlanning)
+        if (!m_PlanningRobot.isPlanning)
             m_ManipulationPublisher.PublishMoveArm();
     }
 }

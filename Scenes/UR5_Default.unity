@@ -2542,7 +2542,7 @@ Transform:
   - {fileID: 4000011558299741}
   - {fileID: 4000011660926421}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &468103315
 Transform:
@@ -3452,7 +3452,6 @@ GameObject:
   - component: {fileID: 621543380}
   - component: {fileID: 621543382}
   - component: {fileID: 621543381}
-  - component: {fileID: 621543383}
   m_Layer: 0
   m_Name: ManipulationMode
   m_TagString: Untagged
@@ -3473,7 +3472,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &621543381
 MonoBehaviour:
@@ -3487,8 +3486,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011d656c8b8540d4196f1cbeac8aa231, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Manipulator: {fileID: 4216500284383032850}
-  m_WidgetPrefab: {fileID: 639713963423195960}
+  m_SDOFWidget: {fileID: 7659439181079122306}
+  m_PlanningRobot: {fileID: 4132567178377732532}
 --- !u!114 &621543382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3508,29 +3507,6 @@ MonoBehaviour:
   activateOnStart: 1
   deactivateOnDestroy: 1
   initialPriority: 0
---- !u!114 &621543383
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 621543378}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 384bf459da073b747968675346ff4c99, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_UR5: {fileID: 2936355979154742649}
-  m_PlanningRobotPrefab: {fileID: 5301712253249134632, guid: 68b19af0a42ca4b49af92bb73b2596b4, type: 3}
-  m_rosPublisher: {fileID: 896024449}
-  isPlanning: 0
-  m_Trajectory:
-    joint_trajectory:
-      joint_names: []
-      points: []
-    multi_dof_joint_trajectory:
-      joint_names: []
-      points: []
 --- !u!1 &640378868
 GameObject:
   m_ObjectHideFlags: 0
@@ -4324,7 +4300,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &896024449
 MonoBehaviour:
@@ -4339,12 +4315,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Manipulator: {fileID: 4216500284383032850}
+  m_PlanningRobot: {fileID: 4132567178377732532}
   m_PlanTrajTopic: chris_plan_trajectory
   m_ExecPlanTopic: chris_execute_plan
   m_MoveArmTopic: chris_move_arm
   m_SdofTranslateTopic: chris_sdof_translate
   m_AddCollisionObjectTopic: chris_add_collision_object
-  m_Planner: {fileID: 621543383}
 --- !u!1 &946804181
 GameObject:
   m_ObjectHideFlags: 0
@@ -5580,7 +5556,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1416840288
 GameObject:
@@ -7434,7 +7410,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attachmentFlags: 44
   restoreOriginalParent: 0
-  m_Planner: {fileID: 621543383}
+  m_PlanningRobot: {fileID: 4132567178377732532}
   m_ManipulationPublisher: {fileID: 896024449}
   onPickUp:
     m_PersistentCalls:
@@ -8038,7 +8014,7 @@ Transform:
   m_Children:
   - {fileID: 1583506370}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1000009626690779
 GameObject:
@@ -9685,6 +9661,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7659439181079122305}
+  - component: {fileID: 7659439181079122306}
   m_Layer: 0
   m_Name: SDOFWidget
   m_TagString: Untagged
@@ -9925,7 +9902,7 @@ Transform:
   - {fileID: 9180979069262740458}
   - {fileID: 7486270842876654117}
   m_Father: {fileID: 0}
-  m_RootOrder: 8
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1094506777415752651
 Transform:
@@ -11505,7 +11482,7 @@ Transform:
   - {fileID: 1731270278}
   - {fileID: 832242073}
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2936355979154742651
 MonoBehaviour:
@@ -11845,8 +11822,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
-  - {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
+  - {fileID: 2100000, guid: 4522a65d2a35c24439c401a1b93394b3, type: 2}
+  - {fileID: 2100000, guid: 4522a65d2a35c24439c401a1b93394b3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -13033,6 +13010,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c252e353a2b500d479544d2f62424c86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_UR5: {fileID: 2936355979154742649}
+  m_Manipulator: {fileID: 4216500284383032852}
+  m_Mat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
+  m_RosPublisher: {fileID: 896024449}
+  m_Trajectory:
+    joint_trajectory:
+      joint_names: []
+      points: []
+    multi_dof_joint_trajectory:
+      joint_names: []
+      points: []
+  isPlanning: 0
 --- !u!4 &4139384411178969901
 Transform:
   m_ObjectHideFlags: 0
@@ -13213,7 +13202,7 @@ Transform:
   - {fileID: 4216500285340194961}
   - {fileID: 4216500284603128734}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4216500284383032852
 MonoBehaviour:
@@ -13227,7 +13216,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ce9c737c53d921498428df95e0cb5e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  parent: {fileID: 2936355978882770438}
+  m_EndEffector: {fileID: 2936355978882770438}
 --- !u!114 &4216500284525423840
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15871,6 +15860,19 @@ Transform:
   m_Father: {fileID: 4216500284383032851}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7659439181079122306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 639713963423195960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 214b77769c314fe40a04b0f638c7bde7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Manipulator: {fileID: 4216500284383032850}
 --- !u!1 &7665791270489733295
 GameObject:
   m_ObjectHideFlags: 0
@@ -15883,7 +15885,6 @@ GameObject:
   - component: {fileID: 835875438774691795}
   - component: {fileID: 1451444143521480137}
   - component: {fileID: 4132567178377732532}
-  - component: {fileID: 8347723084764915882}
   m_Layer: 0
   m_Name: PlanningRobot
   m_TagString: robot
@@ -16342,44 +16343,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &8347723084764915882
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7665791270489733295}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c090eaaa853542969cc52590a778d2c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jointChain:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  currentAngles: []
-  endEffectorRotation: {x: 0, y: 0, z: 0, w: 0}
-  endEffectorPosition:
-    e00: 0
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 0
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 0
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 0
 --- !u!23 &8395681093632655591
 MeshRenderer:
   m_ObjectHideFlags: 0

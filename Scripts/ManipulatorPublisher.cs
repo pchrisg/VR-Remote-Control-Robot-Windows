@@ -16,14 +16,14 @@ public class ManipulatorPublisher : MonoBehaviour
     private ROSConnection m_Ros;
 
     // Variables required for ROS communication
-    [SerializeField] private GameObject m_Manipulator;
+    [SerializeField] private GameObject m_Manipulator = null;
+    [SerializeField] private PlanningRobot m_PlanningRobot = null;
+
     [SerializeField] private string m_PlanTrajTopic = "chris_plan_trajectory";
     [SerializeField] private string m_ExecPlanTopic = "chris_execute_plan";
     [SerializeField] private string m_MoveArmTopic = "chris_move_arm";
     [SerializeField] private string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private string m_AddCollisionObjectTopic = "chris_add_collision_object";
-
-    [SerializeField] private Planner m_Planner;
 
     void Start()
     {
@@ -55,7 +55,7 @@ public class ManipulatorPublisher : MonoBehaviour
         if (response.trajectory != null)
         {
             Debug.Log("Trajectory returned.");
-            m_Planner.DisplayTrajectory(response.trajectory);
+            m_PlanningRobot.DisplayTrajectory(response.trajectory);
         }
         else
         {
