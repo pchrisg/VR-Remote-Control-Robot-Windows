@@ -2228,7 +2228,7 @@ GameObject:
   - component: {fileID: 1921058246075889971}
   - component: {fileID: 5775930659472748589}
   m_Layer: 0
-  m_Name: planning_robot_fixed
+  m_Name: PlanningRobot
   m_TagString: robot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

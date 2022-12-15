@@ -4,14 +4,13 @@ using Valve.VR;
 
 public class ManipulationMode : MonoBehaviour
 {
-    [SerializeField] private GameObject m_Manipulator;
-    [SerializeField] private GameObject m_WidgetPrefab;
+    //[SerializeField] private GameObject m_Manipulator;
+    [SerializeField] private SDOFWidget m_SDOFWidget;
     //[SerializeField] private ManipulatorPublisher m_rosPublisher;
 
     private Planner m_Planner;
 
-    private bool m_SDOFManipulation;
-    private GameObject m_Widget;
+    private bool m_SDOFManipulating;
 
     // Variables required for Controller Actions
     private SteamVR_Action_Boolean m_Trackpad;
@@ -27,13 +26,31 @@ public class ManipulationMode : MonoBehaviour
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Grip.AddOnStateDownListener(GripGrabbed, SteamVR_Input_Sources.Any);
 
-        m_SDOFManipulation = false;
+        m_SDOFManipulating = false;
         m_Planner = gameObject.GetComponent<Planner>();
     }
 
     private void MenuPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
     {
         Debug.Log("MenuPressed");
+        if (m_Planner.isPlanning)
+            m_Planner.ExecuteTrajectory();
+    }
+
+    private void TrackpadPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
+    {
+        //Debug.Log("TrackpadPressed");
+        
+    }
+
+    private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
+    {
+        Debug.Log("GripGrabbed");
+        
+    }
+
+    public void TogglePlanner()
+    {
         if (!m_Planner.isPlanning)
         {
             m_Planner.SetUpPlanningRobot();
@@ -44,18 +61,10 @@ public class ManipulationMode : MonoBehaviour
         }
     }
 
-    private void TrackpadPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
+    public void ToggleWidget()
     {
-        Debug.Log("TrackpadPressed");
-        if (m_Planner.isPlanning)
-            m_Planner.ExecuteTrajectory();
-    }
-
-    private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
-    {
-        Debug.Log("GripGrabbed");
-        m_SDOFManipulation = !m_SDOFManipulation;
-        if (m_SDOFManipulation)
+        m_SDOFManipulating = !m_SDOFManipulating;
+        /*if (m_SDOFManipulation)
         {
             SetUpWidget();
         }
@@ -63,21 +72,13 @@ public class ManipulationMode : MonoBehaviour
         {
             m_Manipulator.transform.parent = null;
             Destroy(m_Widget);
-        }
+        }*/
+
+        m_SDOFWidget.Show(m_SDOFManipulating);
     }
 
-    private void SetUpWidget()
+    public void ToggleCollisionBoxes()
     {
-        m_Widget = Instantiate(m_WidgetPrefab, m_Manipulator.transform.position, m_Manipulator.transform.rotation);
-        m_Manipulator.transform.SetParent(m_Widget.transform);
-    }
 
-    /*void Update()
-    {
-        if (Input.GetKeyDown("space"))
-        {
-            Debug.Log("Space pressed");
-            PublishTrajectoryPlanner();
-        }
-    }*/
+    }
 }
