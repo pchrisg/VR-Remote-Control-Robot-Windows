@@ -1,46 +1,37 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Events;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
 [RequireComponent(typeof(Interactable))]
 
 public class SDOFManipulation : MonoBehaviour
 {
-    private SteamVR_Action_Boolean m_Trigger;
-    private Interactable m_Interactable;
-    private ManipulatorPublisher m_Publisher;
+    private SteamVR_Action_Boolean m_Trigger = null;
+    private Interactable m_Interactable = null;
+    private ROSPublisher m_ROSPublisher = null;
 
-    private bool isInteracting;
-    private bool isTranslating;
-    private bool isRotating;
+    private bool isInteracting = false;
+    private bool isTranslating = false;
+    private bool isRotating = false;
 
-    private Vector3 m_PlaneNormal;
+    private Vector3 m_PlaneNormal = Vector3.zero;
 
-    private Hand m_InteractingHand;
-    private Vector3 m_PrevHandPos;
+    private Hand m_InteractingHand = null;
+    private Vector3 m_PrevHandPos = Vector3.zero;
 
-    //-------------------------------------------------
-    protected virtual void Awake()
+    private void Awake()
     {
+        m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+
         m_Interactable = GetComponent<Interactable>();
-    }
-
-    private void Start()
-    {
-        m_Publisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ManipulatorPublisher>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
-        m_Trigger.AddOnStateDownListener(TriggerGrabbed, SteamVR_Input_Sources.Any);
+        m_Trigger.onStateDown += TriggerGrabbed;
+    }
 
-        m_InteractingHand = null;
-        isInteracting = false;
-        isTranslating = false;
-        isRotating = false;
+    private void OnDestroy()
+    {
+        m_Trigger.onStateDown -= TriggerGrabbed;
     }
 
     private void OnHandHoverBegin(Hand hand)
@@ -49,7 +40,6 @@ public class SDOFManipulation : MonoBehaviour
             m_InteractingHand = hand;
     }
 
-    //-------------------------------------------------
     private void HandHoverUpdate(Hand hand)
     {
         if (!isInteracting)
@@ -151,11 +141,11 @@ public class SDOFManipulation : MonoBehaviour
     {
         if(isRotating)
         {
-            m_Publisher.PublishMoveArm();
+            m_ROSPublisher.PublishMoveArm();
         }
         if(isTranslating)
         {
-            m_Publisher.PublishConstrainedMovement();
+            m_ROSPublisher.PublishConstrainedMovement();
         }
 
         m_InteractingHand = null;

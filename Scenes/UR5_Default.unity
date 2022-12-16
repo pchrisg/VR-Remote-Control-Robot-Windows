@@ -5533,13 +5533,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de2ba3348f9359048a83b4fb89a7de1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  touch:
+  m_Touch:
     actionPath: /actions/default/in/TouchTrackpad
     needsReinit: 0
-  press:
+  m_Press:
     actionPath: /actions/default/in/PressTrackpad
     needsReinit: 0
-  touchPos:
+  m_TouchPos:
     actionPath: /actions/default/in/TouchPosition
     needsReinit: 0
   radialMenu: {fileID: 3932472410756704519}
@@ -13014,13 +13014,6 @@ MonoBehaviour:
   m_Manipulator: {fileID: 4216500284383032852}
   m_Mat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
   m_RosPublisher: {fileID: 896024449}
-  m_Trajectory:
-    joint_trajectory:
-      joint_names: []
-      points: []
-    multi_dof_joint_trajectory:
-      joint_names: []
-      points: []
   isPlanning: 0
 --- !u!4 &4139384411178969901
 Transform:

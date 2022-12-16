@@ -8,7 +8,7 @@ using UnityEngine.UIElements;
 
 public class RadialMenu : MonoBehaviour
 {
-    [Header("Scene")]
+    [Header("Scene Objects")]
     public Transform selectionTransform = null;
     public Transform cursorTransform = null;
 

@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class CollisionObjectCreator : MonoBehaviour
 {
-    [SerializeField] private ManipulatorPublisher m_ManipulationPublisher;
+    [SerializeField] private ROSPublisher m_ROSPublisher;
 
     // Start is called before the first frame update
     void Start()
     {
-        m_ManipulationPublisher.PublishCollisionObject(this.gameObject);
+        m_ROSPublisher.PublishCollisionObject(this.gameObject);
     }
 }

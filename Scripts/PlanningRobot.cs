@@ -7,18 +7,27 @@ using System;
 
 public class PlanningRobot : MonoBehaviour
 {
+    [Header("Scene Objects")]
     [SerializeField] private GameObject m_UR5 = null;
     [SerializeField] private Manipulator m_Manipulator = null;
     [SerializeField] private Material m_Mat = null;
-    [SerializeField] private ManipulatorPublisher m_RosPublisher = null;
-    [HideInInspector] public RobotTrajectoryMsg m_Trajectory = null;
+    [SerializeField] private ROSPublisher m_ROSPublisher = null;
+    
+    private RobotTrajectoryMsg m_Trajectory = null;
 
     private const int k_NumJoints = 6;
     private ArticulationBody[] m_PlanRobJoints = null;
     private ArticulationBody[] m_UR5Joints = null;
 
     private bool followUR5 = false;
-    private bool m_DisplayPath = false;
+    private bool displayPath = false;
+    private bool isAtUR5 = false;
+
+    private const float color = 200.0f / 255.0f;
+    private readonly float r = color;
+    private readonly float g = color;
+    private readonly float b = color;
+    private float a = 0.0f;
 
     [HideInInspector] public bool isPlanning = false;
 
@@ -43,25 +52,30 @@ public class PlanningRobot : MonoBehaviour
             GoToUR5();
     }
 
-    public void Show(bool value)
+    private void OnDestroy()
     {
-        float r, g, b, a;
-        r = b = g = 200.0f/255.0f;
+        if(isPlanning)
+        {
+            a = 0.0f;
+            m_Mat.color = new Color(r, g, b, a);
+        }
+    }
 
-        if (value)
+    public void Show()
+    {
+        if (isPlanning)
             a = 100.0f / 255.0f;
         else
         {
             a = 0.0f;
             m_Manipulator.ResetPosition();
             m_Trajectory = null;
-            m_DisplayPath = false;
+            displayPath = false;
         }
 
         m_Mat.color = new Color(r, g, b, a);
 
         followUR5 = !followUR5;
-        isPlanning = !isPlanning;
     }
 
     public void GoToUR5()
@@ -74,46 +88,44 @@ public class PlanningRobot : MonoBehaviour
         }
     }
 
+    public void GoToManipulator()
+    {
+        // For every robot pose in trajectory plan
+        foreach (var t in m_Trajectory.joint_trajectory.points)
+        {
+            var jointPositions = t.positions;
+            var result = jointPositions.Select(r => (float)r * Mathf.Rad2Deg).ToArray();
+
+            for (var joint = 0; joint < k_NumJoints; joint++)
+            {
+                var joint1XDrive = m_PlanRobJoints[joint].xDrive;
+                joint1XDrive.target = result[joint];
+                m_PlanRobJoints[joint].xDrive = joint1XDrive;
+            }
+        }
+    }
+
     public void DisplayTrajectory(RobotTrajectoryMsg trajectory)
     {
         m_Trajectory = trajectory;
         StopAllCoroutines();
-        m_DisplayPath = false;
+        displayPath = false;
         StartCoroutine(DisplayPath());
-    }
-
-    public void StopDisplaying()
-    {
-        m_DisplayPath = false;
     }
 
     IEnumerator DisplayPath()
     {
         if (m_Trajectory != null)
         {
-            m_DisplayPath = true;
-            while(m_DisplayPath)
+            displayPath = true;
+            while(displayPath)
             {
+                isAtUR5 = false;
+                GoToManipulator();
+                yield return new WaitForSeconds(0.5f);
+
                 GoToUR5();
-                yield return new WaitForSeconds(0.1f);
-
-                // For every robot pose in trajectory plan
-                foreach (var t in m_Trajectory.joint_trajectory.points)
-                {
-                    var jointPositions = t.positions;
-                    var result = jointPositions.Select(r => (float)r * Mathf.Rad2Deg).ToArray();
-
-                    // Set the joint values for every joint
-                    for (var joint = 0; joint < k_NumJoints; joint++)
-                    {
-                        var joint1XDrive = m_PlanRobJoints[joint].xDrive;
-                        joint1XDrive.target = result[joint];
-                        m_PlanRobJoints[joint].xDrive = joint1XDrive;
-                    }
-                    // Wait for robot to achieve pose for all joint assignments
-                    yield return new WaitForSeconds(0.1f);
-                }
-                // Wait for the robot to achieve the final pose from joint assignment
+                isAtUR5 = true;
                 yield return new WaitForSeconds(0.5f);
             }
         }
@@ -123,8 +135,11 @@ public class PlanningRobot : MonoBehaviour
     {
         if (m_Trajectory != null)
         {
-            m_RosPublisher.PublishExecutePlan(m_Trajectory);
-            m_DisplayPath = false;
+            if (isAtUR5)
+                GoToManipulator();
+
+            m_ROSPublisher.PublishExecutePlan(m_Trajectory);
+            displayPath = false;
             m_Trajectory = null;
         }
     }

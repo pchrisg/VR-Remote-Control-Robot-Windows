@@ -10,22 +10,24 @@ using RosMessageTypes.Shape;
 using System;
 using RosMessageTypes.Std;
 
-public class ManipulatorPublisher : MonoBehaviour
+public class ROSPublisher : MonoBehaviour
 {
     // ROS Connector
-    private ROSConnection m_Ros;
+    private ROSConnection m_Ros = null;
 
+    [Header("Scene Objects")]
     // Variables required for ROS communication
     [SerializeField] private GameObject m_Manipulator = null;
     [SerializeField] private PlanningRobot m_PlanningRobot = null;
 
+    [Header("ROS Topics")]
     [SerializeField] private string m_PlanTrajTopic = "chris_plan_trajectory";
     [SerializeField] private string m_ExecPlanTopic = "chris_execute_plan";
     [SerializeField] private string m_MoveArmTopic = "chris_move_arm";
     [SerializeField] private string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private string m_AddCollisionObjectTopic = "chris_add_collision_object";
 
-    void Start()
+    private void Awake()
     {
         // Get ROS connection static instance
         m_Ros = ROSConnection.GetOrCreateInstance();
@@ -53,14 +55,9 @@ public class ManipulatorPublisher : MonoBehaviour
     public void HandleTrajectoryResponse(TrajectoryPlannerServiceResponse response)
     {
         if (response.trajectory != null)
-        {
-            Debug.Log("Trajectory returned.");
             m_PlanningRobot.DisplayTrajectory(response.trajectory);
-        }
         else
-        {
             Debug.LogError("No trajectory returned from MoverService.");
-        }
     }
 
     public void PublishExecutePlan(RobotTrajectoryMsg trajectory)
@@ -70,39 +67,54 @@ public class ManipulatorPublisher : MonoBehaviour
 
     public void PublishMoveArm()
     {
-        var destination = new PoseMsg
+        print(UnityEngine.Time.realtimeSinceStartup);
+        if(m_PlanningRobot.isPlanning)
         {
-            position = m_Manipulator.transform.position.To<FLU>(),
-            orientation = m_Manipulator.transform.rotation.To<FLU>()
-        };
-        m_Ros.Publish(m_MoveArmTopic, destination);
+            PublishTrajectoryRequest();
+        }
+        else
+        {
+            var destination = new PoseMsg
+            {
+                position = m_Manipulator.transform.position.To<FLU>(),
+                orientation = m_Manipulator.transform.rotation.To<FLU>()
+            };
+            m_Ros.Publish(m_MoveArmTopic, destination);
+        }
     }
 
     public void PublishConstrainedMovement()
     {
-        var dest = new PoseMsg
+        if(m_PlanningRobot.isPlanning)
         {
-            position = m_Manipulator.transform.position.To<FLU>(),
-            orientation = m_Manipulator.transform.rotation.To<FLU>()
-        };
-        var ocm = new OrientationConstraintMsg
+            PublishTrajectoryRequest();
+        }
+        else
         {
-            link_name = "tool0",
-            orientation = m_Manipulator.transform.rotation.To<FLU>(),
-            absolute_x_axis_tolerance = 0.1,
-            absolute_y_axis_tolerance = 0.1,
-            absolute_z_axis_tolerance = 0.1,
-            weight = 1.0
-        };
-        ocm.header.frame_id = "base_link";
+            var dest = new PoseMsg
+            {
+                position = m_Manipulator.transform.position.To<FLU>(),
+                orientation = m_Manipulator.transform.rotation.To<FLU>()
+            };
+            var ocm = new OrientationConstraintMsg
+            {
+                link_name = "tool0",
+                orientation = m_Manipulator.transform.rotation.To<FLU>(),
+                absolute_x_axis_tolerance = 0.01f,
+                absolute_y_axis_tolerance = 0.01f,
+                absolute_z_axis_tolerance = 0.01f,
+                weight = 1.0
+            };
+            ocm.header.frame_id = "base_link";
 
-        var sdofTranslation = new SdofTranslationMsg()
-        {
-            orientation_constraint = ocm,
-            destination = dest
-        };
+            var sdofTranslation = new SdofTranslationMsg()
+            {
+                orientation_constraint = ocm,
+                destination = dest
+            };
 
-        m_Ros.Publish(m_SdofTranslateTopic, sdofTranslation);
+            m_Ros.Publish(m_SdofTranslateTopic, sdofTranslation);
+        }
     }
 
     public void PublishCollisionObject(GameObject box)

@@ -6,25 +6,25 @@ using Valve.VR;
 public class RadialMenuManager : MonoBehaviour
 {
     [Header("Actions")]
-    public SteamVR_Action_Boolean touch = null;
-    public SteamVR_Action_Boolean press = null;
-    public SteamVR_Action_Vector2 touchPos = null;
+    public SteamVR_Action_Boolean m_Touch = null;
+    public SteamVR_Action_Boolean m_Press = null;
+    public SteamVR_Action_Vector2 m_TouchPos = null;
 
     [Header("Scene Objects")]
-    public RadialMenu radialMenu = null;
+    [SerializeField] private RadialMenu radialMenu = null;
 
     private void Awake()
     {
-        touch.onChange += Touch;
-        press.onStateUp += PressRelease;
-        touchPos.onAxis += Position;
+        m_Touch.onChange += Touch;
+        m_Press.onStateUp += PressRelease;
+        m_TouchPos.onAxis += Position;
     }
 
     private void OnDestroy()
     {
-        touch.onChange -= Touch;
-        press.onStateUp -= PressRelease;
-        touchPos.onAxis -= Position;
+        m_Touch.onChange -= Touch;
+        m_Press.onStateUp -= PressRelease;
+        m_TouchPos.onAxis -= Position;
     }
 
     private void Position(SteamVR_Action_Vector2 fromAction, SteamVR_Input_Sources fromSource, Vector2 axis, Vector2 delta)

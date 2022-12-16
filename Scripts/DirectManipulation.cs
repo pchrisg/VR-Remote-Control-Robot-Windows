@@ -15,7 +15,7 @@ public class DirectManipulation : MonoBehaviour
     public bool restoreOriginalParent = false;
 
     [SerializeField] private PlanningRobot m_PlanningRobot = null;
-    [SerializeField] private ManipulatorPublisher m_ManipulationPublisher = null;
+    [SerializeField] private ROSPublisher m_ROSPublisher = null;
 
     protected bool attached = false;
     protected float attachTime = 0.0f;
@@ -25,16 +25,16 @@ public class DirectManipulation : MonoBehaviour
     public UnityEvent onPickUp;
     public UnityEvent onDetachFromHand;
     public HandEvent onHeldUpdate;
+    private const float m_TimeInterval = 0.5f;
+    private float period = 0.0f;
 
     [HideInInspector] public Interactable interactable;
 
-    //-------------------------------------------------
     protected virtual void Awake()
     {
         interactable = GetComponent<Interactable>();
     }
 
-    //-------------------------------------------------
     protected virtual void OnHandHoverBegin(Hand hand)
     {
         bool showHint = false;
@@ -56,13 +56,11 @@ public class DirectManipulation : MonoBehaviour
         }
     }
 
-    //-------------------------------------------------
     protected virtual void OnHandHoverEnd(Hand hand)
     {
         hand.HideGrabHint();
     }
 
-    //-------------------------------------------------
     protected virtual void HandHoverUpdate(Hand hand)
     {
         GrabTypes startingGrabType = hand.GetGrabStarting();
@@ -77,7 +75,6 @@ public class DirectManipulation : MonoBehaviour
         }
     }
 
-    //-------------------------------------------------
     protected virtual void OnAttachedToHand(Hand hand)
     {
         attached = true;
@@ -91,7 +88,6 @@ public class DirectManipulation : MonoBehaviour
         attachRotation = transform.rotation;
     }
 
-    //-------------------------------------------------
     protected virtual void OnDetachedFromHand(Hand hand)
     {
         attached = false;
@@ -100,10 +96,9 @@ public class DirectManipulation : MonoBehaviour
 
         hand.HoverUnlock(null);
         if (m_PlanningRobot.isPlanning)
-            m_ManipulationPublisher.PublishTrajectoryRequest();
+            m_ROSPublisher.PublishTrajectoryRequest();
     }
 
-    //-------------------------------------------------
     protected virtual void HandAttachedUpdate(Hand hand)
     {
         if (hand.IsGrabEnding(gameObject))
@@ -114,7 +109,11 @@ public class DirectManipulation : MonoBehaviour
         if (onHeldUpdate != null)
             onHeldUpdate.Invoke(hand);
 
-        if (!m_PlanningRobot.isPlanning)
-            m_ManipulationPublisher.PublishMoveArm();
+        if (!m_PlanningRobot.isPlanning && period > m_TimeInterval)
+        {
+            m_ROSPublisher.PublishMoveArm();
+            period = 0;
+        }
+        period += UnityEngine.Time.deltaTime;        
     }
 }

@@ -7,10 +7,8 @@ public class ManipulationMode : MonoBehaviour
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
     [SerializeField] private PlanningRobot m_PlanningRobot = null;
 
-    //private Planner m_Planner;
-
-    private bool m_Planning;
-    private bool m_SDOFManipulating;
+    //private bool m_Planning = false;
+    private bool m_SDOFManipulating = false;
 
     // Variables required for Controller Actions
     private SteamVR_Action_Boolean m_Trackpad;
@@ -25,8 +23,6 @@ public class ManipulationMode : MonoBehaviour
         m_Trackpad.AddOnStateDownListener(TrackpadPressed, SteamVR_Input_Sources.Any);
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Grip.AddOnStateDownListener(GripGrabbed, SteamVR_Input_Sources.Any);
-
-        m_SDOFManipulating = false;
     }
 
     private void MenuPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
@@ -50,8 +46,8 @@ public class ManipulationMode : MonoBehaviour
 
     public void TogglePlanner()
     {
-        m_Planning = !m_Planning;
-        m_PlanningRobot.Show(m_Planning);
+        m_PlanningRobot.isPlanning = !m_PlanningRobot.isPlanning;
+        m_PlanningRobot.Show();
     }
 
     public void ToggleWidget()

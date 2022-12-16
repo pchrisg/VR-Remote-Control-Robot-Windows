@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SDOFWidget : MonoBehaviour
 {
-    [SerializeField] GameObject m_Manipulator;
+    [SerializeField] GameObject m_Manipulator = null;
 
     public void Show(bool value)
     {
