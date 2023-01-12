@@ -1,28 +1,49 @@
-
 using UnityEngine;
 using Valve.VR;
 
 public class ManipulationMode : MonoBehaviour
 {
-    [SerializeField] private SDOFWidget m_SDOFWidget = null;
-    [SerializeField] private PlanningRobot m_PlanningRobot = null;
 
-    //private bool m_Planning = false;
+    [SerializeField] private PlanningRobot m_PlanningRobot = null;
+    [SerializeField] private SDOFWidget m_SDOFWidget = null;
+    [SerializeField] private Rails m_Rails = null;
+    [SerializeField] private CollisionObjects m_CollisionObjects= null;
+
+    [HideInInspector]
+    public enum Mode
+    {
+        DIRECT,
+        SDOF,
+        COLLISIONBOX,
+        RAIL
+    }
+    [HideInInspector] public Mode mode = Mode.DIRECT;
+
     private bool m_SDOFManipulating = false;
+    private bool m_RailManipulating = false;
+    private bool m_CreatingCollisionObjects = false;
 
     // Variables required for Controller Actions
-    private SteamVR_Action_Boolean m_Trackpad;
-    private SteamVR_Action_Boolean m_Menu;
-    private SteamVR_Action_Boolean m_Grip;
+    private SteamVR_Action_Boolean m_Trackpad = null;
+    private SteamVR_Action_Boolean m_Menu = null;
+    private SteamVR_Action_Boolean m_Grip = null;
 
-    void Start()
+    private void Awake()
     {
         m_Menu = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressMenu");
-        m_Menu.AddOnStateDownListener(MenuPressed, SteamVR_Input_Sources.Any);
         m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressTrackpad");
-        m_Trackpad.AddOnStateDownListener(TrackpadPressed, SteamVR_Input_Sources.Any);
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-        m_Grip.AddOnStateDownListener(GripGrabbed, SteamVR_Input_Sources.Any);
+
+        m_Menu.onStateDown += MenuPressed;
+        m_Trackpad.onStateDown += TrackpadPressed;
+        m_Grip.onStateDown += GripGrabbed;
+    }
+
+    private void OnDestroy()
+    {
+        m_Menu.onStateDown -= MenuPressed;
+        m_Trackpad.onStateDown -= TrackpadPressed;
+        m_Grip.onStateDown -= GripGrabbed;
     }
 
     private void MenuPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
@@ -40,7 +61,7 @@ public class ManipulationMode : MonoBehaviour
 
     private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
     {
-        Debug.Log("GripGrabbed");
+        //Debug.Log("GripGrabbed");
         
     }
 
@@ -56,8 +77,15 @@ public class ManipulationMode : MonoBehaviour
         m_SDOFWidget.Show(m_SDOFManipulating);
     }
 
+    public void ToggleRails()
+    {
+        m_RailManipulating = !m_RailManipulating;
+        m_Rails.Show(m_RailManipulating);
+    }
+
     public void ToggleCollisionBoxes()
     {
-
+        m_CreatingCollisionObjects = !m_CreatingCollisionObjects;
+        m_CollisionObjects.Show(m_CreatingCollisionObjects);
     }
 }

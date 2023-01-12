@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using System;
+using Unity.Robotics.ROSTCPConnector;
+using Unity.Robotics.ROSTCPConnector.ROSGeometry;
+using RosMessageTypes.Std;
 using RosMessageTypes.Geometry;
 using RosMessageTypes.Moveit;
 using RosMessageTypes.ChrisUr5Moveit;
-using Unity.Robotics.ROSTCPConnector;
-using Unity.Robotics.ROSTCPConnector.ROSGeometry;
-using UnityEngine;
 using RosMessageTypes.Shape;
-using System;
-using RosMessageTypes.Std;
 
 public class ROSPublisher : MonoBehaviour
 {
@@ -26,6 +26,8 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private string m_MoveArmTopic = "chris_move_arm";
     [SerializeField] private string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private string m_AddCollisionObjectTopic = "chris_add_collision_object";
+    [SerializeField] private string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
+    [SerializeField] private string m_GameExitTopic = "chris_game_exit";
 
     private void Awake()
     {
@@ -38,6 +40,14 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<PoseMsg>(m_MoveArmTopic);
         m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
+        m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
+        m_Ros.RegisterPublisher<EmptyMsg>(m_GameExitTopic);
+    }
+
+    public void OnDestroy()
+    {
+        PublishGameExit();
+        m_Ros.Disconnect();
     }
 
     public void PublishTrajectoryRequest()
@@ -67,7 +77,6 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishMoveArm()
     {
-        print(UnityEngine.Time.realtimeSinceStartup);
         if(m_PlanningRobot.isPlanning)
         {
             PublishTrajectoryRequest();
@@ -117,11 +126,11 @@ public class ROSPublisher : MonoBehaviour
         }
     }
 
-    public void PublishCollisionObject(GameObject box)
+    public void PublishCreateCollisionObject(CollisionObjectMsg collisionObject)
     {
-        var collision_object = new CollisionObjectMsg();
+        /*var collision_object = new CollisionObjectMsg();
         collision_object.header.frame_id = "base_link";
-        collision_object.id = "base";
+        collision_object.id = id;
 
         var primitive = new SolidPrimitiveMsg();
         primitive.type = SolidPrimitiveMsg.BOX;
@@ -141,7 +150,18 @@ public class ROSPublisher : MonoBehaviour
         Array.Resize(ref collision_object.primitive_poses, 1);
         collision_object.primitive_poses[0] = box_pose;
         collision_object.operation = CollisionObjectMsg.ADD;
+        */
 
-        m_Ros.Publish(m_AddCollisionObjectTopic, collision_object);
+        m_Ros.Publish(m_AddCollisionObjectTopic, collisionObject);
+    }
+
+    public void PublishRemoveCollisionObject(CollisionObjectMsg collisionObject)
+    {
+        m_Ros.Publish(m_RemoveCollisionObjectTopic, collisionObject);
+    }
+
+    private void PublishGameExit()
+    {
+        m_Ros.Publish(m_GameExitTopic, new EmptyMsg());
     }
 }

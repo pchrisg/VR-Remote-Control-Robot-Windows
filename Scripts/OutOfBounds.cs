@@ -14,7 +14,7 @@ public class OutOfBounds : MonoBehaviour
 
     private void Start()
     {
-        m_Renderer = this.gameObject.GetComponent<Renderer>();
+        m_Renderer = gameObject.GetComponent<Renderer>();
     }
 
     private void OnTriggerEnter(Collider other)

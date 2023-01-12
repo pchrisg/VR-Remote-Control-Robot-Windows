@@ -29,6 +29,21 @@ public class RadialMenu : MonoBehaviour
         CreateAndSetupSections();
     }
 
+    private void Start()
+    {
+        //Show(false);
+    }
+
+    private void Update()
+    {
+        Vector2 direction = Vector2.zero + touchPosition;
+        float rotation = GetDegree(direction);
+
+        SetCursorPosition();
+        SetSelectionRotation(rotation);
+        SetSeletedEvent(rotation);
+    }
+
     private void CreateAndSetupSections()
     {
         radialSections = new List<RadialSection>()
@@ -43,26 +58,11 @@ public class RadialMenu : MonoBehaviour
             section.iconRenderer.sprite = section.icon;
     }
 
-    private void Start()
-    {
-        Show(false);
-    }
-
     public void Show(bool value)
     {
         gameObject.SetActive(value);
     }
-
-    private void Update()
-    {
-        Vector2 direction = Vector2.zero + touchPosition;
-        float rotation = GetDegree(direction);
-
-        SetCursorPosition();
-        SetSelectionRotation(rotation);
-        SetSeletedEvent(rotation);
-    }
-
+    
     private float GetDegree(Vector2 direction)
     {
         float value = Mathf.Atan2(direction.x, direction.y);
