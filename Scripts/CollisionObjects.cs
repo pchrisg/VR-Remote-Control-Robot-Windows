@@ -20,11 +20,6 @@ public class CollisionObjects : MonoBehaviour
         Invoke("PublishChildren", 1.0f);
     }
 
-    public void Show(bool value)
-    {
-        gameObject.SetActive(value);
-    }
-
     private void MakeBase()
     {
         GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);

@@ -3488,8 +3488,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_PlanningRobot: {fileID: 4132567178377732532}
   m_SDOFWidget: {fileID: 7659439181079122306}
-  m_Rails: {fileID: 1009488525}
-  m_CollisionObjects: {fileID: 2135094566}
+  m_RailCreator: {fileID: 1945606745}
+  m_CollisionObjectCreator: {fileID: 1256204842}
   mode: 0
 --- !u!114 &621543382
 MonoBehaviour:
@@ -4701,7 +4701,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1009488525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5238,7 +5238,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1256204841
 Transform:
   m_ObjectHideFlags: 0
@@ -5266,6 +5266,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db3391a151a67ed47b934646d803b2a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_ManipulationMode: {fileID: 621543381}
 --- !u!1 &1274424757
 GameObject:
   m_ObjectHideFlags: 0
@@ -7379,32 +7380,6 @@ MonoBehaviour:
   highlightOnHover: 1
   hideHighlight: []
   hoverPriority: 0
---- !u!114 &1885634704
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4216500284383032850}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0633283ebd4c462489eb2c87ec9dc44b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attachmentFlags: 44
-  restoreOriginalParent: 0
-  m_PlanningRobot: {fileID: 4132567178377732532}
-  m_ROSPublisher: {fileID: 896024449}
-  onPickUp:
-    m_PersistentCalls:
-      m_Calls: []
-  onDetachFromHand:
-    m_PersistentCalls:
-      m_Calls: []
-  onHeldUpdate:
-    m_PersistentCalls:
-      m_Calls: []
-  interactable: {fileID: 0}
 --- !u!1 &1905361751
 GameObject:
   m_ObjectHideFlags: 0
@@ -7604,7 +7579,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1945606744
 Transform:
   m_ObjectHideFlags: 0
@@ -7633,6 +7608,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Manipulator: {fileID: 4216500284383032850}
+  m_ManipulationMode: {fileID: 621543381}
   m_RailPrefab: {fileID: 3699201449131580400, guid: 3c98866993dd8e64a8ffd000ad4e52d1, type: 3}
 --- !u!1 &1953600969
 GameObject:
@@ -8029,7 +8005,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2135094565
 Transform:
   m_ObjectHideFlags: 0
@@ -12295,7 +12271,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 621543381}
           m_TargetAssemblyTypeName: ManipulationMode, Assembly-CSharp
-          m_MethodName: ToggleRails
+          m_MethodName: ToggleCollisionObjectCreator
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -12313,7 +12289,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 621543381}
           m_TargetAssemblyTypeName: ManipulationMode, Assembly-CSharp
-          m_MethodName: ToggleCollisionBoxes
+          m_MethodName: ToggleRailCreator
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -13223,9 +13199,10 @@ GameObject:
   m_Component:
   - component: {fileID: 4216500284383032851}
   - component: {fileID: 1885634700}
-  - component: {fileID: 1885634701}
-  - component: {fileID: 1885634704}
   - component: {fileID: 4216500284383032852}
+  - component: {fileID: 1885634701}
+  - component: {fileID: 4216500284383032854}
+  - component: {fileID: 4216500284383032853}
   m_Layer: 0
   m_Name: Manipulator
   m_TagString: Untagged
@@ -13265,6 +13242,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_EndEffector: {fileID: 2936355978882770438}
+--- !u!114 &4216500284383032853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4216500284383032850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b85ab27613a83f408e3627bcf868a7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4216500284383032854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4216500284383032850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0633283ebd4c462489eb2c87ec9dc44b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ManipulationMode: {fileID: 621543381}
 --- !u!114 &4216500284525423840
 MonoBehaviour:
   m_ObjectHideFlags: 0

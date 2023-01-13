@@ -1,27 +1,29 @@
 using UnityEngine;
 using Valve.VR;
+using ManipulationOptions;
+
+namespace ManipulationOptions
+{
+    public enum Mode
+    {
+        DIRECT,
+        SDOF,
+        RAIL,
+        AABBCREATOR,
+        RAILCREATOR
+    };
+}
 
 public class ManipulationMode : MonoBehaviour
 {
 
     [SerializeField] private PlanningRobot m_PlanningRobot = null;
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
-    [SerializeField] private Rails m_Rails = null;
-    [SerializeField] private CollisionObjects m_CollisionObjects= null;
+    [SerializeField] private RailCreator m_RailCreator = null;
+    [SerializeField] private CollisionObjectCreator m_CollisionObjectCreator = null;
 
-    [HideInInspector]
-    public enum Mode
-    {
-        DIRECT,
-        SDOF,
-        COLLISIONBOX,
-        RAIL
-    }
-    [HideInInspector] public Mode mode = Mode.DIRECT;
-
-    private bool m_SDOFManipulating = false;
-    private bool m_RailManipulating = false;
-    private bool m_CreatingCollisionObjects = false;
+    //[HideInInspector]
+    public Mode mode = Mode.DIRECT;
 
     // Variables required for Controller Actions
     private SteamVR_Action_Boolean m_Trackpad = null;
@@ -48,7 +50,6 @@ public class ManipulationMode : MonoBehaviour
 
     private void MenuPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
     {
-        Debug.Log("MenuPressed");
         if (m_PlanningRobot.isPlanning)
             m_PlanningRobot.ExecuteTrajectory();
     }
@@ -73,19 +74,44 @@ public class ManipulationMode : MonoBehaviour
 
     public void ToggleWidget()
     {
-        m_SDOFManipulating = !m_SDOFManipulating;
-        m_SDOFWidget.Show(m_SDOFManipulating);
+        if(mode == Mode.DIRECT)
+        {
+            mode = Mode.SDOF;
+            m_SDOFWidget.Show(true);
+            
+        }
+        else if (mode == Mode.SDOF)
+        {
+            m_SDOFWidget.Show(false);
+            mode = Mode.DIRECT;
+        }
     }
 
-    public void ToggleRails()
+    public void ToggleRailCreator()
     {
-        m_RailManipulating = !m_RailManipulating;
-        m_Rails.Show(m_RailManipulating);
+        if (mode == Mode.DIRECT)
+        {
+            m_RailCreator.Show(true);
+            mode = Mode.RAILCREATOR;
+        }
+        else if (mode == Mode.RAILCREATOR)
+        {
+            m_RailCreator.Show(false);
+            mode = Mode.RAIL;
+        }
     }
 
-    public void ToggleCollisionBoxes()
+    public void ToggleCollisionObjectCreator()
     {
-        m_CreatingCollisionObjects = !m_CreatingCollisionObjects;
-        m_CollisionObjects.Show(m_CreatingCollisionObjects);
+        if (mode == Mode.DIRECT)
+        {
+            m_CollisionObjectCreator.Show(true);
+            mode = Mode.AABBCREATOR;
+        }
+        else if (mode == Mode.AABBCREATOR)
+        {
+            m_CollisionObjectCreator.Show(false);
+            mode = Mode.DIRECT;
+        }
     }
 }

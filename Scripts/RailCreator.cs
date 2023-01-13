@@ -4,11 +4,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using ManipulationOptions;
 
 public class RailCreator : MonoBehaviour
 {
     [Header("Scene Object")]
     [SerializeField] private GameObject m_Manipulator = null;
+    [SerializeField] private ManipulationMode m_ManipulationMode;
 
     [Header("Prefab")]
     [SerializeField] private GameObject m_RailPrefab = null;
@@ -38,8 +40,12 @@ public class RailCreator : MonoBehaviour
 
     private void OnDisable()
     {
-        m_Rail = null;
-        m_Pivot = Vector3.zero;
+        if(m_Rail != null)
+        {
+            Destroy(m_Rail);
+            m_Rail = null;
+            m_Pivot = Vector3.zero;
+        }
     }
 
     private void OnDestroy()
@@ -50,12 +56,20 @@ public class RailCreator : MonoBehaviour
 
     private void Update()
     {
-        if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
+        if(m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            MakeRail();
+            if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
+            {
+                MakeRail();
+            }
+            else
+                m_InteractingHand = null;
         }
-        else
-            m_InteractingHand = null;
+    }
+
+    public void Show(bool value)
+    {
+        gameObject.SetActive(value);
     }
 
     private void SetInteractingHand(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)

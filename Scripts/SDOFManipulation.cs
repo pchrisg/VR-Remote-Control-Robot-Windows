@@ -34,6 +34,21 @@ public class SDOFManipulation : MonoBehaviour
         m_Trigger.onStateDown -= TriggerGrabbed;
     }
 
+    private void Update()
+    {
+        if (isInteracting)
+        {
+            if (m_Trigger.GetState(m_InteractingHand.handType))
+            {
+                TriggerHeld();
+            }
+            else
+            {
+                TriggerReleased();
+            }
+        }
+    }
+
     private void OnHandHoverBegin(Hand hand)
     {
         if (!isInteracting)
@@ -44,21 +59,6 @@ public class SDOFManipulation : MonoBehaviour
     {
         if (!isInteracting)
             m_InteractingHand = hand;
-    }
-
-    private void Update()
-    {
-        if (isInteracting)
-        {
-            if(m_Trigger.GetState(m_InteractingHand.handType))
-            {
-                TriggerHeld();
-            }
-            else
-            {
-                TriggerReleased();
-            }
-        }
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources hand)

@@ -1,119 +1,76 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
+using Valve.VR;
 using Valve.VR.InteractionSystem;
-[RequireComponent(typeof(Interactable))]
+using ManipulationOptions;
 
 public class DirectManipulation : MonoBehaviour
 {
-    [EnumFlags]
-    [Tooltip("The flags used to attach this object to the hand.")]
-    public Hand.AttachmentFlags attachmentFlags = Hand.AttachmentFlags.ParentToHand | Hand.AttachmentFlags.DetachFromOtherHand;
+    [Header("Scene Object")]
+    [SerializeField] private ManipulationMode m_ManipulationMode = null;
 
-    [Tooltip("When detaching the object, should it return to its original parent?")]
-    public bool restoreOriginalParent = false;
+    private ROSPublisher m_ROSPublisher = null;
 
-    [SerializeField] private PlanningRobot m_PlanningRobot = null;
-    [SerializeField] private ROSPublisher m_ROSPublisher = null;
+    private Interactable m_Interactable = null;
+    private SteamVR_Action_Boolean m_Trigger = null;
+    
+    private bool isInteracting = false;
+    private Hand m_InteractingHand = null;
 
-    protected bool attached = false;
-    protected float attachTime = 0.0f;
-    protected Vector3 attachPosition = Vector3.zero;
-    protected Quaternion attachRotation = Quaternion.identity;
-
-    public UnityEvent onPickUp;
-    public UnityEvent onDetachFromHand;
-    public HandEvent onHeldUpdate;
-    private const float m_TimeInterval = 0.5f;
-    private float period = 0.0f;
-
-    [HideInInspector] public Interactable interactable;
-
-    protected virtual void Awake()
+    private void Awake()
     {
-        interactable = GetComponent<Interactable>();
+        m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+
+        m_Interactable = GetComponent<Interactable>();
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+        m_Trigger.onStateDown += TriggerGrabbed;
     }
 
-    protected virtual void OnHandHoverBegin(Hand hand)
+    private void OnDestroy()
     {
-        bool showHint = false;
+        m_Trigger.onStateDown -= TriggerGrabbed;
+    }
 
-        if (!attached)
+    private void Update()
+    {
+        if (isInteracting)
         {
-            GrabTypes bestGrabType = hand.GetBestGrabbingType();
-
-            if (bestGrabType != GrabTypes.None)
+            if (m_Trigger.GetStateUp(m_InteractingHand.handType))
             {
-                hand.AttachObject(gameObject, bestGrabType, attachmentFlags);
-                showHint = false;
+                TriggerReleased();
             }
         }
+    }
 
-        if (showHint)
+    private void OnHandHoverBegin(Hand hand)
+    {
+        if (!isInteracting)
+            m_InteractingHand = hand;
+    }
+
+    private void HandHoverUpdate(Hand hand)
+    {
+        if (!isInteracting)
+            m_InteractingHand = hand;
+    }
+
+    private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources hand)
+    {
+        if (m_ManipulationMode.mode == Mode.DIRECT && !isInteracting && m_InteractingHand != null)
         {
-            hand.ShowGrabHint();
+            if (m_InteractingHand.IsStillHovering(m_Interactable))
+            {
+                gameObject.transform.SetParent(m_InteractingHand.transform);
+                isInteracting = true;
+            }
         }
     }
 
-    protected virtual void OnHandHoverEnd(Hand hand)
+    private void TriggerReleased()
     {
-        hand.HideGrabHint();
-    }
-
-    protected virtual void HandHoverUpdate(Hand hand)
-    {
-        GrabTypes startingGrabType = hand.GetGrabStarting();
-
-        if (startingGrabType != GrabTypes.None)
-        {
-            if (!restoreOriginalParent)
-                gameObject.transform.parent = null;
-
-            hand.AttachObject(gameObject, startingGrabType, attachmentFlags);
-            hand.HideGrabHint();
-        }
-    }
-
-    protected virtual void OnAttachedToHand(Hand hand)
-    {
-        attached = true;
-
-        onPickUp.Invoke();
-
-        hand.HoverLock(null);
-
-        attachTime = Time.time;
-        attachPosition = transform.position;
-        attachRotation = transform.rotation;
-    }
-
-    protected virtual void OnDetachedFromHand(Hand hand)
-    {
-        attached = false;
-
-        onDetachFromHand.Invoke();
-
-        hand.HoverUnlock(null);
-        if (m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishTrajectoryRequest();
-    }
-
-    protected virtual void HandAttachedUpdate(Hand hand)
-    {
-        if (hand.IsGrabEnding(gameObject))
-        {
-            hand.DetachObject(gameObject);
-        }
-
-        if (onHeldUpdate != null)
-            onHeldUpdate.Invoke(hand);
-
-        if (!m_PlanningRobot.isPlanning && period > m_TimeInterval)
-        {
-            m_ROSPublisher.PublishMoveArm();
-            period = 0;
-        }
-        period += UnityEngine.Time.deltaTime;        
+        gameObject.transform.SetParent(null);
+        m_InteractingHand = null;
+        isInteracting = false;
     }
 }

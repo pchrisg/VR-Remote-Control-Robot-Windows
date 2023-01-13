@@ -4,9 +4,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using ManipulationOptions;
 
 public class CollisionObjectCreator : MonoBehaviour
 {
+    [Header("Scene Object")]
+    [SerializeField] private ManipulationMode m_ManipulationMode;
+
     private CollisionObjects m_CollisionObjects = null;
     private SteamVR_Action_Boolean m_Grip = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -25,6 +29,13 @@ public class CollisionObjectCreator : MonoBehaviour
         m_RightHand = Player.instance.rightHand;
     }
 
+    private void OnDisable()
+    {
+        if (m_NewBox != null)
+            Destroy(m_NewBox);
+        m_NewBox = null;
+    }
+
     private void OnDestroy()
     {
         m_Trigger.onStateDown -= SetCollisionBox;
@@ -32,10 +43,18 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private void Update()
     {
-        if(m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
+        if(m_ManipulationMode.mode == Mode.AABBCREATOR)
         {
-            MakeCollisionBox();
+            if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
+            {
+                MakeCollisionBox();
+            }
         }
+    }
+
+    public void Show(bool value)
+    {
+        gameObject.SetActive(value);
     }
 
     private void MakeCollisionBox()
