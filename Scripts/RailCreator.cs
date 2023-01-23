@@ -88,15 +88,6 @@ public class RailCreator : MonoBehaviour
             m_InteractingHand = m_RightHand;
     }
 
-    private void SetRail(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
-    {
-        if (m_Rail != null)
-        {
-            m_Rail = null;
-            m_Pivot = Vector3.zero;
-        }
-    }
-
     private void MakeRail()
     {
         Transform index = m_InteractingHand.skeleton.indexTip;
@@ -146,6 +137,17 @@ public class RailCreator : MonoBehaviour
 
             m_Rail.transform.position = m_Pivot + projectedConnectingVector / 2.0f;
             m_Rail.transform.rotation = Quaternion.FromToRotation(Vector3.up, projectedConnectingVector);
+        }
+    }
+
+    private void SetRail(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_Rail != null)
+        {
+            m_Rails.AddRail(m_Rail);
+
+            m_Rail = null;
+            m_Pivot = Vector3.zero;
         }
     }
 }

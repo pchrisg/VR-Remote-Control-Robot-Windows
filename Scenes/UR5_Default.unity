@@ -4694,7 +4694,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1009488526}
-  - component: {fileID: 1009488525}
+  - component: {fileID: 1009488527}
   m_Layer: 0
   m_Name: Rails
   m_TagString: Untagged
@@ -4702,18 +4702,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1009488525
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1009488524}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8d4b69665be61744a3712f8237e4c63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1009488526
 Transform:
   m_ObjectHideFlags: 0
@@ -4730,6 +4718,18 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1009488527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1009488524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8d4b69665be61744a3712f8237e4c63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1115003993
 GameObject:
   m_ObjectHideFlags: 0
@@ -13254,6 +13254,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b85ab27613a83f408e3627bcf868a7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_ManipulationMode: {fileID: 621543381}
+  m_PlanningRobot: {fileID: 4132567178377732532}
+  m_Rails: {fileID: 1009488527}
 --- !u!114 &4216500284383032854
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13267,6 +13270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ManipulationMode: {fileID: 621543381}
+  m_PlanningRobot: {fileID: 4132567178377732532}
 --- !u!114 &4216500284525423840
 MonoBehaviour:
   m_ObjectHideFlags: 0

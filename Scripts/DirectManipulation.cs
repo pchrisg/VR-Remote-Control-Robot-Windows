@@ -9,6 +9,7 @@ public class DirectManipulation : MonoBehaviour
 {
     [Header("Scene Object")]
     [SerializeField] private ManipulationMode m_ManipulationMode = null;
+    [SerializeField] private PlanningRobot m_PlanningRobot = null;
 
     private ROSPublisher m_ROSPublisher = null;
 
@@ -17,6 +18,8 @@ public class DirectManipulation : MonoBehaviour
     
     private bool isInteracting = false;
     private Hand m_InteractingHand = null;
+    private const float m_TimeInterval = 0.5f;
+    private float period = 0.0f;
 
     private void Awake()
     {
@@ -40,6 +43,12 @@ public class DirectManipulation : MonoBehaviour
             {
                 TriggerReleased();
             }
+            else if (!m_PlanningRobot.isPlanning && period > m_TimeInterval)
+            {
+                m_ROSPublisher.PublishMoveArm();
+                period = 0;
+            }
+            period += UnityEngine.Time.deltaTime;
         }
     }
 
@@ -69,8 +78,15 @@ public class DirectManipulation : MonoBehaviour
 
     private void TriggerReleased()
     {
-        gameObject.transform.SetParent(null);
-        m_InteractingHand = null;
-        isInteracting = false;
+
+        if (isInteracting)
+        {
+            gameObject.transform.SetParent(null);
+            m_InteractingHand = null;
+            isInteracting = false;
+
+            if (m_PlanningRobot.isPlanning)
+                m_ROSPublisher.PublishTrajectoryRequest();
+        }
     }
 }
