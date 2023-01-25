@@ -99,6 +99,11 @@ public class ManipulationMode : MonoBehaviour
             m_RailCreator.Show(false);
             mode = Mode.RAIL;
         }
+        else if(mode == Mode.RAIL)
+        {
+            m_RailCreator.Clear();
+            mode = Mode.DIRECT;
+        }
     }
 
     public void ToggleCollisionObjectCreator()

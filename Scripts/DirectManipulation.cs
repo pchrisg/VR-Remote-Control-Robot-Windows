@@ -78,8 +78,7 @@ public class DirectManipulation : MonoBehaviour
 
     private void TriggerReleased()
     {
-
-        if (isInteracting)
+        if (m_ManipulationMode.mode == Mode.DIRECT && isInteracting)
         {
             gameObject.transform.SetParent(null);
             m_InteractingHand = null;

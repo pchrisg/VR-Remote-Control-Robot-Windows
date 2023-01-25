@@ -4325,7 +4325,6 @@ MonoBehaviour:
   m_SdofTranslateTopic: chris_sdof_translate
   m_AddCollisionObjectTopic: chris_add_collision_object
   m_RemoveCollisionObjectTopic: chris_remove_collision_object
-  m_GameExitTopic: chris_game_exit
 --- !u!1 &946804181
 GameObject:
   m_ObjectHideFlags: 0

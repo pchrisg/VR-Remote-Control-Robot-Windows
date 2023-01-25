@@ -10,7 +10,7 @@ public class RailCreator : MonoBehaviour
 {
     [Header("Scene Object")]
     [SerializeField] private GameObject m_Manipulator = null;
-    [SerializeField] private ManipulationMode m_ManipulationMode;
+    [SerializeField] private ManipulationMode m_ManipulationMode = null;
 
     [Header("Prefab")]
     [SerializeField] private GameObject m_RailPrefab = null;
@@ -31,7 +31,6 @@ public class RailCreator : MonoBehaviour
     {
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-        m_Grip.onStateDown += SetInteractingHand;
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
         m_Trigger.onStateDown += SetRail;
         m_LeftHand = Player.instance.leftHand;
@@ -50,7 +49,6 @@ public class RailCreator : MonoBehaviour
 
     private void OnDestroy()
     {
-        m_Grip.onStateDown -= SetInteractingHand;
         m_Trigger.onStateDown -= SetRail;
     }
 
@@ -58,34 +56,26 @@ public class RailCreator : MonoBehaviour
     {
         if(m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
+            if (m_InteractingHand == null)
             {
-                MakeRail();
+                if (m_Grip.GetState(m_RightHand.handType))
+                    m_InteractingHand = m_RightHand;
+                else if (m_Grip.GetState(m_LeftHand.handType))
+                    m_InteractingHand = m_LeftHand;
             }
             else
-                m_InteractingHand = null;
+            {
+                if (!m_Grip.GetState(m_InteractingHand.handType))
+                    m_InteractingHand = null;
+                else
+                    MakeRail();
+            }
         }
     }
 
     public void Show(bool value)
     {
         gameObject.SetActive(value);
-    }
-
-    private void SetInteractingHand(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
-    {
-        if(m_InteractingHand == null)
-        {
-            if (m_Grip.GetState(m_RightHand.handType))
-                m_InteractingHand = m_RightHand;
-            else
-                m_InteractingHand = m_LeftHand;
-        }
-
-        if (m_InteractingHand == m_RightHand)
-            m_InteractingHand = m_LeftHand;
-        else
-            m_InteractingHand = m_RightHand;
     }
 
     private void MakeRail()
@@ -142,12 +132,36 @@ public class RailCreator : MonoBehaviour
 
     private void SetRail(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_Rail != null)
+        if(m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            m_Rails.AddRail(m_Rail);
+            if (m_Rail != null)
+            {
+                m_Rails.AddRail(m_Rail);
 
-            m_Rail = null;
-            m_Pivot = Vector3.zero;
+                m_Rail = null;
+                m_Pivot = Vector3.zero;
+            }
+            else if (m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
+            {
+                print("inside");
+                GameObject lastChild = m_Rails.GetLastChild().gameObject;
+                Destroy(lastChild);
+            }
+        }
+    }
+
+    public void Clear()
+    {
+        Transform rails = m_Rails.GetComponent<Transform>();
+        if (rails.childCount > 1)
+        {
+            print(rails.childCount);
+            for (int i = rails.childCount - 1; i > 0; i--)
+            {
+                print(i);
+                GameObject rail = rails.GetChild(i).gameObject;
+                Destroy(rail);
+            }
         }
     }
 }

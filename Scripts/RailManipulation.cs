@@ -54,7 +54,7 @@ public class RailManipulation : MonoBehaviour
             }
             else
             {
-                SnapToRail();
+                FollowRail();
                 if (!m_PlanningRobot.isPlanning && period > m_TimeInterval)
                 {
                     m_ROSPublisher.PublishConstrainedMovement();
@@ -88,7 +88,7 @@ public class RailManipulation : MonoBehaviour
         }
     }
 
-    private void SnapToRail()
+    private void FollowRail()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
         Vector3 connectingVector = m_InteractingHand.transform.position - m_Rails.rails[m_ActiveRail].start;
@@ -120,8 +120,7 @@ public class RailManipulation : MonoBehaviour
 
     private void TriggerReleased()
     {
-
-        if (isInteracting)
+        if (m_ManipulationMode.mode == Mode.RAIL && isInteracting)
         {
             gameObject.transform.SetParent(null);
             m_InteractingHand = null;
@@ -131,5 +130,4 @@ public class RailManipulation : MonoBehaviour
                 m_ROSPublisher.PublishTrajectoryRequest();
         }
     }
-
 }

@@ -16,7 +16,6 @@ public class ROSPublisher : MonoBehaviour
     private ROSConnection m_Ros = null;
 
     [Header("Scene Objects")]
-    // Variables required for ROS communication
     [SerializeField] private GameObject m_Manipulator = null;
     [SerializeField] private PlanningRobot m_PlanningRobot = null;
 
@@ -27,7 +26,6 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private string m_AddCollisionObjectTopic = "chris_add_collision_object";
     [SerializeField] private string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
-    [SerializeField] private string m_GameExitTopic = "chris_game_exit";
 
     private void Awake()
     {
@@ -41,12 +39,10 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
-        m_Ros.RegisterPublisher<EmptyMsg>(m_GameExitTopic);
     }
 
     public void OnDestroy()
     {
-        PublishGameExit();
         m_Ros.Disconnect();
     }
 
@@ -158,10 +154,5 @@ public class ROSPublisher : MonoBehaviour
     public void PublishRemoveCollisionObject(CollisionObjectMsg collisionObject)
     {
         m_Ros.Publish(m_RemoveCollisionObjectTopic, collisionObject);
-    }
-
-    private void PublishGameExit()
-    {
-        m_Ros.Publish(m_GameExitTopic, new EmptyMsg());
     }
 }
