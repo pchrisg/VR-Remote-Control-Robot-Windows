@@ -43,8 +43,8 @@ public class RailManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.RAIL && !isInteracting && m_Rails.rails.Length <= 0)
-            m_ManipulationMode.mode = Mode.DIRECT;
+        if (m_ManipulationMode.mode == Mode.DIRECT)
+            m_ActiveRail = 0;
 
         if (isInteracting)
         {

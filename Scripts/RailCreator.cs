@@ -105,15 +105,15 @@ public class RailCreator : MonoBehaviour
         m_Rail.transform.rotation = Quaternion.FromToRotation(Vector3.up, connectingVector);
         m_Rail.transform.localScale = new Vector3(0.0025f, distance/2, 0.0025f);
 
-        Snapping(connectingVector);
+        Snapping(connectingVector, index.position);
     }
 
-    private void Snapping(Vector3 connectingVector)
+    private void Snapping(Vector3 connectingVector, Vector3 index)
     {
         float CosAngle = Vector3.Dot(Vector3.Normalize(connectingVector), gameObject.transform.up);
         if (Mathf.Abs(CosAngle) < THRESHOLD)
         {
-            Vector3 index = m_Pivot + connectingVector;
+            //Vector3 index = m_Pivot + connectingVector;
             Vector3 projectedPoint = index - (CosAngle * connectingVector.magnitude) * gameObject.transform.up;
             Vector3 projectedConnectingVector = projectedPoint - m_Pivot;
 
@@ -146,6 +146,7 @@ public class RailCreator : MonoBehaviour
                 print("inside");
                 GameObject lastChild = m_Rails.GetLastChild().gameObject;
                 Destroy(lastChild);
+                m_Rails.RemoveLastRail();
             }
         }
     }
@@ -155,13 +156,12 @@ public class RailCreator : MonoBehaviour
         Transform rails = m_Rails.GetComponent<Transform>();
         if (rails.childCount > 1)
         {
-            print(rails.childCount);
             for (int i = rails.childCount - 1; i > 0; i--)
             {
-                print(i);
                 GameObject rail = rails.GetChild(i).gameObject;
                 Destroy(rail);
             }
         }
+        m_Rails.RemoveAllRails();
     }
 }

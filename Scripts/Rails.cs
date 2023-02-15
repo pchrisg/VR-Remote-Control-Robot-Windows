@@ -30,6 +30,11 @@ public class Rails : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        RemoveAllRails();
+    }
+
     public Transform GetLastChild()
     {
         int count = gameObject.transform.childCount;
@@ -39,12 +44,24 @@ public class Rails : MonoBehaviour
             return gameObject.transform.GetChild(count - 1);
     }
 
-        public void AddRail(GameObject rail)
+    public void AddRail(GameObject rail)
     {
         Array.Resize(ref rails, rails.Length + 1);
 
         Vector3 offset = rail.transform.up * rail.transform.localScale.y;
-        rails[rails.Length-1].start = rail.transform.position - offset;
-        rails[rails.Length-1].end = rail.transform.position + offset;
+        rails[^1].start = rail.transform.position - offset;
+        rails[^1].end = rail.transform.position + offset;
+    }
+
+    public void RemoveLastRail()
+    {
+        if(rails.Length > 0)
+            Array.Resize(ref rails, rails.Length - 1);
+    }
+
+    public void RemoveAllRails()
+    {
+        while (rails.Length > 0)
+            RemoveLastRail();
     }
 }

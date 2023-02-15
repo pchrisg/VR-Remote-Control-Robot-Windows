@@ -3,24 +3,34 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Xml.Serialization;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 public class RadialMenu : MonoBehaviour
 {
     [Header("Scene Objects")]
-    public Transform selectionTransform = null;
-    public Transform cursorTransform = null;
+    [SerializeField] private Transform m_SelectionTransform = null;
+    [SerializeField] private Transform m_CursorTransform = null;
+    [SerializeField] private ManipulationMode m_ManipulationMode = null;
+    [SerializeField] private PlanningRobot m_PlanningRobot = null;
+    [SerializeField] private SpriteRenderer m_SRPlanRob = null;
+    [SerializeField] private SpriteRenderer m_SRActiveMode = null;
+
+    [Header("Sprites")]
+    [SerializeField] private Sprite[] sprites = new Sprite[10];
 
     [Header("Events")]
-    public RadialSection top = null;
-    public RadialSection right = null;
-    public RadialSection bottom = null;
-    public RadialSection left = null;
+    [SerializeField] private RadialSection top = null;
+    [SerializeField] private RadialSection right = null;
+    [SerializeField] private RadialSection bottom = null;
+    [SerializeField] private RadialSection left = null;
 
-    private Vector2 touchPosition = Vector2.zero;
-    private List<RadialSection> radialSections = null;
-    private RadialSection highlightedSection = null;
+    private ManipulationOptions.Mode m_MenuMode = ManipulationOptions.Mode.DIRECT;
+    private Vector2 m_TouchPosition = Vector2.zero;
+    private List<RadialSection> m_RadialSections = null;
+    private RadialSection m_HighlightedSection = null;
+    private bool isPlanning = false;
 
     private readonly float degreeIncrement = 90.0f;
 
@@ -29,24 +39,22 @@ public class RadialMenu : MonoBehaviour
         CreateAndSetupSections();
     }
 
-    private void Start()
-    {
-        //Show(false);
-    }
-
     private void Update()
     {
-        Vector2 direction = Vector2.zero + touchPosition;
+        Vector2 direction = Vector2.zero + m_TouchPosition;
         float rotation = GetDegree(direction);
 
         SetCursorPosition();
         SetSelectionRotation(rotation);
         SetSeletedEvent(rotation);
+
+        if (m_MenuMode != m_ManipulationMode.mode)
+            SetSectionIcons();
     }
 
     private void CreateAndSetupSections()
     {
-        radialSections = new List<RadialSection>()
+        m_RadialSections = new List<RadialSection>()
         {
             top,
             right,
@@ -54,8 +62,76 @@ public class RadialMenu : MonoBehaviour
             left
         };
 
-        foreach (RadialSection section in radialSections)
-            section.iconRenderer.sprite = section.icon;
+        TogglePlanRob();
+        SetSectionIcons();
+
+        m_SRPlanRob.sprite = null;
+        m_SRActiveMode.sprite = null;
+    }
+
+    private void SetSectionIcons()
+    {
+        if(m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
+        {
+            for(int i = 1; i < 4; i++)
+            {
+                m_RadialSections[i].iconRenderer.sprite = sprites[i];
+            }
+            m_MenuMode = ManipulationOptions.Mode.DIRECT;
+            m_SRActiveMode.sprite = null;
+        }
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.SDOF)
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                m_RadialSections[i].iconRenderer.sprite = null;
+            }
+            m_RadialSections[1].iconRenderer.sprite = sprites[5];
+            m_MenuMode = ManipulationOptions.Mode.SDOF;
+            m_SRActiveMode.sprite = sprites[1];
+        }
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.AABBCREATOR)
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                m_RadialSections[i].iconRenderer.sprite = null;
+            }
+            m_RadialSections[2].iconRenderer.sprite = sprites[6];
+            m_MenuMode = ManipulationOptions.Mode.AABBCREATOR;
+            m_SRActiveMode.sprite = sprites[2];
+        }
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAILCREATOR)
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                m_RadialSections[i].iconRenderer.sprite = null;
+            }
+            m_RadialSections[3].iconRenderer.sprite = sprites[7];
+            m_MenuMode = ManipulationOptions.Mode.RAILCREATOR;
+            m_SRActiveMode.sprite = sprites[3];
+        }
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAIL)
+        {
+            m_RadialSections[3].iconRenderer.sprite = sprites[8];
+            m_MenuMode = ManipulationOptions.Mode.RAIL;
+            m_SRActiveMode.sprite = sprites[7];
+        }
+    }
+
+    private void TogglePlanRob()
+    {
+        if(!m_PlanningRobot.isPlanning)
+        {
+            m_RadialSections[0].iconRenderer.sprite = sprites[0];
+            m_SRPlanRob.sprite = null;
+        }
+        else
+        {
+            m_RadialSections[0].iconRenderer.sprite = sprites[4];
+            m_SRPlanRob.sprite = sprites[0];
+        }
+
+        isPlanning = m_PlanningRobot.isPlanning;
     }
 
     public void Show(bool value)
@@ -76,13 +152,13 @@ public class RadialMenu : MonoBehaviour
 
     private void SetCursorPosition()
     {
-        cursorTransform.localPosition = touchPosition;
+        m_CursorTransform.localPosition = m_TouchPosition;
     }
 
     private void SetSelectionRotation(float newRotation)
     {
         float snappedRotation = SnapRotation(newRotation);
-        selectionTransform.localEulerAngles = new Vector3(0, 0, -snappedRotation);
+        m_SelectionTransform.localEulerAngles = new Vector3(0, 0, -snappedRotation);
     }
 
     private float SnapRotation(float rotation)
@@ -102,16 +178,22 @@ public class RadialMenu : MonoBehaviour
         if (index == 4)
             index = 0;
 
-        highlightedSection = radialSections[index];
+        m_HighlightedSection = m_RadialSections[index];
     }
 
     public void SetTouchPosition(Vector2 newValue)
     {
-        touchPosition = newValue;
+        m_TouchPosition = newValue;
     }
 
     public void ActivateHighlightedSection()
     {
-        highlightedSection.onPress.Invoke();
+        m_HighlightedSection.onPress.Invoke();
+
+        if (isPlanning != m_PlanningRobot.isPlanning)
+            TogglePlanRob();
+
+        if (m_MenuMode != m_ManipulationMode.mode)
+            SetSectionIcons();
     }
 }
