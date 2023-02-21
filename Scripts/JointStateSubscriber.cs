@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using Unity.Robotics.ROSTCPConnector;
 using SensorUnity = RosMessageTypes.Sensor.JointStateMsg;
+using Unity.VisualScripting;
 
 public class JointStateSubscriber : MonoBehaviour
 {
@@ -22,7 +23,6 @@ public class JointStateSubscriber : MonoBehaviour
 
     private ArticulationBody[] m_Joints;
     
-    // Start is called before the first frame update
     void Start()
     {
         m_Angles = new float[6];
@@ -39,7 +39,7 @@ public class JointStateSubscriber : MonoBehaviour
         m_Ros.Subscribe<SensorUnity>(m_JointStates, GetJointPositions);
     }
     
-    public void UnSub()
+    public void OnDestroy()
     {
         m_Ros.Unsubscribe(m_JointStates);
     }

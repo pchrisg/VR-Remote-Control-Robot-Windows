@@ -9,7 +9,7 @@ public class PlanningRobot : MonoBehaviour
 {
     [Header("Scene Objects")]
     [SerializeField] private GameObject m_UR5 = null;
-    [SerializeField] private Manipulator m_Manipulator = null;
+    [SerializeField] private Follow m_Manipulator = null;
     [SerializeField] private Material m_Mat = null;
     [SerializeField] private ROSPublisher m_ROSPublisher = null;
     

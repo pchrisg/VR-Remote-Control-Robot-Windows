@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class CollisionObjects : MonoBehaviour
 {
-    [Header("Prefab")]
+    [Header("Materials")]
     public Material m_InBoundsMaterial = null;
+    public Material m_OutOfBoundsMaterial = null;
+
 
     private int m_Id = 0;
 
@@ -32,6 +34,10 @@ public class CollisionObjects : MonoBehaviour
         box.GetComponent<Renderer>().material = m_InBoundsMaterial;
 
         box.AddComponent<CollisionBox>();
+        box.AddComponent<OutOfBounds>();
+        box.GetComponent<OutOfBounds>().m_InBoundsMaterial = m_InBoundsMaterial;
+        box.GetComponent<OutOfBounds>().m_OutOfBoundsMaterial = m_OutOfBoundsMaterial;
+        box.GetComponent<OutOfBounds>().m_IsPlayableArea = false;
     }
 
     public int GetFreeID()

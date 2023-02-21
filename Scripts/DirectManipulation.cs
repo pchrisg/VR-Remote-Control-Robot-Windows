@@ -86,6 +86,8 @@ public class DirectManipulation : MonoBehaviour
 
             if (m_PlanningRobot.isPlanning)
                 m_ROSPublisher.PublishTrajectoryRequest();
+            else
+                m_ROSPublisher.PublishMoveArm();
         }
     }
 }
