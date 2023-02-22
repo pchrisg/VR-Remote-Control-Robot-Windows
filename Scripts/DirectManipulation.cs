@@ -18,8 +18,6 @@ public class DirectManipulation : MonoBehaviour
     
     private bool isInteracting = false;
     private Hand m_InteractingHand = null;
-    private const float m_TimeInterval = 0.5f;
-    private float period = 0.0f;
 
     private void Awake()
     {
@@ -43,12 +41,10 @@ public class DirectManipulation : MonoBehaviour
             {
                 TriggerReleased();
             }
-            else if (!m_PlanningRobot.isPlanning && period > m_TimeInterval)
+            else if (!m_PlanningRobot.isPlanning)
             {
                 m_ROSPublisher.PublishMoveArm();
-                period = 0;
             }
-            period += UnityEngine.Time.deltaTime;
         }
     }
 

@@ -4443,8 +4443,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 896024448}
-  - component: {fileID: 896024447}
   - component: {fileID: 896024449}
+  - component: {fileID: 896024447}
   - component: {fileID: 896024450}
   m_Layer: 0
   m_Name: ROS
@@ -4496,12 +4496,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Manipulator: {fileID: 4216500284383032850}
   m_PlanningRobot: {fileID: 4132567178377732532}
-  m_PlanTrajTopic: chris_plan_trajectory
-  m_ExecPlanTopic: chris_execute_plan
-  m_MoveArmTopic: chris_move_arm
-  m_SdofTranslateTopic: chris_sdof_translate
-  m_AddCollisionObjectTopic: chris_add_collision_object
-  m_RemoveCollisionObjectTopic: chris_remove_collision_object
 --- !u!114 &896024450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4514,9 +4508,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f547a0e058f278d42ad662595a9ce6f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_test: {fileID: 312782237}
+  m_UR5: {fileID: 2936355979154742649}
   m_LightGrey: {fileID: 2100000, guid: 8b4c1a8a3d7a356459d078e6c651f9d0, type: 2}
-  m_OutOfBoundsMaterial: {fileID: 2100000, guid: a3b524b25e34f9549b19c1f44548c3b7, type: 2}
+  m_InCollisionMaterial: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
 --- !u!1 &946804181
 GameObject:
   m_ObjectHideFlags: 0
@@ -5735,15 +5729,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de2ba3348f9359048a83b4fb89a7de1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Touch:
-    actionPath: /actions/default/in/TouchTrackpad
-    needsReinit: 0
-  m_Press:
-    actionPath: /actions/default/in/PressTrackpad
-    needsReinit: 0
-  m_TouchPos:
-    actionPath: /actions/default/in/TouchPosition
-    needsReinit: 0
   radialMenu: {fileID: 3932472410756704519}
 --- !u!4 &1390926849
 Transform:
@@ -7552,6 +7537,8 @@ MonoBehaviour:
   m_IsPlayableArea: 1
   m_InBoundsMaterial: {fileID: 2100000, guid: 45ba0ac336ffceb44ac9bbfcb3907fca, type: 2}
   m_OutOfBoundsMaterial: {fileID: 2100000, guid: a3b524b25e34f9549b19c1f44548c3b7, type: 2}
+  m_CollidingMaterial: {fileID: 0}
+  m_EludingMaterial: {fileID: 0}
 --- !u!1 &1878521732
 GameObject:
   m_ObjectHideFlags: 0
@@ -8259,8 +8246,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e089b2873ae34f42884478f3529615f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_InBoundsMaterial: {fileID: 2100000, guid: b55dc267eb9f2274cb73f27449d27fc1, type: 2}
-  m_OutOfBoundsMaterial: {fileID: 2100000, guid: a3b524b25e34f9549b19c1f44548c3b7, type: 2}
+  m_EludingMaterial: {fileID: 2100000, guid: b55dc267eb9f2274cb73f27449d27fc1, type: 2}
+  m_CollidingMaterial: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
 --- !u!1 &1000009626690779
 GameObject:
   m_ObjectHideFlags: 0
@@ -13280,8 +13267,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_UR5: {fileID: 2936355979154742649}
   m_Manipulator: {fileID: 4216500284383032855}
+  m_SDOFWidget: {fileID: 7659439181079122306}
   m_Mat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
-  m_ROSPublisher: {fileID: 896024449}
   isPlanning: 0
 --- !u!4 &4139384411178969901
 Transform:
@@ -13481,6 +13468,7 @@ MonoBehaviour:
   m_ManipulationMode: {fileID: 621543381}
   m_PlanningRobot: {fileID: 4132567178377732532}
   m_Rails: {fileID: 1009488527}
+  m_Speed: 0.001
 --- !u!114 &4216500284383032854
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13507,7 +13495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ce9c737c53d921498428df95e0cb5e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ToFollow: {fileID: 2936355978882770438}
+  m_EndEffector: {fileID: 2936355978882770438}
 --- !u!54 &4216500284383032856
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -16194,7 +16182,7 @@ GameObject:
   - component: {fileID: 4132567178377732532}
   m_Layer: 0
   m_Name: PlanningRobot
-  m_TagString: robot
+  m_TagString: PlanningRobot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

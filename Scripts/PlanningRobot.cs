@@ -9,10 +9,15 @@ public class PlanningRobot : MonoBehaviour
 {
     [Header("Scene Objects")]
     [SerializeField] private GameObject m_UR5 = null;
-    [SerializeField] private Follow m_Manipulator = null;
+    [SerializeField] private Manipulator m_Manipulator = null;
+    [SerializeField] private SDOFWidget m_SDOFWidget = null;
+
+    [Header("Materials")]
     [SerializeField] private Material m_Mat = null;
-    [SerializeField] private ROSPublisher m_ROSPublisher = null;
-    
+
+
+    private ROSPublisher m_ROSPublisher = null;
+
     private RobotTrajectoryMsg m_Trajectory = null;
 
     private const int k_NumJoints = 6;
@@ -33,6 +38,8 @@ public class PlanningRobot : MonoBehaviour
 
     public void Awake()
     {
+        m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+
         m_PlanRobJoints = new ArticulationBody[k_NumJoints];
         m_UR5Joints = new ArticulationBody[k_NumJoints];
         var linkName = string.Empty;
@@ -68,7 +75,17 @@ public class PlanningRobot : MonoBehaviour
         else
         {
             a = 0.0f;
-            m_Manipulator.ResetPosition();
+
+            if(m_SDOFWidget.isActiveAndEnabled)
+            {
+                m_SDOFWidget.SetManipulatorAsParent();
+                m_Manipulator.ResetPosition();
+                m_SDOFWidget.SetManipulatorAsChild();
+            }
+            else
+                m_Manipulator.ResetPosition();
+
+
             m_Trajectory = null;
             displayPath = false;
         }

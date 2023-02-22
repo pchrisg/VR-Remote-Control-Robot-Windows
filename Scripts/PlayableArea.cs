@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-public class OutOfBounds : MonoBehaviour
+public class PlayableArea : MonoBehaviour
 {
     private Collider m_Manipulator = null;
     public bool m_IsPlayableArea = false;
@@ -11,6 +11,8 @@ public class OutOfBounds : MonoBehaviour
     [Header("Materials")]
     public Material m_InBoundsMaterial = null;
     public Material m_OutOfBoundsMaterial = null;
+    public Material m_CollidingMaterial = null;
+    public Material m_EludingMaterial = null;
 
     private void Awake()
     {
@@ -24,7 +26,7 @@ public class OutOfBounds : MonoBehaviour
         if (other == m_Manipulator)
         {
             if (!m_IsPlayableArea)
-                renderer.material = m_OutOfBoundsMaterial;
+                renderer.material = m_CollidingMaterial;
             else
                 renderer.material = m_InBoundsMaterial;
         }
@@ -36,7 +38,7 @@ public class OutOfBounds : MonoBehaviour
         if (other == m_Manipulator)
         {
             if (!m_IsPlayableArea)
-                renderer.material = m_InBoundsMaterial;
+                renderer.material = m_EludingMaterial;
             else
                 renderer.material = m_OutOfBoundsMaterial;
         }

@@ -2,46 +2,61 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
-using ActionResultUnity = RosMessageTypes.Moveit.MoveGroupActionResultMsg;
+using ActionFeedbackUnity = RosMessageTypes.Moveit.MoveGroupActionFeedbackMsg;
 
 public class ResultSubscriber : MonoBehaviour
 {
-    private string m_StatusTopic = null;
-    private ROSConnection m_Ros = null;
-
     [Header("Scene Object")]
-    [SerializeField] private GameObject m_test = null;
+    [SerializeField] private GameObject m_UR5 = null;
 
     [Header("Materials")]
     [SerializeField] private Material m_LightGrey = null;
-    [SerializeField] private Material m_OutOfBoundsMaterial = null;
+    [SerializeField] private Material m_InCollisionMaterial = null;
+
+    private ROSConnection m_Ros = null;
+    private readonly string m_FeedbackTopic = "/move_group/feedback";
+    
+    private bool isPlanExecuted = true;
+    private readonly string NotExecuted = "No motion plan found. No execution attempted.";
+    private Renderer[] m_Renderers = null;
 
     private void Awake()
     {
-        m_StatusTopic = "/move_group/result";
         m_Ros = ROSConnection.GetOrCreateInstance();
+        m_Renderers = m_UR5.GetComponentsInChildren<Renderer>();
     }
 
     private void Start()
     {
-        m_Ros.Subscribe<ActionResultUnity>(m_StatusTopic, CheckResult);
+        m_Ros.Subscribe<ActionFeedbackUnity>(m_FeedbackTopic, CheckResult);
     }
 
     private void OnDestroy()
     {
-        m_Ros.Unsubscribe(m_StatusTopic);
+        m_Ros.Unsubscribe(m_FeedbackTopic);
     }
 
-    private void CheckResult(ActionResultUnity message)
+    private void CheckResult(ActionFeedbackUnity message)
     {
-        print(message.status.text);
-        if(message.status.text == "No motion plan found. No execution attempted.")
+        if(message.feedback.state == "IDLE")
         {
-            m_test.GetComponent<Renderer>().material = m_OutOfBoundsMaterial;
+            if (message.status.text == NotExecuted && isPlanExecuted)
+            {
+                foreach (Renderer renderer in m_Renderers)
+                    renderer.material = m_InCollisionMaterial;
+
+                isPlanExecuted = false;
+            }
         }
-        else
+        else if (message.feedback.state == "MONITOR")
         {
-            m_test.GetComponent<Renderer>().material = m_LightGrey;
+            if (message.status.text != NotExecuted && !isPlanExecuted)
+            {
+                foreach (Renderer renderer in m_Renderers)
+                    renderer.material = m_LightGrey;
+
+                isPlanExecuted = true;
+            }
         }
     }
 }

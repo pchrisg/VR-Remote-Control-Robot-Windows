@@ -13,11 +13,14 @@ public class RailManipulation : MonoBehaviour
     [SerializeField] private ManipulationMode m_ManipulationMode = null;
     [SerializeField] private PlanningRobot m_PlanningRobot = null;
     [SerializeField] private Rails m_Rails = null;
+    public float m_Speed = 10.0f;
 
     private ROSPublisher m_ROSPublisher = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
+    private SteamVR_Action_Boolean m_Forward = null;
+    private SteamVR_Action_Boolean m_Reverse = null;
 
     private bool isInteracting = false;
     private Hand m_InteractingHand = null;
@@ -33,34 +36,59 @@ public class RailManipulation : MonoBehaviour
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+        m_Forward = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("Forward");
+        m_Reverse = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("Reverse");
+
         m_Trigger.onStateDown += TriggerGrabbed;
+        m_Forward.onStateDown += ForwardPressed;
+        m_Reverse.onStateDown += ReversePressed;
     }
 
     private void OnDestroy()
     {
         m_Trigger.onStateDown -= TriggerGrabbed;
+        m_Forward.onStateDown -= ForwardPressed;
+        m_Reverse.onStateDown -= ReversePressed;
     }
 
     private void Update()
     {
         if (m_ManipulationMode.mode == Mode.DIRECT)
+        {
             m_ActiveRail = 0;
+            isInteracting = false;
+        }
 
         if (isInteracting)
         {
-            if (m_Trigger.GetStateUp(m_InteractingHand.handType))
+            if(m_InteractingHand != null)
             {
-                TriggerReleased();
+                if (m_Trigger.GetStateUp(m_InteractingHand.handType))
+                    Released();
+
+                else
+                {
+                    FollowRail();
+                    if (!m_PlanningRobot.isPlanning)
+                        m_ROSPublisher.PublishMoveArm();
+                }
             }
             else
             {
-                FollowRail();
-                if (!m_PlanningRobot.isPlanning && period > m_TimeInterval)
+                if (m_Forward.GetStateUp(Player.instance.leftHand.handType) || m_Reverse.GetStateUp(Player.instance.leftHand.handType))
+                    Released();
+
+                else
                 {
-                    m_ROSPublisher.PublishConstrainedMovement();
-                    period = 0;
+                    if (m_Forward.GetState(Player.instance.leftHand.handType))
+                        Forward();
+
+                    if (m_Reverse.GetState(Player.instance.leftHand.handType))
+                        Reverse();
+
+                    if (!m_PlanningRobot.isPlanning)
+                        m_ROSPublisher.PublishMoveArm();
                 }
-                period += UnityEngine.Time.deltaTime;
             }
         }
     }
@@ -88,6 +116,52 @@ public class RailManipulation : MonoBehaviour
         }
     }
 
+    private void ForwardPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        isInteracting = true;
+    }
+
+    private void ReversePressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        isInteracting = true;
+    }
+
+    private void Forward()
+    {
+        Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
+        gameObject.transform.position += Vector3.Normalize(rail) * m_Speed;
+
+        Vector3 connectingVector = gameObject.transform.position - m_Rails.rails[m_ActiveRail].start;
+        if(connectingVector.magnitude > rail.magnitude)
+        {
+            gameObject.transform.position = m_Rails.rails[m_ActiveRail].end;
+            if (m_Rails.rails.Length > m_ActiveRail + 1 && period > m_TimeInterval)
+            {
+                m_ActiveRail++;
+                period = 0;
+            }
+            period += UnityEngine.Time.deltaTime;
+        }
+    }
+
+    private void Reverse()
+    {
+        Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
+        gameObject.transform.position -= Vector3.Normalize(rail) * m_Speed;
+
+        Vector3 connectingVector = gameObject.transform.position - m_Rails.rails[m_ActiveRail].start;
+        if (Vector3.Dot(Vector3.Normalize(connectingVector), Vector3.Normalize(rail)) < 0)
+        {
+            gameObject.transform.position = m_Rails.rails[m_ActiveRail].start;
+            if (m_ActiveRail > 0 && period > m_TimeInterval)
+            {
+                m_ActiveRail--;
+                period = 0;
+            }
+            period += UnityEngine.Time.deltaTime;
+        }
+    }
+
     private void FollowRail()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
@@ -99,8 +173,12 @@ public class RailManipulation : MonoBehaviour
         {
             gameObject.transform.position = m_Rails.rails[m_ActiveRail].start;
 
-            if (m_ActiveRail > 0)
+            if (m_ActiveRail > 0 && period > m_TimeInterval)
+            {
                 m_ActiveRail--;
+                period = 0;
+            }
+            period += UnityEngine.Time.deltaTime;
         }
         else
         {
@@ -112,22 +190,29 @@ public class RailManipulation : MonoBehaviour
             {
                 gameObject.transform.position = m_Rails.rails[m_ActiveRail].end;
 
-                if (m_Rails.rails.Length > m_ActiveRail + 1)
+                if (m_Rails.rails.Length > m_ActiveRail + 1 && period > m_TimeInterval)
+                {
                     m_ActiveRail++;
+                    period = 0;
+                }
+                period += UnityEngine.Time.deltaTime;
             }
         }
     }
 
-    private void TriggerReleased()
+    private void Released()
     {
         if (m_ManipulationMode.mode == Mode.RAIL && isInteracting)
         {
             gameObject.transform.SetParent(null);
             m_InteractingHand = null;
             isInteracting = false;
+            period = 0.0f;
 
             if (m_PlanningRobot.isPlanning)
                 m_ROSPublisher.PublishTrajectoryRequest();
+            else
+                m_ROSPublisher.PublishMoveArm();
         }
     }
 }

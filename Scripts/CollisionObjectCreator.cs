@@ -70,13 +70,13 @@ public class CollisionObjectCreator : MonoBehaviour
             //m_NewBox.GetComponent<CapsuleCollider>().isTrigger = true;
 
             m_NewBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_InBoundsMaterial;
+            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_EludingMaterial;
             m_NewBox.GetComponent<BoxCollider>().isTrigger = true;
 
-            m_NewBox.AddComponent<OutOfBounds>();
-            m_NewBox.GetComponent<OutOfBounds>().m_InBoundsMaterial = m_CollisionObjects.m_InBoundsMaterial;
-            m_NewBox.GetComponent<OutOfBounds>().m_OutOfBoundsMaterial = m_CollisionObjects.m_OutOfBoundsMaterial;
-            m_NewBox.GetComponent<OutOfBounds>().m_IsPlayableArea = false;
+            m_NewBox.AddComponent<PlayableArea>();
+            m_NewBox.GetComponent<PlayableArea>().m_EludingMaterial = m_CollisionObjects.m_EludingMaterial;
+            m_NewBox.GetComponent<PlayableArea>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMaterial;
+            m_NewBox.GetComponent<PlayableArea>().m_IsPlayableArea = false;
 
             //m_NewBox.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude/2, 0.0025f);
             //m_NewBox.transform.localScale = connectingVector;

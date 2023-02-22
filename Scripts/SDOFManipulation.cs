@@ -6,10 +6,11 @@ using Valve.VR.InteractionSystem;
 
 public class SDOFManipulation : MonoBehaviour
 {
-    private SteamVR_Action_Boolean m_Trigger = null;
-    private Interactable m_Interactable = null;
     private ROSPublisher m_ROSPublisher = null;
-
+    private PlanningRobot m_PlanningRobot = null;
+    private Interactable m_Interactable = null;
+    private SteamVR_Action_Boolean m_Trigger = null;
+    
     private bool isInteracting = false;
     private bool isTranslating = false;
     private bool isRotating = false;
@@ -18,10 +19,12 @@ public class SDOFManipulation : MonoBehaviour
 
     private Hand m_InteractingHand = null;
     private Vector3 m_PrevHandPos = Vector3.zero;
+    private readonly float m_Threshold = 0.05f;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
         m_Interactable = GetComponent<Interactable>();
 
@@ -38,13 +41,12 @@ public class SDOFManipulation : MonoBehaviour
     {
         if (isInteracting)
         {
-            if (m_Trigger.GetState(m_InteractingHand.handType))
-            {
-                TriggerHeld();
-            }
+            if (m_Trigger.GetStateUp(m_InteractingHand.handType))
+                TriggerReleased();
+            
             else
             {
-                TriggerReleased();
+                TriggerHeld();
             }
         }
     }
@@ -67,11 +69,8 @@ public class SDOFManipulation : MonoBehaviour
         {
             if (m_InteractingHand.IsStillHovering(m_Interactable))
             {
-                if(!isInteracting)
-                {
-                    m_PrevHandPos = m_InteractingHand.objectAttachmentPoint.position;
-                    isInteracting = true;
-                }
+                m_PrevHandPos = m_InteractingHand.objectAttachmentPoint.position;
+                isInteracting = true;
             }
         }
     }
@@ -80,9 +79,9 @@ public class SDOFManipulation : MonoBehaviour
     {
         if(!isTranslating && !isRotating)
         {
-            if (Vector3.Distance(m_PrevHandPos, m_InteractingHand.objectAttachmentPoint.position) >= 0.1f)
+            Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_PrevHandPos;
+            if (connectingVector.magnitude >= m_Threshold)
             {
-                Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_PrevHandPos;
                 Transform handleAxis = gameObject.transform.parent.transform;
 
                 float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, handleAxis.up.normalized)) * 180 / Mathf.PI;
@@ -107,11 +106,24 @@ public class SDOFManipulation : MonoBehaviour
 
         if (isRotating)
             Rotate();
+
+        if (!m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishMoveArm();
+    }
+
+    void Translate()
+    {
+        Transform handleAxis = gameObject.transform.parent.transform;
+        Transform widget = handleAxis.parent.transform;
+
+        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.transform.position - gameObject.transform.position;
+        Vector3 projHandVec = (Vector3.Dot(connectingVector, handleAxis.up) * handleAxis.up);
+
+        widget.transform.position += projHandVec;
     }
 
     void Rotate()
     {
-        Debug.Log("rotate");
         Transform handleAxis = gameObject.transform.parent.transform;
         Transform widget = handleAxis.parent.transform;
         Vector3 connectingVector;
@@ -125,32 +137,16 @@ public class SDOFManipulation : MonoBehaviour
         widget.transform.rotation = Quaternion.FromToRotation(handleAxis.up, direction) * widget.transform.rotation;
     }
 
-    void Translate()
-    {
-        Debug.Log("translate");
-        Transform handleAxis = gameObject.transform.parent.transform;
-        Transform widget = handleAxis.parent.transform;
-
-        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.transform.position - gameObject.transform.position;
-        Vector3 projHandVec = (Vector3.Dot(connectingVector, handleAxis.up) * handleAxis.up);
-
-        widget.transform.position += projHandVec;
-    }
-
     private void TriggerReleased()
     {
-        if(isRotating)
-        {
-            m_ROSPublisher.PublishMoveArm();
-        }
-        if(isTranslating)
-        {
-            m_ROSPublisher.PublishConstrainedMovement();
-        }
-
         m_InteractingHand = null;
         isInteracting = false;
         isTranslating = false;
         isRotating = false;
+
+        if (m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishTrajectoryRequest();
+        else
+            m_ROSPublisher.PublishMoveArm();
     }
 }

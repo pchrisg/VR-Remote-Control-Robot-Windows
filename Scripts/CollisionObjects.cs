@@ -5,9 +5,8 @@ using UnityEngine;
 public class CollisionObjects : MonoBehaviour
 {
     [Header("Materials")]
-    public Material m_InBoundsMaterial = null;
-    public Material m_OutOfBoundsMaterial = null;
-
+    public Material m_EludingMaterial = null;
+    public Material m_CollidingMaterial = null;
 
     private int m_Id = 0;
 
@@ -19,7 +18,7 @@ public class CollisionObjects : MonoBehaviour
 
     private void Start()
     {
-        Invoke("PublishChildren", 1.0f);
+        Invoke("PublishChildren", 0.5f);
     }
 
     private void MakeBase()
@@ -31,13 +30,13 @@ public class CollisionObjects : MonoBehaviour
         box.transform.SetParent(gameObject.transform);
 
         box.GetComponent<BoxCollider>().isTrigger = true;
-        box.GetComponent<Renderer>().material = m_InBoundsMaterial;
+        box.GetComponent<Renderer>().material = m_EludingMaterial;
 
         box.AddComponent<CollisionBox>();
-        box.AddComponent<OutOfBounds>();
-        box.GetComponent<OutOfBounds>().m_InBoundsMaterial = m_InBoundsMaterial;
-        box.GetComponent<OutOfBounds>().m_OutOfBoundsMaterial = m_OutOfBoundsMaterial;
-        box.GetComponent<OutOfBounds>().m_IsPlayableArea = false;
+        box.AddComponent<PlayableArea>();
+        box.GetComponent<PlayableArea>().m_EludingMaterial = m_EludingMaterial;
+        box.GetComponent<PlayableArea>().m_CollidingMaterial = m_CollidingMaterial;
+        box.GetComponent<PlayableArea>().m_IsPlayableArea = false;
     }
 
     public int GetFreeID()

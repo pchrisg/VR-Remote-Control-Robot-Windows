@@ -8,13 +8,16 @@ public class SDOFWidget : MonoBehaviour
 
     public void Show(bool value)
     {
-        if(!value)
-            SetManipulatorAsParent();
- 
         gameObject.SetActive(value);
 
-        if(value)
+        if (value)
             SetManipulatorAsChild();
+
+        if (!value)
+        {
+            SetManipulatorAsParent();
+            m_Manipulator.GetComponent<Manipulator>().ResetPosition();
+        }
     }
 
     public void SetManipulatorAsChild()
@@ -23,7 +26,7 @@ public class SDOFWidget : MonoBehaviour
         m_Manipulator.transform.SetParent(gameObject.transform);
     }
 
-    private void SetManipulatorAsParent()
+    public void SetManipulatorAsParent()
     {
         m_Manipulator.transform.SetParent(null);
         gameObject.transform.SetParent(m_Manipulator.transform);

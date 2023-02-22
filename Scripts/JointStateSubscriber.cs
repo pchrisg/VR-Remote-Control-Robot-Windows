@@ -6,7 +6,14 @@ using Unity.VisualScripting;
 
 public class JointStateSubscriber : MonoBehaviour
 {
-    const int k_NumJoints = 6;
+    [Header("Scene Object")]
+    [SerializeField] private GameObject m_UR5 = null;
+
+    [Header("Joint Angles")]
+    [SerializeField] private float[] m_Angles = null;
+
+    private ArticulationBody[] m_Joints = null;
+    private const int k_NumJoints = 6;
     public static readonly string[] m_LinkNames = { 
         "base_link/base_link_inertia/shoulder_pan_joint", 
         "/shoulder_lift_joint",
@@ -15,15 +22,10 @@ public class JointStateSubscriber : MonoBehaviour
         "/wrist_2_joint",
         "/wrist_3_joint" };
 
-    private string m_JointStates = "/joint_states";
-    private ROSConnection m_Ros;
+    private ROSConnection m_Ros = null;
+    private readonly string m_JointStatesTopic = "/joint_states";
 
-    [SerializeField] private GameObject m_UR5;
-    [SerializeField] private float[] m_Angles;
-
-    private ArticulationBody[] m_Joints;
-    
-    void Start()
+    private void Awake()
     {
         m_Angles = new float[6];
         m_Joints = new ArticulationBody[6];
@@ -36,12 +38,16 @@ public class JointStateSubscriber : MonoBehaviour
         }
 
         m_Ros = ROSConnection.GetOrCreateInstance();
-        m_Ros.Subscribe<SensorUnity>(m_JointStates, GetJointPositions);
+    }
+
+    private void Start()
+    {
+        m_Ros.Subscribe<SensorUnity>(m_JointStatesTopic, GetJointPositions);
     }
     
     public void OnDestroy()
     {
-        m_Ros.Unsubscribe(m_JointStates);
+        m_Ros.Unsubscribe(m_JointStatesTopic);
     }
 
     private void GetJointPositions(SensorUnity sensorMsg)

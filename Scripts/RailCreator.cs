@@ -113,7 +113,6 @@ public class RailCreator : MonoBehaviour
         float CosAngle = Vector3.Dot(Vector3.Normalize(connectingVector), gameObject.transform.up);
         if (Mathf.Abs(CosAngle) < THRESHOLD)
         {
-            //Vector3 index = m_Pivot + connectingVector;
             Vector3 projectedPoint = index - (CosAngle * connectingVector.magnitude) * gameObject.transform.up;
             Vector3 projectedConnectingVector = projectedPoint - m_Pivot;
 
