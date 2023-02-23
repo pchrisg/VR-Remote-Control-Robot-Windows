@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Rails;
 
 
 public class Rails : MonoBehaviour
@@ -48,7 +47,7 @@ public class Rails : MonoBehaviour
     {
         Array.Resize(ref rails, rails.Length + 1);
 
-        Vector3 offset = rail.transform.up * rail.transform.localScale.y;
+        Vector3 offset = rail.transform.up.normalized * rail.transform.localScale.y;
         rails[^1].start = rail.transform.position - offset;
         rails[^1].end = rail.transform.position + offset;
     }

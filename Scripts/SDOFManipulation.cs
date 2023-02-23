@@ -85,7 +85,6 @@ public class SDOFManipulation : MonoBehaviour
                 Transform handleAxis = gameObject.transform.parent.transform;
 
                 float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, handleAxis.up.normalized)) * 180 / Mathf.PI;
-
                 if ((Mathf.Abs(angle - 90.0f) < angle) && (Mathf.Abs(angle - 90.0f) < Mathf.Abs(180.0f - angle)))
                 {
                     angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, handleAxis.right.normalized)) * 180 / Mathf.PI;
@@ -116,8 +115,8 @@ public class SDOFManipulation : MonoBehaviour
         Transform handleAxis = gameObject.transform.parent.transform;
         Transform widget = handleAxis.parent.transform;
 
-        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.transform.position - gameObject.transform.position;
-        Vector3 projHandVec = (Vector3.Dot(connectingVector, handleAxis.up) * handleAxis.up);
+        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - gameObject.transform.position;
+        Vector3 projHandVec = Vector3.Project(connectingVector, handleAxis.up);
 
         widget.transform.position += projHandVec;
     }
@@ -126,12 +125,12 @@ public class SDOFManipulation : MonoBehaviour
     {
         Transform handleAxis = gameObject.transform.parent.transform;
         Transform widget = handleAxis.parent.transform;
-        Vector3 connectingVector;
 
+        Vector3 connectingVector;
         if (handleAxis.GetChild(0) == gameObject.transform)
-            connectingVector = m_InteractingHand.objectAttachmentPoint.transform.position - widget.transform.position;
+            connectingVector = m_InteractingHand.objectAttachmentPoint.position - widget.transform.position;
         else
-            connectingVector = widget.transform.position - m_InteractingHand.objectAttachmentPoint.transform.position;
+            connectingVector = widget.transform.position - m_InteractingHand.objectAttachmentPoint.position;
 
         Vector3 direction = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
         widget.transform.rotation = Quaternion.FromToRotation(handleAxis.up, direction) * widget.transform.rotation;

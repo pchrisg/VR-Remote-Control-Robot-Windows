@@ -6,15 +6,17 @@ using Unity.VisualScripting;
 
 public class JointStateSubscriber : MonoBehaviour
 {
-    [Header("Scene Object")]
-    [SerializeField] private GameObject m_UR5 = null;
-
     [Header("Joint Angles")]
     [SerializeField] private float[] m_Angles = null;
 
+    private GameObject m_UR5 = null;
+    private ROSConnection m_Ros = null;
+    private readonly string m_JointStatesTopic = "/joint_states";
+
     private ArticulationBody[] m_Joints = null;
     private const int k_NumJoints = 6;
-    public static readonly string[] m_LinkNames = { 
+    
+    [HideInInspector] public static readonly string[] m_LinkNames = { 
         "base_link/base_link_inertia/shoulder_pan_joint", 
         "/shoulder_lift_joint",
         "/elbow_joint",
@@ -22,11 +24,10 @@ public class JointStateSubscriber : MonoBehaviour
         "/wrist_2_joint",
         "/wrist_3_joint" };
 
-    private ROSConnection m_Ros = null;
-    private readonly string m_JointStatesTopic = "/joint_states";
-
     private void Awake()
     {
+        m_UR5 = GameObject.FindGameObjectWithTag("robot");
+
         m_Angles = new float[6];
         m_Joints = new ArticulationBody[6];
 

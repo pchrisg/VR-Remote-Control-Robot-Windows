@@ -4,19 +4,19 @@ using UnityEngine;
 using System.Linq;
 using RosMessageTypes.Moveit;
 using System;
+using System.Runtime.CompilerServices;
 
 public class PlanningRobot : MonoBehaviour
 {
     [Header("Scene Objects")]
-    [SerializeField] private GameObject m_UR5 = null;
-    [SerializeField] private Manipulator m_Manipulator = null;
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
 
     [Header("Materials")]
-    [SerializeField] private Material m_Mat = null;
-
+    [SerializeField] private Material m_PlanRobMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
+    private GameObject m_UR5 = null;
+    private Manipulator m_Manipulator = null;
 
     private RobotTrajectoryMsg m_Trajectory = null;
 
@@ -26,19 +26,14 @@ public class PlanningRobot : MonoBehaviour
 
     private bool followUR5 = false;
     private bool displayPath = false;
-    private bool isAtUR5 = false;
-
-    private const float color = 200.0f / 255.0f;
-    private readonly float r = color;
-    private readonly float g = color;
-    private readonly float b = color;
-    private float a = 0.0f;
 
     [HideInInspector] public bool isPlanning = false;
 
     public void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_UR5 = GameObject.FindGameObjectWithTag("robot");
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
 
         m_PlanRobJoints = new ArticulationBody[k_NumJoints];
         m_UR5Joints = new ArticulationBody[k_NumJoints];
@@ -63,16 +58,17 @@ public class PlanningRobot : MonoBehaviour
     {
         if(isPlanning)
         {
-            a = 0.0f;
-            m_Mat.color = new Color(r, g, b, a);
+            m_PlanRobMat.color = new Color(m_PlanRobMat.color.r, m_PlanRobMat.color.g, m_PlanRobMat.color.b, 0.0f);
         }
     }
 
     public void Show()
     {
-        if (isPlanning)
-            a = 100.0f / 255.0f;
-        else
+        isPlanning = !isPlanning;
+        followUR5 = !followUR5;
+
+        float a = 100.0f / 255.0f;
+        if (!isPlanning)
         {
             a = 0.0f;
 
@@ -85,14 +81,11 @@ public class PlanningRobot : MonoBehaviour
             else
                 m_Manipulator.ResetPosition();
 
-
             m_Trajectory = null;
             displayPath = false;
         }
 
-        m_Mat.color = new Color(r, g, b, a);
-
-        followUR5 = !followUR5;
+        m_PlanRobMat.color = new Color(m_PlanRobMat.color.r, m_PlanRobMat.color.g, m_PlanRobMat.color.b, a);
     }
 
     public void GoToUR5()
@@ -126,7 +119,6 @@ public class PlanningRobot : MonoBehaviour
     {
         m_Trajectory = trajectory;
         StopAllCoroutines();
-        displayPath = false;
         StartCoroutine(DisplayPath());
     }
 
@@ -137,12 +129,10 @@ public class PlanningRobot : MonoBehaviour
             displayPath = true;
             while(displayPath)
             {
-                isAtUR5 = false;
                 GoToManipulator();
                 yield return new WaitForSeconds(0.5f);
 
                 GoToUR5();
-                isAtUR5 = true;
                 yield return new WaitForSeconds(0.5f);
             }
         }
@@ -152,8 +142,7 @@ public class PlanningRobot : MonoBehaviour
     {
         if (m_Trajectory != null)
         {
-            if (isAtUR5)
-                GoToManipulator();
+            GoToManipulator();
 
             m_ROSPublisher.PublishExecutePlan(m_Trajectory);
             displayPath = false;

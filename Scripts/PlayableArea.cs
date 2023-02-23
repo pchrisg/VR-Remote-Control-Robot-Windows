@@ -26,7 +26,11 @@ public class PlayableArea : MonoBehaviour
         if (other == m_Manipulator)
         {
             if (!m_IsPlayableArea)
+            {
                 renderer.material = m_CollidingMaterial;
+
+                m_Manipulator.GetComponent<AudioSource>().Play();
+            }
             else
                 renderer.material = m_InBoundsMaterial;
         }

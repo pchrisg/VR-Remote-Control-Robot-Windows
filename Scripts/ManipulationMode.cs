@@ -9,20 +9,22 @@ namespace ManipulationOptions
         DIRECT,
         SDOF,
         RAIL,
-        AABBCREATOR,
-        RAILCREATOR
+        RAILCREATOR,
+        COLOBJCREATOR
     };
 }
 
 public class ManipulationMode : MonoBehaviour
 {
     [Header("Scene Objects")]
-    [SerializeField] private PlanningRobot m_PlanningRobot = null;
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
     [SerializeField] private RailCreator m_RailCreator = null;
-    [SerializeField] private CollisionObjectCreator m_CollisionObjectCreator = null;
+    [SerializeField] private CollisionObjectCreator m_ColObjCreator = null;
 
-    [HideInInspector] public Mode mode = Mode.DIRECT;
+    [Header ("Mode")]
+    public Mode mode = Mode.DIRECT;
+
+    private PlanningRobot m_PlanningRobot = null;
 
     private SteamVR_Action_Boolean m_Trackpad = null;
     private SteamVR_Action_Boolean m_Menu = null;
@@ -30,6 +32,8 @@ public class ManipulationMode : MonoBehaviour
 
     private void Awake()
     {
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+
         m_Menu = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressMenu");
         m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressTrackpad");
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
@@ -50,18 +54,18 @@ public class ManipulationMode : MonoBehaviour
 
     public void TogglePlanner()
     {
-        m_PlanningRobot.isPlanning = !m_PlanningRobot.isPlanning;
         m_PlanningRobot.Show();
     }
 
     public void ToggleWidget()
     {
+        print(mode);
         if(mode == Mode.DIRECT)
         {
-            mode = Mode.SDOF;
             m_SDOFWidget.Show(true);
-            
+            mode = Mode.SDOF;
         }
+
         else if (mode == Mode.SDOF)
         {
             m_SDOFWidget.Show(false);
@@ -76,11 +80,13 @@ public class ManipulationMode : MonoBehaviour
             m_RailCreator.Show(true);
             mode = Mode.RAILCREATOR;
         }
+
         else if (mode == Mode.RAILCREATOR)
         {
             m_RailCreator.Show(false);
             mode = Mode.RAIL;
         }
+
         else if(mode == Mode.RAIL)
         {
             m_RailCreator.Clear();
@@ -92,12 +98,13 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.DIRECT)
         {
-            m_CollisionObjectCreator.Show(true);
-            mode = Mode.AABBCREATOR;
+            m_ColObjCreator.Show(true);
+            mode = Mode.COLOBJCREATOR;
         }
-        else if (mode == Mode.AABBCREATOR)
+
+        else if (mode == Mode.COLOBJCREATOR)
         {
-            m_CollisionObjectCreator.Show(false);
+            m_ColObjCreator.Show(false);
             mode = Mode.DIRECT;
         }
     }

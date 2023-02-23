@@ -12,8 +12,6 @@ public class RadialMenu : MonoBehaviour
     [Header("Scene Objects")]
     [SerializeField] private Transform m_SelectionTransform = null;
     [SerializeField] private Transform m_CursorTransform = null;
-    [SerializeField] private ManipulationMode m_ManipulationMode = null;
-    [SerializeField] private PlanningRobot m_PlanningRobot = null;
     [SerializeField] private SpriteRenderer m_SRPlanRob = null;
     [SerializeField] private SpriteRenderer m_SRActiveMode = null;
 
@@ -26,6 +24,9 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private RadialSection bottom = null;
     [SerializeField] private RadialSection left = null;
 
+    private ManipulationMode m_ManipulationMode = null;
+    private PlanningRobot m_PlanningRobot = null;
+
     private ManipulationOptions.Mode m_MenuMode = ManipulationOptions.Mode.DIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
     private List<RadialSection> m_RadialSections = null;
@@ -36,6 +37,8 @@ public class RadialMenu : MonoBehaviour
 
     private void Awake()
     {
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         CreateAndSetupSections();
     }
 
@@ -90,14 +93,14 @@ public class RadialMenu : MonoBehaviour
             m_MenuMode = ManipulationOptions.Mode.SDOF;
             m_SRActiveMode.sprite = sprites[1];
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.AABBCREATOR)
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.COLOBJCREATOR)
         {
             for (int i = 1; i < 4; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[2].iconRenderer.sprite = sprites[6];
-            m_MenuMode = ManipulationOptions.Mode.AABBCREATOR;
+            m_MenuMode = ManipulationOptions.Mode.COLOBJCREATOR;
             m_SRActiveMode.sprite = sprites[2];
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAILCREATOR)

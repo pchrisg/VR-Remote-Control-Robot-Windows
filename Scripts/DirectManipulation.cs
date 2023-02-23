@@ -7,11 +7,9 @@ using ManipulationOptions;
 
 public class DirectManipulation : MonoBehaviour
 {
-    [Header("Scene Object")]
-    [SerializeField] private ManipulationMode m_ManipulationMode = null;
-    [SerializeField] private PlanningRobot m_PlanningRobot = null;
-
     private ROSPublisher m_ROSPublisher = null;
+    private ManipulationMode m_ManipulationMode = null;
+    private PlanningRobot m_PlanningRobot = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -22,6 +20,8 @@ public class DirectManipulation : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
@@ -38,13 +38,10 @@ public class DirectManipulation : MonoBehaviour
         if (isInteracting)
         {
             if (m_Trigger.GetStateUp(m_InteractingHand.handType))
-            {
                 TriggerReleased();
-            }
+
             else if (!m_PlanningRobot.isPlanning)
-            {
                 m_ROSPublisher.PublishMoveArm();
-            }
         }
     }
 
@@ -62,7 +59,7 @@ public class DirectManipulation : MonoBehaviour
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources hand)
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT && !isInteracting && m_InteractingHand != null)
+        if (m_ManipulationMode.mode == Mode.DIRECT && m_InteractingHand != null && !isInteracting)
         {
             if (m_InteractingHand.IsStillHovering(m_Interactable))
             {

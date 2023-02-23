@@ -4,7 +4,12 @@ using UnityEngine;
 
 public class SDOFWidget : MonoBehaviour
 {
-    [SerializeField] GameObject m_Manipulator = null;
+    private GameObject m_Manipulator = null;
+
+    private void Awake()
+    {
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+    }
 
     public void Show(bool value)
     {

@@ -12,13 +12,6 @@ using RosMessageTypes.Shape;
 
 public class ROSPublisher : MonoBehaviour
 {
-    // ROS Connector
-    private ROSConnection m_Ros = null;
-
-    [Header("Scene Objects")]
-    [SerializeField] private GameObject m_Manipulator = null;
-    [SerializeField] private PlanningRobot m_PlanningRobot = null;
-
     [Header("ROS Topics")]
     [SerializeField] private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
     [SerializeField] private readonly string m_ExecPlanTopic = "chris_execute_plan";
@@ -27,8 +20,16 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
     [SerializeField] private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
 
+    private GameObject m_Manipulator = null;
+    private PlanningRobot m_PlanningRobot = null;
+
+    private ROSConnection m_Ros = null;
+
     private void Awake()
     {
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+
         // Get ROS connection static instance
         m_Ros = ROSConnection.GetOrCreateInstance();
 

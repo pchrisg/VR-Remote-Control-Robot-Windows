@@ -10,18 +10,20 @@ using static Rails;
 
 public class CollisionObjectCreator : MonoBehaviour
 {
-    [Header("Scene Object")]
-    [SerializeField] private ManipulationMode m_ManipulationMode;
-
+    private ManipulationMode m_ManipulationMode;
     private CollisionObjects m_CollisionObjects = null;
+
     private SteamVR_Action_Boolean m_Grip = null;
     private SteamVR_Action_Boolean m_Trigger = null;
+
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
+
     private GameObject m_NewBox = null;
 
     private void Awake()
     {
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_CollisionObjects = gameObject.transform.parent.GetComponent<CollisionObjects>();
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
@@ -44,7 +46,7 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private void Update()
     {
-        if(m_ManipulationMode.mode == Mode.AABBCREATOR)
+        if(m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
             if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
             {

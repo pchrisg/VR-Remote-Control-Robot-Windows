@@ -8,31 +8,35 @@ using ManipulationOptions;
 
 public class RailCreator : MonoBehaviour
 {
-    [Header("Scene Object")]
-    [SerializeField] private GameObject m_Manipulator = null;
-    [SerializeField] private ManipulationMode m_ManipulationMode = null;
-
     [Header("Prefab")]
     [SerializeField] private GameObject m_RailPrefab = null;
 
+    private GameObject m_Manipulator = null;
+    private ManipulationMode m_ManipulationMode = null;
     private Rails m_Rails = null;
 
     private GameObject m_Rail = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
     private SteamVR_Action_Boolean m_Trigger = null;
+
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
     private Hand m_InteractingHand = null;
+
     private Vector3 m_Pivot = Vector3.zero;
-    private const float THRESHOLD = 0.05f;
+    private readonly float m_Threshold = 5.0f;
 
     private void Awake()
     {
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
+
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
         m_Trigger.onStateDown += SetRail;
+
         m_LeftHand = Player.instance.leftHand;
         m_RightHand = Player.instance.rightHand;
     }
@@ -65,10 +69,11 @@ public class RailCreator : MonoBehaviour
             }
             else
             {
-                if (!m_Grip.GetState(m_InteractingHand.handType))
-                    m_InteractingHand = null;
-                else
+                if (m_Grip.GetState(m_InteractingHand.handType))
                     MakeRail();
+
+                else
+                    m_InteractingHand = null;
             }
         }
     }
@@ -80,20 +85,19 @@ public class RailCreator : MonoBehaviour
 
     private void MakeRail()
     {
-        Transform index = m_InteractingHand.skeleton.indexTip;
+        Transform indexFinger = m_InteractingHand.skeleton.indexTip;
 
         if(m_Pivot == Vector3.zero)
         {
             Transform lastChild = m_Rails.GetLastChild();
 
-            if (lastChild.position == gameObject.GetComponentInParent<Transform>().position)
+            if (lastChild.position == gameObject.transform.parent.position)
                 m_Pivot = m_Manipulator.transform.position;
             else
-                m_Pivot = lastChild.position + (lastChild.up * lastChild.localScale.y);
+                m_Pivot = lastChild.position + (lastChild.up.normalized * lastChild.localScale.y);
         }
 
-        Vector3 connectingVector = index.position - m_Pivot;
-        float distance = Vector3.Distance(m_Pivot, index.position);
+        Vector3 connectingVector = indexFinger.position - m_Pivot;
 
         if (m_Rail == null)
         {
@@ -101,31 +105,25 @@ public class RailCreator : MonoBehaviour
             m_Rail.transform.SetParent(gameObject.transform.parent);
         }
 
-        m_Rail.transform.position = m_Pivot + connectingVector / 2.0f;
-        m_Rail.transform.rotation = Quaternion.FromToRotation(Vector3.up, connectingVector);
-        m_Rail.transform.localScale = new Vector3(0.0025f, distance/2, 0.0025f);
+        m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
+        m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
 
-        Snapping(connectingVector, index.position);
+        Snapping(connectingVector);
     }
 
-    private void Snapping(Vector3 connectingVector, Vector3 index)
+    private void Snapping(Vector3 connectingVector)
     {
-        float CosAngle = Vector3.Dot(Vector3.Normalize(connectingVector), gameObject.transform.up);
-        if (Mathf.Abs(CosAngle) < THRESHOLD)
+        float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * 180 / Mathf.PI;
+        if (Mathf.Abs(90.0f - angle) < m_Threshold)
         {
-            Vector3 projectedPoint = index - (CosAngle * connectingVector.magnitude) * gameObject.transform.up;
-            Vector3 projectedConnectingVector = projectedPoint - m_Pivot;
-
-            m_Rail.transform.position = m_Pivot + projectedConnectingVector / 2.0f;
-            m_Rail.transform.rotation = Quaternion.FromToRotation(Vector3.up, projectedConnectingVector);
+            Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);
+            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
         }
 
-        if (1 - Mathf.Abs(CosAngle) < THRESHOLD)
+        if (angle < m_Threshold || Mathf.Abs(180.0f - angle) < m_Threshold)
         {
-            Vector3 projectedConnectingVector = (CosAngle * connectingVector.magnitude) * gameObject.transform.up;
-
-            m_Rail.transform.position = m_Pivot + projectedConnectingVector / 2.0f;
-            m_Rail.transform.rotation = Quaternion.FromToRotation(Vector3.up, projectedConnectingVector);
+            Vector3 projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
+            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
         }
     }
 
@@ -142,7 +140,6 @@ public class RailCreator : MonoBehaviour
             }
             else if (m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
             {
-                print("inside");
                 GameObject lastChild = m_Rails.GetLastChild().gameObject;
                 Destroy(lastChild);
                 m_Rails.RemoveLastRail();

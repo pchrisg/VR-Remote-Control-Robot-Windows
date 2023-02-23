@@ -6,13 +6,11 @@ using ActionFeedbackUnity = RosMessageTypes.Moveit.MoveGroupActionFeedbackMsg;
 
 public class ResultSubscriber : MonoBehaviour
 {
-    [Header("Scene Object")]
-    [SerializeField] private GameObject m_UR5 = null;
-
     [Header("Materials")]
-    [SerializeField] private Material m_LightGrey = null;
-    [SerializeField] private Material m_InCollisionMaterial = null;
+    [SerializeField] private Material m_LightGreyMat = null;
+    [SerializeField] private Material m_CollisionMat = null;
 
+    private GameObject m_UR5 = null;
     private ROSConnection m_Ros = null;
     private readonly string m_FeedbackTopic = "/move_group/feedback";
     
@@ -22,6 +20,7 @@ public class ResultSubscriber : MonoBehaviour
 
     private void Awake()
     {
+        m_UR5 = GameObject.FindGameObjectWithTag("robot");
         m_Ros = ROSConnection.GetOrCreateInstance();
         m_Renderers = m_UR5.GetComponentsInChildren<Renderer>();
     }
@@ -43,8 +42,9 @@ public class ResultSubscriber : MonoBehaviour
             if (message.status.text == NotExecuted && isPlanExecuted)
             {
                 foreach (Renderer renderer in m_Renderers)
-                    renderer.material = m_InCollisionMaterial;
+                    renderer.material = m_CollisionMat;
 
+                m_UR5.GetComponent<AudioSource>().Play();
                 isPlanExecuted = false;
             }
         }
@@ -53,7 +53,7 @@ public class ResultSubscriber : MonoBehaviour
             if (message.status.text != NotExecuted && !isPlanExecuted)
             {
                 foreach (Renderer renderer in m_Renderers)
-                    renderer.material = m_LightGrey;
+                    renderer.material = m_LightGreyMat;
 
                 isPlanExecuted = true;
             }
