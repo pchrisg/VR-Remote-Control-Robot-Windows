@@ -76,7 +76,7 @@ public class RadialMenu : MonoBehaviour
     {
         if(m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
         {
-            for(int i = 1; i < 4; i++)
+            for(int i = 0; i < 4; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = sprites[i];
             }
@@ -95,7 +95,7 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.COLOBJCREATOR)
         {
-            for (int i = 1; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
@@ -105,7 +105,7 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAILCREATOR)
         {
-            for (int i = 1; i < 4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
@@ -115,6 +115,7 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAIL)
         {
+            m_RadialSections[0].iconRenderer.sprite = sprites[0];
             m_RadialSections[3].iconRenderer.sprite = sprites[8];
             m_MenuMode = ManipulationOptions.Mode.RAIL;
             m_SRActiveMode.sprite = sprites[7];

@@ -28,10 +28,10 @@ public class CollisionObjects : MonoBehaviour
         box.transform.position = new Vector3(0.0f, -0.05f, 0);
         box.transform.localScale = new Vector3(1.0f, 0.1f, 1.0f);
         box.transform.SetParent(gameObject.transform);
-
-        box.GetComponent<BoxCollider>().isTrigger = true;
         box.GetComponent<Renderer>().material = m_EludingMaterial;
 
+        box.AddComponent<Rigidbody>();
+        box.GetComponent<Rigidbody>().isKinematic = true;
         box.AddComponent<CollisionBox>();
         box.AddComponent<PlayableArea>();
         box.GetComponent<PlayableArea>().m_EludingMaterial = m_EludingMaterial;

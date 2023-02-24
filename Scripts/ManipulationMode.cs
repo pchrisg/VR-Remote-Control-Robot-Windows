@@ -54,12 +54,12 @@ public class ManipulationMode : MonoBehaviour
 
     public void TogglePlanner()
     {
-        m_PlanningRobot.Show();
+        if(mode != Mode.COLOBJCREATOR && mode != Mode.RAILCREATOR)
+            m_PlanningRobot.Show();
     }
 
     public void ToggleWidget()
     {
-        print(mode);
         if(mode == Mode.DIRECT)
         {
             m_SDOFWidget.Show(true);
@@ -77,6 +77,9 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.DIRECT)
         {
+            if (m_PlanningRobot.isPlanning)
+                m_PlanningRobot.Show();
+
             m_RailCreator.Show(true);
             mode = Mode.RAILCREATOR;
         }
@@ -98,6 +101,9 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.DIRECT)
         {
+            if (m_PlanningRobot.isPlanning)
+                m_PlanningRobot.Show();
+
             m_ColObjCreator.Show(true);
             mode = Mode.COLOBJCREATOR;
         }

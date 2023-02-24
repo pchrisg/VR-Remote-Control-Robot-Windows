@@ -489,7 +489,7 @@ ArticulationBody:
   m_AngularDamping: 0.05
   m_JointFriction: 0.05
   m_Immovable: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &162701528
 MonoBehaviour:
@@ -1121,7 +1121,7 @@ ArticulationBody:
   m_AngularDamping: 0
   m_JointFriction: 0
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &328812479
 MonoBehaviour:
@@ -1258,7 +1258,7 @@ ArticulationBody:
   m_AngularDamping: 0
   m_JointFriction: 0
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &343243984
 MonoBehaviour:
@@ -3465,7 +3465,7 @@ ArticulationBody:
   m_AngularDamping: 0
   m_JointFriction: 0
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &576059320
 MonoBehaviour:
@@ -4255,7 +4255,7 @@ MeshCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 798887186}
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
   m_Convex: 1
@@ -4720,7 +4720,7 @@ ArticulationBody:
   m_AngularDamping: 0
   m_JointFriction: 0
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &996846843
 MonoBehaviour:
@@ -5058,7 +5058,7 @@ ArticulationBody:
   m_AngularDamping: 0.05
   m_JointFriction: 0.05
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &1160697168
 MonoBehaviour:
@@ -5362,6 +5362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db3391a151a67ed47b934646d803b2a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_KillFinger: 
 --- !u!1 &1274424757
 GameObject:
   m_ObjectHideFlags: 0
@@ -5484,7 +5485,7 @@ ArticulationBody:
   m_AngularDamping: 0
   m_JointFriction: 0
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &1274424762
 MonoBehaviour:
@@ -5954,7 +5955,7 @@ ArticulationBody:
   m_AngularDamping: 0.05
   m_JointFriction: 0.05
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &1465457685
 MonoBehaviour:
@@ -7625,7 +7626,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5620b96a5defe04daaad4016150c260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_ColObjCreator: {fileID: 0}
   m_IsPlayableArea: 1
+  m_isDeleteAble: 0
+  m_RightIndex: {fileID: 0}
+  m_LeftIndex: {fileID: 0}
   m_InBoundsMaterial: {fileID: 2100000, guid: 45ba0ac336ffceb44ac9bbfcb3907fca, type: 2}
   m_OutOfBoundsMaterial: {fileID: 2100000, guid: a3b524b25e34f9549b19c1f44548c3b7, type: 2}
   m_CollidingMaterial: {fileID: 0}
@@ -7913,7 +7918,7 @@ ArticulationBody:
   m_AngularDamping: 0.05
   m_JointFriction: 0.05
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &1936042737
 MonoBehaviour:
@@ -11721,7 +11726,7 @@ ArticulationBody:
   m_AngularDamping: 0
   m_JointFriction: 0
   m_Immovable: 0
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_CollisionDetectionMode: 0
 --- !u!114 &2936355978882770442
 MonoBehaviour:
@@ -13568,7 +13573,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4216500284383032851}
-  - component: {fileID: 4216500284383032856}
   - component: {fileID: 4216500284383032855}
   - component: {fileID: 1885634701}
   - component: {fileID: 4216500284383032854}
@@ -13637,22 +13641,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_EndEffector: {fileID: 2936355978882770438}
---- !u!54 &4216500284383032856
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4216500284383032850}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!114 &4216500284525423840
 MonoBehaviour:
   m_ObjectHideFlags: 0

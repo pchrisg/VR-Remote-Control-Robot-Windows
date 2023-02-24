@@ -1,16 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
-using static UnityEngine.ParticleSystem;
-using static Rails;
+using System;
 
 public class CollisionObjectCreator : MonoBehaviour
 {
-    private ManipulationMode m_ManipulationMode;
+    private ManipulationMode m_ManipulationMode = null;
     private CollisionObjects m_CollisionObjects = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
@@ -20,6 +16,8 @@ public class CollisionObjectCreator : MonoBehaviour
     private Hand m_LeftHand = null;
 
     private GameObject m_NewBox = null;
+
+    [HideInInspector] public string m_KillFinger = String.Empty;
 
     private void Awake()
     {
@@ -48,9 +46,24 @@ public class CollisionObjectCreator : MonoBehaviour
     {
         if(m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
-            if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
+            if (m_NewBox != null )
             {
-                MakeCollisionBox();
+                if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
+                    ScaleCollisionBox();
+
+                else if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
+                    RotateCollisionBox();
+            }
+            else
+            {
+                if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
+                    MakeCollisionBox();
+
+                else if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
+                    DeleteCollisionBox();
+
+                else
+                    m_KillFinger = String.Empty;
             }
         }
     }
@@ -62,57 +75,54 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private void MakeCollisionBox()
     {
-        Transform rightIndex = m_RightHand.skeleton.indexTip;
-        Transform leftIndex = m_LeftHand.skeleton.indexTip;
-        Vector3 connectingVector = rightIndex.position - leftIndex.position;
+        m_NewBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_EludingMaterial;
 
-        if (m_NewBox == null)
+        m_NewBox.AddComponent<Rigidbody>();
+        m_NewBox.GetComponent<Rigidbody>().isKinematic = true;
+        m_NewBox.AddComponent<PlayableArea>();
+        m_NewBox.GetComponent<PlayableArea>().m_EludingMaterial = m_CollisionObjects.m_EludingMaterial;
+        m_NewBox.GetComponent<PlayableArea>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMaterial;
+        m_NewBox.GetComponent<PlayableArea>().m_IsPlayableArea = false;
+        m_NewBox.GetComponent<PlayableArea>().m_isDeleteAble = true;
+        m_NewBox.GetComponent<PlayableArea>().m_ColObjCreator = gameObject.GetComponent<CollisionObjectCreator>();
+
+        ScaleCollisionBox();
+    }
+
+    private void ScaleCollisionBox()
+    {
+        Vector3 rightIndex = m_RightHand.skeleton.indexTip.position;
+        Vector3 leftIndex = m_LeftHand.skeleton.indexTip.position;
+        Vector3 connectingVector = rightIndex - leftIndex;
+        Vector3 midPoint = leftIndex + connectingVector * 0.5f;
+
+        connectingVector = Quaternion.FromToRotation(m_NewBox.transform.right, Vector3.right) * connectingVector;
+        m_NewBox.transform.position = midPoint;
+        m_NewBox.transform.localScale = new Vector3(connectingVector.x, connectingVector.y, connectingVector.z);
+    }
+
+    private void RotateCollisionBox()
+    {
+        if(m_Grip.GetState(m_RightHand.handType))
         {
-            //m_NewBox = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            //m_NewBox.GetComponent<CapsuleCollider>().isTrigger = true;
+            Transform rightIndex = m_RightHand.skeleton.indexTip.transform;
+            Vector3 connectingVector = rightIndex.position - m_NewBox.transform.position;
+            Vector3 rightBackEdge = m_NewBox.transform.position + m_NewBox.transform.localScale * 0.5f - new Vector3(0, m_NewBox.transform.localScale.y * 0.5f, 0);
+            Vector3 centerToRightBackEdge = rightBackEdge - m_NewBox.transform.position;
 
-            m_NewBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_EludingMaterial;
-            m_NewBox.GetComponent<BoxCollider>().isTrigger = true;
-
-            m_NewBox.AddComponent<PlayableArea>();
-            m_NewBox.GetComponent<PlayableArea>().m_EludingMaterial = m_CollisionObjects.m_EludingMaterial;
-            m_NewBox.GetComponent<PlayableArea>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMaterial;
-            m_NewBox.GetComponent<PlayableArea>().m_IsPlayableArea = false;
-
-            //m_NewBox.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude/2, 0.0025f);
-            //m_NewBox.transform.localScale = connectingVector;
+            m_NewBox.transform.rotation = Quaternion.FromToRotation(centerToRightBackEdge, Vector3.ProjectOnPlane(connectingVector, Vector3.up));
         }
+        else
+        {
+            Transform leftIndex = m_LeftHand.skeleton.indexTip.transform;
+            Vector3 connectingVector = leftIndex.position - m_NewBox.transform.position;
+            Vector3 leftfrontEdge = m_NewBox.transform.position - m_NewBox.transform.localScale * 0.5f + new Vector3(0, m_NewBox.transform.localScale.y * 0.5f, 0);
 
-        ////////
-        float a = connectingVector.magnitude/2;
+            Vector3 centerToLeftFrontEdge = leftfrontEdge - m_NewBox.transform.position;
 
-        m_NewBox.transform.localScale = new Vector3(a,a,0.02f);
-        ////////
-        /*float CosAngle = Vector3.Dot(Vector3.Normalize(connectingVector), Vector3.forward);
-        Vector3 projectedPoint = rightIndex.position - (CosAngle * connectingVector.magnitude) * Vector3.forward;
-        Vector3 projectedConnectingVector = projectedPoint - leftIndex.position;
-
-        float x = Mathf.Abs(projectedConnectingVector.x);
-        float y = Mathf.Abs(projectedConnectingVector.y);
-        float z = Mathf.Sqrt(Mathf.Pow(connectingVector.magnitude,2) - Mathf.Pow(x, 2) - Mathf.Pow(y, 2));
-
-        m_NewBox.transform.localScale = new Vector3(x, y, z);*/
-        ////////
-        //m_NewBox.transform.rotation = Quaternion.FromToRotation(Vector3.up, connectingVector);
-        /*m_NewBox.transform.rotation = Quaternion.FromToRotation(Vector3.up, connectingVector);
-        m_NewBox.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude/2, 0.0025f);
-        float dot = Vector3.Dot(Vector3.Normalize(connectingVector), Vector3.right);
-        float arcos = Mathf.Acos(dot);
-        float ang = Mathf.Rad2Deg * arcos;
-        print(dot + " " + arcos + " " + ang);
-        m_NewBox.transform.rotation = Quaternion.AngleAxis(ang, Vector3.up) * m_NewBox.transform.rotation;*/
-        ////////
-        ///
-        Vector3 direction = Vector3.Cross(Vector3.Normalize(connectingVector), Vector3.up);
-
-        m_NewBox.transform.position = leftIndex.position + connectingVector / 2.0f;
-        m_NewBox.transform.rotation = m_NewBox.transform.rotation * Quaternion.FromToRotation(m_NewBox.transform.forward, direction);
+            m_NewBox.transform.rotation = Quaternion.FromToRotation(centerToLeftFrontEdge, Vector3.ProjectOnPlane(connectingVector, Vector3.up));
+        }
     }
 
     private void SetCollisionBox(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
@@ -124,11 +134,13 @@ public class CollisionObjectCreator : MonoBehaviour
             m_NewBox.GetComponent<CollisionBox>().PublishCollisionBox(m_CollisionObjects.GetFreeID().ToString());
             m_NewBox = null;
         }
-        /*else if (m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
-        {
-            print("inside");
-            GameObject lastChild = m_Rails.GetLastChild().gameObject;
-            Destroy(lastChild);
-        }*/
+    }
+
+    private void DeleteCollisionBox()
+    {
+        if(m_Grip.GetState(m_RightHand.handType))
+            m_KillFinger = "right";
+        else
+            m_KillFinger = "left";
     }
 }
