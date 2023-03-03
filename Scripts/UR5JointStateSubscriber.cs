@@ -4,7 +4,7 @@ using Unity.Robotics.ROSTCPConnector;
 using SensorUnity = RosMessageTypes.Sensor.JointStateMsg;
 using Unity.VisualScripting;
 
-public class JointStateSubscriber : MonoBehaviour
+public class UR5JointStateSubscriber : MonoBehaviour
 {
     [Header("Joint Angles")]
     [SerializeField] private float[] m_Angles = null;

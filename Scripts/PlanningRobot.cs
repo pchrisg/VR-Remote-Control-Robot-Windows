@@ -40,7 +40,7 @@ public class PlanningRobot : MonoBehaviour
         var linkName = string.Empty;
         for (var joint = 0; joint < k_NumJoints; joint++)
         {
-            linkName += JointStateSubscriber.m_LinkNames[joint];
+            linkName += UR5JointStateSubscriber.m_LinkNames[joint];
             m_PlanRobJoints[joint] = gameObject.transform.Find(linkName).GetComponent<ArticulationBody>();
             m_UR5Joints[joint] = m_UR5.transform.Find(linkName).GetComponent<ArticulationBody>();
         }

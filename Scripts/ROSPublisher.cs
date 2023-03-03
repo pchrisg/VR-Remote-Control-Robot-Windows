@@ -1,17 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System;
 using Unity.Robotics.ROSTCPConnector;
 using Unity.Robotics.ROSTCPConnector.ROSGeometry;
-using RosMessageTypes.Std;
 using RosMessageTypes.Geometry;
 using RosMessageTypes.Moveit;
 using RosMessageTypes.ChrisUr5Moveit;
-using RosMessageTypes.Shape;
+using RosMessageTypes.Robotiq3fGripperArticulated;
 
 public class ROSPublisher : MonoBehaviour
 {
+    public bool m_Gazebo = false;
+
     [Header("ROS Topics")]
     [SerializeField] private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
     [SerializeField] private readonly string m_ExecPlanTopic = "chris_execute_plan";
@@ -19,6 +17,7 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private readonly string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
     [SerializeField] private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
+    [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
     private GameObject m_Manipulator = null;
     private PlanningRobot m_PlanningRobot = null;
@@ -27,6 +26,11 @@ public class ROSPublisher : MonoBehaviour
 
     private void Awake()
     {
+        if (m_Gazebo)
+            m_RoboticSqueezeTopic = "left_hand/command";
+        else
+            m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
+
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
@@ -40,6 +44,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
+        m_Ros.RegisterPublisher<Robotiq3FGripperRobotOutputMsg>(m_RoboticSqueezeTopic);
     }
 
     public void OnDestroy()
@@ -115,5 +120,10 @@ public class ROSPublisher : MonoBehaviour
     public void PublishRemoveCollisionObject(CollisionObjectMsg collisionObject)
     {
         m_Ros.Publish(m_RemoveCollisionObjectTopic, collisionObject);
+    }
+
+    public void PublishRobotiqSqueeze(Robotiq3FGripperRobotOutputMsg outputMessage)
+    {
+        m_Ros.Publish(m_RoboticSqueezeTopic, outputMessage);
     }
 }
