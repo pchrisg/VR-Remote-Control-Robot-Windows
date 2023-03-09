@@ -8,7 +8,7 @@ public class SDOFWidget : MonoBehaviour
 
     private void Awake()
     {
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+        m_Manipulator = GameObject.FindGameObjectWithTag("EndEffector");
     }
 
     public void Show(bool value)

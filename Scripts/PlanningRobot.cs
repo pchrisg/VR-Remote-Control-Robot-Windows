@@ -33,14 +33,14 @@ public class PlanningRobot : MonoBehaviour
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Manipulator>();
 
         m_PlanRobJoints = new ArticulationBody[k_NumJoints];
         m_UR5Joints = new ArticulationBody[k_NumJoints];
         var linkName = string.Empty;
         for (var joint = 0; joint < k_NumJoints; joint++)
         {
-            linkName += UR5JointStateSubscriber.m_LinkNames[joint];
+            linkName += JointStateSubscriber.m_UR5LinkNames[joint];
             m_PlanRobJoints[joint] = gameObject.transform.Find(linkName).GetComponent<ArticulationBody>();
             m_UR5Joints[joint] = m_UR5.transform.Find(linkName).GetComponent<ArticulationBody>();
         }

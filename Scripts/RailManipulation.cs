@@ -8,7 +8,7 @@ using ManipulationOptions;
 
 public class RailManipulation : MonoBehaviour
 {
-    public float m_Speed = 0.001f;
+    public float m_Speed = 0.005f;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
@@ -137,10 +137,19 @@ public class RailManipulation : MonoBehaviour
         if(connectingVector.magnitude > rail.magnitude)
         {
             gameObject.transform.position = m_Rails.rails[m_ActiveRail].end;
-            if (m_Rails.rails.Length > m_ActiveRail + 1 && period > m_TimeInterval)
+
+            if (m_ActiveRail < m_Rails.rails.Length - 1 && period > m_TimeInterval)
             {
                 m_ActiveRail++;
                 period = 0;
+            }
+            else if (m_ActiveRail == m_Rails.rails.Length - 1)
+            {
+                if (m_Rails.rails[0].start == m_Rails.rails[^1].end && period > m_TimeInterval)
+                {
+                    m_ActiveRail = 0;
+                    period = 0;
+                }
             }
             period += UnityEngine.Time.deltaTime;
         }
@@ -155,10 +164,19 @@ public class RailManipulation : MonoBehaviour
         if (Vector3.Dot(connectingVector.normalized, rail.normalized) < 0)
         {
             gameObject.transform.position = m_Rails.rails[m_ActiveRail].start;
+
             if (m_ActiveRail > 0 && period > m_TimeInterval)
             {
                 m_ActiveRail--;
                 period = 0;
+            }
+            else if (m_ActiveRail == 0)
+            {
+                if (m_Rails.rails[0].start == m_Rails.rails[^1].end && period > m_TimeInterval)
+                {
+                    m_ActiveRail = m_Rails.rails.Length - 1;
+                    period = 0;
+                }
             }
             period += UnityEngine.Time.deltaTime;
         }
@@ -179,6 +197,14 @@ public class RailManipulation : MonoBehaviour
                 m_ActiveRail--;
                 period = 0;
             }
+            else if (m_ActiveRail == 0)
+            {
+                if (m_Rails.rails[0].start == m_Rails.rails[^1].end && period > m_TimeInterval)
+                {
+                    m_ActiveRail = m_Rails.rails.Length - 1;
+                    period = 0;
+                }
+            }
             period += UnityEngine.Time.deltaTime;
         }
         else
@@ -191,10 +217,18 @@ public class RailManipulation : MonoBehaviour
             {
                 gameObject.transform.position = m_Rails.rails[m_ActiveRail].end;
 
-                if (m_Rails.rails.Length > m_ActiveRail + 1 && period > m_TimeInterval)
+                if (m_ActiveRail < m_Rails.rails.Length - 1 && period > m_TimeInterval)
                 {
                     m_ActiveRail++;
                     period = 0;
+                }
+                else if (m_ActiveRail == m_Rails.rails.Length - 1)
+                {
+                    if (m_Rails.rails[0].start == m_Rails.rails[^1].end && period > m_TimeInterval)
+                    {
+                        m_ActiveRail = 0;
+                        period = 0;
+                    }
                 }
                 period += UnityEngine.Time.deltaTime;
             }

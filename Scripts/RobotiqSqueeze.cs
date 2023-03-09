@@ -14,9 +14,6 @@ public class RobotiqSqueeze : MonoBehaviour
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
 
-    private const float m_TimeInterval = 0.5f;
-    private float period = 0.0f;
-
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
@@ -31,23 +28,15 @@ public class RobotiqSqueeze : MonoBehaviour
     private void Update()
     {
         if(m_Trigger.GetState(m_LeftHand.handType))
-        {
             SqueezeHand();
-            
-        }
     }
 
     private void SqueezeHand()
     {
-        if (period > m_TimeInterval)
-        {
             Robotiq3FGripperRobotOutputMsg outputMessage = new Robotiq3FGripperRobotOutputMsg();
             outputMessage.rACT = 1;
             outputMessage.rPRA = (byte)(m_Squeeze.GetAxis(m_RightHand.handType) * 255);
 
             m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
-            period = 0;
-        }
-        period += UnityEngine.Time.deltaTime;
     }
 }

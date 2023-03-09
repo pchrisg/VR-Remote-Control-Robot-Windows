@@ -11,6 +11,9 @@ public class RailCreator : MonoBehaviour
     [Header("Prefab")]
     [SerializeField] private GameObject m_RailPrefab = null;
 
+    [Header("Material")]
+    [SerializeField] private Material m_RailMat;
+
     private GameObject m_Manipulator = null;
     private ManipulationMode m_ManipulationMode = null;
     private Rails m_Rails = null;
@@ -108,22 +111,35 @@ public class RailCreator : MonoBehaviour
         m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
         m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
 
-        Snapping(connectingVector);
+        Snapping(indexFinger, connectingVector);
     }
 
-    private void Snapping(Vector3 connectingVector)
+    private void Snapping(Transform indexFinger, Vector3 connectingVector)
     {
+        m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
+        m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * 180 / Mathf.PI;
         if (Mathf.Abs(90.0f - angle) < m_Threshold)
         {
             Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
+            m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 0.0f, 255.0f);
         }
 
         if (angle < m_Threshold || Mathf.Abs(180.0f - angle) < m_Threshold)
         {
             Vector3 projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
+            m_Rail.GetComponent<Renderer>().material.color = new Color(0.0f, 255.0f, 0.0f);
+        }
+
+        if (m_Rails.rails.Length > 1 && (indexFinger.position - m_Rails.rails[0].start).magnitude < m_Threshold * 0.01)
+        {
+            Vector3 projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
+            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
+            m_Rail.transform.localScale = new Vector3(0.0025f, projectedConnectingVector.magnitude * 0.5f, 0.0025f);
+            m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 255.0f, 0.0f);
+            m_RailMat.color = new Color(255.0f, 255.0f, 0.0f);
         }
     }
 
@@ -133,8 +149,10 @@ public class RailCreator : MonoBehaviour
         {
             if (m_Rail != null)
             {
+                m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
                 m_Rails.AddRail(m_Rail);
 
+                m_Rail.GetComponent<Renderer>().material = m_RailMat;
                 m_Rail = null;
                 m_Pivot = Vector3.zero;
             }

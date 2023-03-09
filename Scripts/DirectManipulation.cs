@@ -17,6 +17,10 @@ public class DirectManipulation : MonoBehaviour
     private bool isInteracting = false;
     private Hand m_InteractingHand = null;
 
+    private Vector3 m_PrevHandPos = Vector3.zero;
+    private Quaternion m_InitRot;
+    private Quaternion m_InitHandRot = Quaternion.identity;
+
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
@@ -37,6 +41,9 @@ public class DirectManipulation : MonoBehaviour
     {
         if (isInteracting)
         {
+            //if (m_Trigger.GetState(m_InteractingHand.handType))
+            //    MoveManipulator();
+
             if (m_Trigger.GetStateUp(m_InteractingHand.handType))
                 TriggerReleased();
 
@@ -65,8 +72,23 @@ public class DirectManipulation : MonoBehaviour
             {
                 gameObject.transform.SetParent(m_InteractingHand.transform);
                 isInteracting = true;
+
+                //m_PrevHandPos = m_InteractingHand.objectAttachmentPoint.position;
+                //m_InitRot = gameObject.transform.rotation;
+                //m_InitHandRot = m_InteractingHand.objectAttachmentPoint.rotation;
             }
         }
+    }
+
+    private void MoveManipulator()
+    {
+        Vector3 deltaTranslation = m_InteractingHand.objectAttachmentPoint.position - m_PrevHandPos;
+        Quaternion deltaRotation = m_InteractingHand.objectAttachmentPoint.rotation * Quaternion.Inverse(m_InitHandRot);
+
+        gameObject.transform.position += deltaTranslation;
+        gameObject.transform.rotation = deltaRotation * m_InitHandRot;
+
+        m_PrevHandPos = m_InteractingHand.objectAttachmentPoint.position;
     }
 
     private void TriggerReleased()
