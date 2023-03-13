@@ -10,7 +10,7 @@ public class PlayableArea : MonoBehaviour
     public Material m_CollidingMaterial = null;
     public Material m_EludingMaterial = null;
 
-    private Collider m_Manipulator = null;
+    private Collider[] m_EndEffector = null;
     private Collider[] m_UR5 = null;
     public bool m_IsPlayableArea = false;
     [HideInInspector] public bool m_isDeleteAble = false;
@@ -24,7 +24,7 @@ public class PlayableArea : MonoBehaviour
 
     private void Awake()
     {
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponentInChildren<Collider>();
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform.Find("palm").GetComponentsInChildren<Collider>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
     }
 
@@ -45,10 +45,16 @@ public class PlayableArea : MonoBehaviour
 
         bool change = false;
 
-        if (other == m_Manipulator)
-            change = true;
+        foreach (var collider in m_EndEffector)
+        {
+            if (other == collider)
+            {
+                change = true;
+                break;
+            }
+        }
 
-        else
+        if(!change)
         {
             foreach (Collider collider in m_UR5)
             {
@@ -65,8 +71,7 @@ public class PlayableArea : MonoBehaviour
             if (!m_IsPlayableArea)
             {
                 renderer.material = m_CollidingMaterial;
-
-                m_Manipulator.GetComponent<AudioSource>().Play();
+                m_EndEffector[0].GetComponent<AudioSource>().Play();
             }
             else
                 renderer.material = m_InBoundsMaterial;
@@ -82,7 +87,7 @@ public class PlayableArea : MonoBehaviour
         }
     }
 
-    private void OnTriggerStay(Collider other)
+    /*private void OnTriggerStay(Collider other)
     {
         Renderer renderer = gameObject.GetComponent<Renderer>();
         if (!m_IsPlayableArea && renderer.material != m_CollidingMaterial)
@@ -110,7 +115,7 @@ public class PlayableArea : MonoBehaviour
                     renderer.material = m_CollidingMaterial;
             }
         }
-    }
+    }*/
 
     private void OnTriggerExit(Collider other)
     {
@@ -118,10 +123,16 @@ public class PlayableArea : MonoBehaviour
 
         bool change = false;
 
-        if (other == m_Manipulator)
-            change = true;
+        foreach (var collider in m_EndEffector)
+        {
+            if (other == collider)
+            {
+                change = true;
+                break;
+            }
+        }
 
-        else
+        if(!change)
         {
             foreach (Collider collider in m_UR5)
             {
@@ -138,7 +149,10 @@ public class PlayableArea : MonoBehaviour
             if (!m_IsPlayableArea)
                 renderer.material = m_EludingMaterial;
             else
+            {
                 renderer.material = m_OutOfBoundsMaterial;
+                m_EndEffector[0].GetComponent<AudioSource>().Play();
+            }
         }
     }
 }

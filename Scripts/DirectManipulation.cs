@@ -4,6 +4,8 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
+using UnityEngine.UIElements;
+using static UnityEngine.ParticleSystem;
 
 public class DirectManipulation : MonoBehaviour
 {
@@ -16,10 +18,11 @@ public class DirectManipulation : MonoBehaviour
     
     private bool isInteracting = false;
     private Hand m_InteractingHand = null;
+    private Hand m_OtherHand = null;
+    private GameObject m_GhostObject = null;
 
-    private Vector3 m_PrevHandPos = Vector3.zero;
-    private Quaternion m_InitRot;
-    private Quaternion m_InitHandRot = Quaternion.identity;
+    private readonly float m_Threshold = 10.0f;
+    private readonly float m_ScaleFactor = 0.25f;
 
     private void Awake()
     {
@@ -41,8 +44,8 @@ public class DirectManipulation : MonoBehaviour
     {
         if (isInteracting)
         {
-            //if (m_Trigger.GetState(m_InteractingHand.handType))
-            //    MoveManipulator();
+            if (m_Trigger.GetState(m_InteractingHand.handType))
+                MoveManipulator();
 
             if (m_Trigger.GetStateUp(m_InteractingHand.handType))
                 TriggerReleased();
@@ -70,33 +73,62 @@ public class DirectManipulation : MonoBehaviour
         {
             if (m_InteractingHand.IsStillHovering(m_Interactable))
             {
-                gameObject.transform.SetParent(m_InteractingHand.transform);
+                m_GhostObject = new GameObject("GhostObject");
+                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
+                m_GhostObject.transform.SetParent(m_InteractingHand.transform);
                 isInteracting = true;
 
-                //m_PrevHandPos = m_InteractingHand.objectAttachmentPoint.position;
-                //m_InitRot = gameObject.transform.rotation;
-                //m_InitHandRot = m_InteractingHand.objectAttachmentPoint.rotation;
+                if (m_InteractingHand != Player.instance.rightHand)
+                    m_OtherHand = Player.instance.rightHand;
+                else
+                    m_OtherHand = Player.instance.leftHand;
             }
         }
     }
 
     private void MoveManipulator()
     {
-        Vector3 deltaTranslation = m_InteractingHand.objectAttachmentPoint.position - m_PrevHandPos;
-        Quaternion deltaRotation = m_InteractingHand.objectAttachmentPoint.rotation * Quaternion.Inverse(m_InitHandRot);
+        if(m_OtherHand != null && m_Trigger.GetState(m_OtherHand.handType))
+        {
+            Vector3 connectingVector = m_GhostObject.transform.position - gameObject.transform.position;
+            Vector3 position = gameObject.transform.position + connectingVector * m_ScaleFactor;
+            gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
+        }
+        else
+        {
+            Quaternion rotation = Snapping();
+            gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, rotation);
 
-        gameObject.transform.position += deltaTranslation;
-        gameObject.transform.rotation = deltaRotation * m_InitHandRot;
+        }
+    }
 
-        m_PrevHandPos = m_InteractingHand.objectAttachmentPoint.position;
+    private Quaternion Snapping()
+    {
+        float angle = Mathf.Acos(Vector3.Dot(-m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * 180 / Mathf.PI;
+        if (Mathf.Abs(90.0f - angle) < m_Threshold)
+        {
+            Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(-m_GhostObject.transform.right.normalized, Vector3.up);
+            Quaternion rotation = Quaternion.FromToRotation(-m_GhostObject.transform.right.normalized, projectedConnectingVector);
+            return m_GhostObject.transform.rotation * rotation;
+        }
+
+        if (angle < m_Threshold || Mathf.Abs(180.0f - angle) < m_Threshold)
+        {
+            Vector3 projectedConnectingVector = Vector3.Project(-m_GhostObject.transform.right.normalized, Vector3.up);
+            Quaternion rotation = Quaternion.FromToRotation(-m_GhostObject.transform.right.normalized, projectedConnectingVector);
+            return m_GhostObject.transform.rotation * rotation;
+        }
+
+        return m_GhostObject.transform.rotation;
     }
 
     private void TriggerReleased()
     {
         if (m_ManipulationMode.mode == Mode.DIRECT && isInteracting)
         {
-            gameObject.transform.SetParent(null);
+            GameObject.Destroy(m_GhostObject);
             m_InteractingHand = null;
+            m_OtherHand = null;
             isInteracting = false;
 
             if (m_PlanningRobot.isPlanning)

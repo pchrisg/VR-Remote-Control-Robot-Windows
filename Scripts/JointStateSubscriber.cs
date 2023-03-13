@@ -13,6 +13,7 @@ public class JointStateSubscriber : MonoBehaviour
     [Header("Robots")]
     [SerializeField] private GameObject m_UR5 = null;
     [SerializeField] private GameObject m_Robotiq = null;
+    private GameObject m_EndEffector = null;
 
     private ROSConnection m_Ros = null;
     private readonly string m_JointStatesTopic = "/joint_states";
@@ -22,6 +23,7 @@ public class JointStateSubscriber : MonoBehaviour
     
     private const int k_RobotiqNumJoints = 11;
     private ArticulationBody[] m_RobotiqJoints = null;
+    private ArticulationBody[] m_EndEffectorJoints = null;
 
     [HideInInspector] public static readonly string[] m_UR5LinkNames = { 
         "base_link/base_link_inertia/shoulder_pan_joint", 
@@ -48,6 +50,9 @@ public class JointStateSubscriber : MonoBehaviour
 
     private void Awake()
     {
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
+        if (m_EndEffector != null)
+
         m_UR5Angles = new float[6];
         m_UR5Joints = new ArticulationBody[6];
 
@@ -61,6 +66,7 @@ public class JointStateSubscriber : MonoBehaviour
 
         m_RobotiqAngles = new float[11];
         m_RobotiqJoints = new ArticulationBody[11];
+        m_EndEffectorJoints = new ArticulationBody[11];
 
         for (var i = 1; i < k_RobotiqNumJoints; i += 4)
         {
@@ -69,6 +75,7 @@ public class JointStateSubscriber : MonoBehaviour
             {
                 linkname += m_RobotiqLinkNames[j];
                 m_RobotiqJoints[j - 1] = m_Robotiq.transform.Find(linkname).GetComponent<ArticulationBody>();
+                m_EndEffectorJoints[j - 1] = m_EndEffector.transform.Find(linkname).GetComponent<ArticulationBody>();
             }
         }
 
@@ -96,10 +103,10 @@ public class JointStateSubscriber : MonoBehaviour
         {
             for (int i = 0; i < 3; i++)
             {
-                var joint1XDrive = m_UR5Joints[2 - i].xDrive;
+                var jointXDrive = m_UR5Joints[2 - i].xDrive;
                 m_UR5Angles[2 - i] = (float)(message.position[i]) * Mathf.Rad2Deg;
-                joint1XDrive.target = m_UR5Angles[2 - i];
-                m_UR5Joints[2 - i].xDrive = joint1XDrive;
+                jointXDrive.target = m_UR5Angles[2 - i];
+                m_UR5Joints[2 - i].xDrive = jointXDrive;
             }
             for (var i = 3; i < k_UR5NumJoints; i++)
             {
@@ -113,10 +120,11 @@ public class JointStateSubscriber : MonoBehaviour
         {
             for (var i = 0; i < k_RobotiqNumJoints; i++)
             {
-                var joint1XDrive = m_RobotiqJoints[i].xDrive;
+                var jointXDrive = m_RobotiqJoints[i].xDrive;
                 m_RobotiqAngles[i] = (float)(message.position[i]) * Mathf.Rad2Deg;
-                joint1XDrive.target = m_RobotiqAngles[i];
-                m_RobotiqJoints[i].xDrive = joint1XDrive;
+                jointXDrive.target = m_RobotiqAngles[i];
+                m_RobotiqJoints[i].xDrive = jointXDrive;
+                m_EndEffectorJoints[i].xDrive = m_RobotiqJoints[i].xDrive;
             }
         }
 

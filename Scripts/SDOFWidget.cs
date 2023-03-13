@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class SDOFWidget : MonoBehaviour
 {
-    private GameObject m_Manipulator = null;
+    private GameObject m_EndEffector = null;
 
     private void Awake()
     {
-        m_Manipulator = GameObject.FindGameObjectWithTag("EndEffector");
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
     }
 
     public void Show(bool value)
@@ -16,24 +16,24 @@ public class SDOFWidget : MonoBehaviour
         gameObject.SetActive(value);
 
         if (value)
-            SetManipulatorAsChild();
+            SetEndEffectorAsChild();
 
         if (!value)
         {
-            SetManipulatorAsParent();
-            m_Manipulator.GetComponent<Manipulator>().ResetPosition();
+            SetEndEffectorAsParent();
+            m_EndEffector.GetComponent<EndEffector>().ResetPosition();
         }
     }
 
-    public void SetManipulatorAsChild()
+    public void SetEndEffectorAsChild()
     {
         gameObject.transform.SetParent(null);
-        m_Manipulator.transform.SetParent(gameObject.transform);
+        m_EndEffector.transform.SetParent(gameObject.transform);
     }
 
-    public void SetManipulatorAsParent()
+    public void SetEndEffectorAsParent()
     {
-        m_Manipulator.transform.SetParent(null);
-        gameObject.transform.SetParent(m_Manipulator.transform);
+        m_EndEffector.transform.SetParent(null);
+        gameObject.transform.SetParent(m_EndEffector.transform);
     }
 }

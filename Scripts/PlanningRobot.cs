@@ -16,7 +16,7 @@ public class PlanningRobot : MonoBehaviour
 
     private ROSPublisher m_ROSPublisher = null;
     private GameObject m_UR5 = null;
-    private Manipulator m_Manipulator = null;
+    private EndEffector m_EndEffector = null;
 
     private RobotTrajectoryMsg m_Trajectory = null;
 
@@ -33,7 +33,7 @@ public class PlanningRobot : MonoBehaviour
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
-        m_Manipulator = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Manipulator>();
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
 
         m_PlanRobJoints = new ArticulationBody[k_NumJoints];
         m_UR5Joints = new ArticulationBody[k_NumJoints];
@@ -74,12 +74,12 @@ public class PlanningRobot : MonoBehaviour
 
             if(m_SDOFWidget.isActiveAndEnabled)
             {
-                m_SDOFWidget.SetManipulatorAsParent();
-                m_Manipulator.ResetPosition();
-                m_SDOFWidget.SetManipulatorAsChild();
+                m_SDOFWidget.SetEndEffectorAsParent();
+                m_EndEffector.ResetPosition();
+                m_SDOFWidget.SetEndEffectorAsChild();
             }
             else
-                m_Manipulator.ResetPosition();
+                m_EndEffector.ResetPosition();
 
             m_Trajectory = null;
             displayPath = false;
