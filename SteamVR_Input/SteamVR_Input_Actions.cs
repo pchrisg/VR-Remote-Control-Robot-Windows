@@ -21,17 +21,11 @@ namespace Valve.VR
         
         private static SteamVR_Action_Boolean p_default_Teleport;
         
-        private static SteamVR_Action_Boolean p_default_GrabPinch;
-        
-        private static SteamVR_Action_Boolean p_default_GrabGrip;
-        
         private static SteamVR_Action_Pose p_default_Pose;
         
         private static SteamVR_Action_Skeleton p_default_SkeletonLeftHand;
         
         private static SteamVR_Action_Skeleton p_default_SkeletonRightHand;
-        
-        private static SteamVR_Action_Single p_default_Squeeze;
         
         private static SteamVR_Action_Boolean p_default_HeadsetOnHead;
         
@@ -67,6 +61,24 @@ namespace Valve.VR
         
         private static SteamVR_Action_Pose p_mixedreality_ExternalCamera;
         
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_GrabGrip;
+        
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_GrabTrigger;
+        
+        private static SteamVR_Action_Single p_chris_ur5_3f_gripper_SqueezeTrigger;
+        
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_TouchTrackpad;
+        
+        private static SteamVR_Action_Vector2 p_chris_ur5_3f_gripper_TouchPosition;
+        
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_PressTrackpad;
+        
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_PressEast;
+        
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_PressWest;
+        
+        private static SteamVR_Action_Boolean p_chris_ur5_3f_gripper_Press_Menu;
+        
         public static SteamVR_Action_Boolean default_InteractUI
         {
             get
@@ -80,22 +92,6 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.p_default_Teleport.GetCopy<SteamVR_Action_Boolean>();
-            }
-        }
-        
-        public static SteamVR_Action_Boolean default_GrabPinch
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_GrabPinch.GetCopy<SteamVR_Action_Boolean>();
-            }
-        }
-        
-        public static SteamVR_Action_Boolean default_GrabGrip
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_GrabGrip.GetCopy<SteamVR_Action_Boolean>();
             }
         }
         
@@ -120,14 +116,6 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.p_default_SkeletonRightHand.GetCopy<SteamVR_Action_Skeleton>();
-            }
-        }
-        
-        public static SteamVR_Action_Single default_Squeeze
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_Squeeze.GetCopy<SteamVR_Action_Single>();
             }
         }
         
@@ -267,17 +255,86 @@ namespace Valve.VR
             }
         }
         
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_GrabGrip
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_GrabGrip.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_GrabTrigger
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_GrabTrigger.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
+        public static SteamVR_Action_Single chris_ur5_3f_gripper_SqueezeTrigger
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_SqueezeTrigger.GetCopy<SteamVR_Action_Single>();
+            }
+        }
+        
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_TouchTrackpad
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_TouchTrackpad.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
+        public static SteamVR_Action_Vector2 chris_ur5_3f_gripper_TouchPosition
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_TouchPosition.GetCopy<SteamVR_Action_Vector2>();
+            }
+        }
+        
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_PressTrackpad
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_PressTrackpad.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_PressEast
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_PressEast.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_PressWest
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_PressWest.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
+        public static SteamVR_Action_Boolean chris_ur5_3f_gripper_Press_Menu
+        {
+            get
+            {
+                return SteamVR_Actions.p_chris_ur5_3f_gripper_Press_Menu.GetCopy<SteamVR_Action_Boolean>();
+            }
+        }
+        
         private static void InitializeActionArrays()
         {
             Valve.VR.SteamVR_Input.actions = new Valve.VR.SteamVR_Action[] {
                     SteamVR_Actions.default_InteractUI,
                     SteamVR_Actions.default_Teleport,
-                    SteamVR_Actions.default_GrabPinch,
-                    SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_Pose,
                     SteamVR_Actions.default_SkeletonLeftHand,
                     SteamVR_Actions.default_SkeletonRightHand,
-                    SteamVR_Actions.default_Squeeze,
                     SteamVR_Actions.default_HeadsetOnHead,
                     SteamVR_Actions.default_SnapTurnLeft,
                     SteamVR_Actions.default_SnapTurnRight,
@@ -294,16 +351,22 @@ namespace Valve.VR
                     SteamVR_Actions.buggy_Throttle,
                     SteamVR_Actions.buggy_Brake,
                     SteamVR_Actions.buggy_Reset,
-                    SteamVR_Actions.mixedreality_ExternalCamera};
+                    SteamVR_Actions.mixedreality_ExternalCamera,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabGrip,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_SqueezeTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchPosition,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressEast,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressWest,
+                    SteamVR_Actions.chris_ur5_3f_gripper_Press_Menu};
             Valve.VR.SteamVR_Input.actionsIn = new Valve.VR.ISteamVR_Action_In[] {
                     SteamVR_Actions.default_InteractUI,
                     SteamVR_Actions.default_Teleport,
-                    SteamVR_Actions.default_GrabPinch,
-                    SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_Pose,
                     SteamVR_Actions.default_SkeletonLeftHand,
                     SteamVR_Actions.default_SkeletonRightHand,
-                    SteamVR_Actions.default_Squeeze,
                     SteamVR_Actions.default_HeadsetOnHead,
                     SteamVR_Actions.default_SnapTurnLeft,
                     SteamVR_Actions.default_SnapTurnRight,
@@ -319,7 +382,16 @@ namespace Valve.VR
                     SteamVR_Actions.buggy_Throttle,
                     SteamVR_Actions.buggy_Brake,
                     SteamVR_Actions.buggy_Reset,
-                    SteamVR_Actions.mixedreality_ExternalCamera};
+                    SteamVR_Actions.mixedreality_ExternalCamera,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabGrip,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_SqueezeTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchPosition,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressEast,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressWest,
+                    SteamVR_Actions.chris_ur5_3f_gripper_Press_Menu};
             Valve.VR.SteamVR_Input.actionsOut = new Valve.VR.ISteamVR_Action_Out[] {
                     SteamVR_Actions.default_Haptic};
             Valve.VR.SteamVR_Input.actionsVibration = new Valve.VR.SteamVR_Action_Vibration[] {
@@ -330,8 +402,6 @@ namespace Valve.VR
             Valve.VR.SteamVR_Input.actionsBoolean = new Valve.VR.SteamVR_Action_Boolean[] {
                     SteamVR_Actions.default_InteractUI,
                     SteamVR_Actions.default_Teleport,
-                    SteamVR_Actions.default_GrabPinch,
-                    SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_HeadsetOnHead,
                     SteamVR_Actions.default_SnapTurnLeft,
                     SteamVR_Actions.default_SnapTurnRight,
@@ -342,14 +412,22 @@ namespace Valve.VR
                     SteamVR_Actions.default_Reverse,
                     SteamVR_Actions.platformer_Jump,
                     SteamVR_Actions.buggy_Brake,
-                    SteamVR_Actions.buggy_Reset};
+                    SteamVR_Actions.buggy_Reset,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabGrip,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressEast,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressWest,
+                    SteamVR_Actions.chris_ur5_3f_gripper_Press_Menu};
             Valve.VR.SteamVR_Input.actionsSingle = new Valve.VR.SteamVR_Action_Single[] {
-                    SteamVR_Actions.default_Squeeze,
-                    SteamVR_Actions.buggy_Throttle};
+                    SteamVR_Actions.buggy_Throttle,
+                    SteamVR_Actions.chris_ur5_3f_gripper_SqueezeTrigger};
             Valve.VR.SteamVR_Input.actionsVector2 = new Valve.VR.SteamVR_Action_Vector2[] {
                     SteamVR_Actions.default_TouchPosition,
                     SteamVR_Actions.platformer_Move,
-                    SteamVR_Actions.buggy_Steering};
+                    SteamVR_Actions.buggy_Steering,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchPosition};
             Valve.VR.SteamVR_Input.actionsVector3 = new Valve.VR.SteamVR_Action_Vector3[0];
             Valve.VR.SteamVR_Input.actionsSkeleton = new Valve.VR.SteamVR_Action_Skeleton[] {
                     SteamVR_Actions.default_SkeletonLeftHand,
@@ -357,9 +435,6 @@ namespace Valve.VR
             Valve.VR.SteamVR_Input.actionsNonPoseNonSkeletonIn = new Valve.VR.ISteamVR_Action_In[] {
                     SteamVR_Actions.default_InteractUI,
                     SteamVR_Actions.default_Teleport,
-                    SteamVR_Actions.default_GrabPinch,
-                    SteamVR_Actions.default_GrabGrip,
-                    SteamVR_Actions.default_Squeeze,
                     SteamVR_Actions.default_HeadsetOnHead,
                     SteamVR_Actions.default_SnapTurnLeft,
                     SteamVR_Actions.default_SnapTurnRight,
@@ -374,19 +449,25 @@ namespace Valve.VR
                     SteamVR_Actions.buggy_Steering,
                     SteamVR_Actions.buggy_Throttle,
                     SteamVR_Actions.buggy_Brake,
-                    SteamVR_Actions.buggy_Reset};
+                    SteamVR_Actions.buggy_Reset,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabGrip,
+                    SteamVR_Actions.chris_ur5_3f_gripper_GrabTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_SqueezeTrigger,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_TouchPosition,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressTrackpad,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressEast,
+                    SteamVR_Actions.chris_ur5_3f_gripper_PressWest,
+                    SteamVR_Actions.chris_ur5_3f_gripper_Press_Menu};
         }
         
         private static void PreInitActions()
         {
             SteamVR_Actions.p_default_InteractUI = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/InteractUI")));
             SteamVR_Actions.p_default_Teleport = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/Teleport")));
-            SteamVR_Actions.p_default_GrabPinch = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/GrabPinch")));
-            SteamVR_Actions.p_default_GrabGrip = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/GrabGrip")));
             SteamVR_Actions.p_default_Pose = ((SteamVR_Action_Pose)(SteamVR_Action.Create<SteamVR_Action_Pose>("/actions/default/in/Pose")));
             SteamVR_Actions.p_default_SkeletonLeftHand = ((SteamVR_Action_Skeleton)(SteamVR_Action.Create<SteamVR_Action_Skeleton>("/actions/default/in/SkeletonLeftHand")));
             SteamVR_Actions.p_default_SkeletonRightHand = ((SteamVR_Action_Skeleton)(SteamVR_Action.Create<SteamVR_Action_Skeleton>("/actions/default/in/SkeletonRightHand")));
-            SteamVR_Actions.p_default_Squeeze = ((SteamVR_Action_Single)(SteamVR_Action.Create<SteamVR_Action_Single>("/actions/default/in/Squeeze")));
             SteamVR_Actions.p_default_HeadsetOnHead = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/HeadsetOnHead")));
             SteamVR_Actions.p_default_SnapTurnLeft = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/SnapTurnLeft")));
             SteamVR_Actions.p_default_SnapTurnRight = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/SnapTurnRight")));
@@ -404,6 +485,15 @@ namespace Valve.VR
             SteamVR_Actions.p_buggy_Brake = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/buggy/in/Brake")));
             SteamVR_Actions.p_buggy_Reset = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/buggy/in/Reset")));
             SteamVR_Actions.p_mixedreality_ExternalCamera = ((SteamVR_Action_Pose)(SteamVR_Action.Create<SteamVR_Action_Pose>("/actions/mixedreality/in/ExternalCamera")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_GrabGrip = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/GrabGrip")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_GrabTrigger = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/GrabTrigger")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_SqueezeTrigger = ((SteamVR_Action_Single)(SteamVR_Action.Create<SteamVR_Action_Single>("/actions/chris_ur5_3f_gripper/in/SqueezeTrigger")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_TouchTrackpad = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/TouchTrackpad")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_TouchPosition = ((SteamVR_Action_Vector2)(SteamVR_Action.Create<SteamVR_Action_Vector2>("/actions/chris_ur5_3f_gripper/in/TouchPosition")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_PressTrackpad = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/PressTrackpad")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_PressEast = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/PressEast")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_PressWest = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/PressWest")));
+            SteamVR_Actions.p_chris_ur5_3f_gripper_Press_Menu = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/chris_ur5_3f_gripper/in/Press Menu")));
         }
     }
 }

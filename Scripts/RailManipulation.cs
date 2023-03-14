@@ -1,15 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
+using UnityEngine.UIElements;
 
 public class RailManipulation : MonoBehaviour
 {
-    public float m_Speed = 0.005f;
-
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
@@ -24,9 +20,15 @@ public class RailManipulation : MonoBehaviour
     private bool isInteracting = false;
 
     private Hand m_InteractingHand = null;
+    private Hand m_OtherHand = null;
+
+    private Vector3 m_InitPos = Vector3.zero;
 
     private const float m_TimeInterval = 0.5f;
     private float period = 0.0f;
+
+    public readonly float m_Speed = 0.005f;
+    private readonly float m_ScalingFactor = 0.25f;
 
     private void Awake()
     {
@@ -36,61 +38,57 @@ public class RailManipulation : MonoBehaviour
         m_Rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
 
         m_Interactable = GetComponent<Interactable>();
-        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
-        m_Forward = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("Forward");
-        m_Reverse = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("Reverse");
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
+        m_Forward = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressEast");
+        m_Reverse = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressWest");
 
-        m_Trigger.onStateDown += TriggerGrabbed;
         m_Forward.onStateDown += ForwardPressed;
         m_Reverse.onStateDown += ReversePressed;
     }
 
     private void OnDestroy()
     {
-        m_Trigger.onStateDown -= TriggerGrabbed;
         m_Forward.onStateDown -= ForwardPressed;
         m_Reverse.onStateDown -= ReversePressed;
     }
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if(m_ManipulationMode.mode == Mode.RAIL)
         {
-            m_ActiveRail = 0;
-            isInteracting = false;
-        }
+            if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
+                TriggerGrabbed();
 
-        if (isInteracting)
-        {
-            if(m_InteractingHand != null)
+            if (isInteracting)
             {
-                if (m_Trigger.GetState(m_InteractingHand.handType))
+                if (m_InteractingHand != null)
                 {
-                    FollowRail();
-                    if (!m_PlanningRobot.isPlanning)
-                        m_ROSPublisher.PublishMoveArm();
+                    if (m_Trigger.GetStateUp(m_InteractingHand.handType) || m_Trigger.GetStateUp(m_OtherHand.handType))
+                        Released();
+
+                    else
+                    {
+                        if (m_Trigger.GetStateDown(m_OtherHand.handType))
+                            m_InitPos = gameObject.transform.position;
+
+                        if (m_Trigger.GetState(m_InteractingHand.handType))
+                            FollowRail();
+                    }
                 }
 
                 else
-                    Released();
-            }
-
-            else
-            {
-                if (m_Forward.GetState(Player.instance.leftHand.handType) || m_Reverse.GetState(Player.instance.leftHand.handType))
                 {
-                    if (m_Forward.GetState(Player.instance.leftHand.handType))
+                    SteamVR_Input_Sources leftHand = Player.instance.leftHand.handType;
+
+                    if (m_Forward.GetState(leftHand))
                         Forward();
 
-                    if (m_Reverse.GetState(Player.instance.leftHand.handType))
+                    else if (m_Reverse.GetState(leftHand))
                         Reverse();
 
-                    if (!m_PlanningRobot.isPlanning)
-                        m_ROSPublisher.PublishMoveArm();
+                    else
+                        Released();
                 }
-
-                else
-                    Released();
             }
         }
     }
@@ -101,42 +99,113 @@ public class RailManipulation : MonoBehaviour
             m_InteractingHand = hand;
     }
 
-    private void HandHoverUpdate(Hand hand)
+    private void TriggerGrabbed()
     {
-        if (!isInteracting)
-            m_InteractingHand = hand;
-    }
-
-    private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources hand)
-    {
-        if (m_ManipulationMode.mode == Mode.RAIL && m_InteractingHand != null && !isInteracting)
+        if (m_InteractingHand.IsStillHovering(m_Interactable))
         {
-            if (m_InteractingHand.IsStillHovering(m_Interactable))
-            {
-                isInteracting = true;
-            }
+            m_InitPos = gameObject.transform.position;
+            isInteracting = true;
+
+            if (m_InteractingHand != Player.instance.rightHand)
+                m_OtherHand = Player.instance.rightHand;
+            else
+                m_OtherHand = Player.instance.leftHand;
         }
     }
 
     private void ForwardPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        isInteracting = true;
+        if (m_ManipulationMode.mode == Mode.RAIL)
+            isInteracting = true;
     }
 
     private void ReversePressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        isInteracting = true;
+        if (m_ManipulationMode.mode == Mode.RAIL)
+            isInteracting = true;
+    }
+
+    private void FollowRail()
+    {
+        Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
+        Vector3 connectingVectorToStart = m_InteractingHand.objectAttachmentPoint.position - m_Rails.rails[m_ActiveRail].start;
+        Vector3 connectingVectorToEnd = m_InteractingHand.objectAttachmentPoint.position - m_Rails.rails[m_ActiveRail].end;
+        bool startVectorBigger = connectingVectorToStart.magnitude > connectingVectorToEnd.magnitude ? true : false;
+
+        Vector3 connectingVector = startVectorBigger ? connectingVectorToStart : connectingVectorToEnd;
+        Vector3 projectedConnectingVector = Vector3.Project(connectingVector, rail);
+
+        if (m_OtherHand != null && m_Trigger.GetState(m_OtherHand.handType))
+        {
+            Vector3 scaledVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
+            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, rail) * m_ScalingFactor;
+
+
+            projectedConnectingVector = startVectorBigger ?
+                scaledPos - m_Rails.rails[m_ActiveRail].start :
+                scaledPos - m_Rails.rails[m_ActiveRail].end;
+        }
+
+        Vector3 position = Vector3.zero;
+        if (projectedConnectingVector.magnitude < rail.magnitude)
+            position = startVectorBigger ?
+                m_Rails.rails[m_ActiveRail].start + projectedConnectingVector :
+                m_Rails.rails[m_ActiveRail].end + projectedConnectingVector;
+        else
+        {
+            if(startVectorBigger)
+            {
+                m_InitPos = m_Rails.rails[m_ActiveRail].end;
+                position = m_Rails.rails[m_ActiveRail].end;
+
+                if(period > m_TimeInterval)
+                {
+                    if (m_ActiveRail < m_Rails.rails.Length - 1)
+                        m_ActiveRail++;
+
+                    else if (m_Rails.rails[0].start == m_Rails.rails[^1].end)
+                        m_ActiveRail = 0;
+
+                    period = 0;
+                }
+                period += UnityEngine.Time.deltaTime;
+            }
+            else
+            {
+                m_InitPos = m_Rails.rails[m_ActiveRail].start;
+                position = m_Rails.rails[m_ActiveRail].start;
+
+                if (period > m_TimeInterval)
+                {
+                    if (m_ActiveRail > 0)
+                        m_ActiveRail--;
+
+                    else if (m_Rails.rails[0].start == m_Rails.rails[^1].end)
+                        m_ActiveRail = m_Rails.rails.Length - 1;
+
+                    period = 0;
+                }
+                period += UnityEngine.Time.deltaTime;
+            }
+        }
+
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
+
+        if (!m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishMoveArm();
     }
 
     private void Forward()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
-        gameObject.transform.position += rail.normalized * m_Speed;
+        float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? m_ScalingFactor : 1.0f;
 
-        Vector3 connectingVector = gameObject.transform.position - m_Rails.rails[m_ActiveRail].start;
+        Vector3 position = gameObject.transform.position += rail.normalized * m_Speed * scaling;
+
+        Vector3 connectingVector = position - m_Rails.rails[m_ActiveRail].start;
         if(connectingVector.magnitude > rail.magnitude)
         {
-            gameObject.transform.position = m_Rails.rails[m_ActiveRail].end;
+            position = m_Rails.rails[m_ActiveRail].end;
 
             if (m_ActiveRail < m_Rails.rails.Length - 1 && period > m_TimeInterval)
             {
@@ -153,17 +222,24 @@ public class RailManipulation : MonoBehaviour
             }
             period += UnityEngine.Time.deltaTime;
         }
+
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
+
+        if (!m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishMoveArm();
     }
 
     private void Reverse()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
-        gameObject.transform.position -= rail.normalized * m_Speed;
+        float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? m_ScalingFactor : 1.0f;
 
-        Vector3 connectingVector = gameObject.transform.position - m_Rails.rails[m_ActiveRail].start;
+        Vector3 position = gameObject.transform.position -= rail.normalized * m_Speed * scaling;
+
+        Vector3 connectingVector = position - m_Rails.rails[m_ActiveRail].start;
         if (Vector3.Dot(connectingVector.normalized, rail.normalized) < 0)
         {
-            gameObject.transform.position = m_Rails.rails[m_ActiveRail].start;
+            position = m_Rails.rails[m_ActiveRail].start;
 
             if (m_ActiveRail > 0 && period > m_TimeInterval)
             {
@@ -180,59 +256,11 @@ public class RailManipulation : MonoBehaviour
             }
             period += UnityEngine.Time.deltaTime;
         }
-    }
 
-    private void FollowRail()
-    {
-        Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
-        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_Rails.rails[m_ActiveRail].start;
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
 
-        float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, rail.normalized)) * 180 / Mathf.PI;
-        if (angle >= 90.0f)
-        {
-            gameObject.transform.position = m_Rails.rails[m_ActiveRail].start;
-
-            if (m_ActiveRail > 0 && period > m_TimeInterval)
-            {
-                m_ActiveRail--;
-                period = 0;
-            }
-            else if (m_ActiveRail == 0)
-            {
-                if (m_Rails.rails[0].start == m_Rails.rails[^1].end && period > m_TimeInterval)
-                {
-                    m_ActiveRail = m_Rails.rails.Length - 1;
-                    period = 0;
-                }
-            }
-            period += UnityEngine.Time.deltaTime;
-        }
-        else
-        {
-            Vector3 projectedConnectingVector = Vector3.Project(connectingVector, rail);
-
-            if(projectedConnectingVector.magnitude < rail.magnitude)
-                gameObject.transform.position = m_Rails.rails[m_ActiveRail].start + projectedConnectingVector;
-            else
-            {
-                gameObject.transform.position = m_Rails.rails[m_ActiveRail].end;
-
-                if (m_ActiveRail < m_Rails.rails.Length - 1 && period > m_TimeInterval)
-                {
-                    m_ActiveRail++;
-                    period = 0;
-                }
-                else if (m_ActiveRail == m_Rails.rails.Length - 1)
-                {
-                    if (m_Rails.rails[0].start == m_Rails.rails[^1].end && period > m_TimeInterval)
-                    {
-                        m_ActiveRail = 0;
-                        period = 0;
-                    }
-                }
-                period += UnityEngine.Time.deltaTime;
-            }
-        }
+        if (!m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishMoveArm();
     }
 
     private void Released()

@@ -14,7 +14,7 @@ public class RailCreator : MonoBehaviour
     [Header("Material")]
     [SerializeField] private Material m_RailMat;
 
-    private GameObject m_Manipulator = null;
+    private GameObject m_EndEffector = null;
     private ManipulationMode m_ManipulationMode = null;
     private Rails m_Rails = null;
 
@@ -32,12 +32,12 @@ public class RailCreator : MonoBehaviour
 
     private void Awake()
     {
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
 
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Trigger.onStateDown += SetRail;
 
         m_LeftHand = Player.instance.leftHand;
@@ -95,7 +95,7 @@ public class RailCreator : MonoBehaviour
             Transform lastChild = m_Rails.GetLastChild();
 
             if (lastChild.position == gameObject.transform.parent.position)
-                m_Pivot = m_Manipulator.transform.position;
+                m_Pivot = m_EndEffector.transform.position;
             else
                 m_Pivot = lastChild.position + (lastChild.up.normalized * lastChild.localScale.y);
         }

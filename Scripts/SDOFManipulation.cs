@@ -28,7 +28,7 @@ public class SDOFManipulation : MonoBehaviour
 
         m_Interactable = GetComponent<Interactable>();
 
-        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Trigger.onStateDown += TriggerGrabbed;
     }
 

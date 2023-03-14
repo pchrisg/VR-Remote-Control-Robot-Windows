@@ -24,7 +24,7 @@ public class CollisionObjectCreator : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_CollisionObjects = gameObject.transform.parent.GetComponent<CollisionObjects>();
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Trigger.onStateDown += SetCollisionBox;
         m_LeftHand = Player.instance.leftHand;
         m_RightHand = Player.instance.rightHand;

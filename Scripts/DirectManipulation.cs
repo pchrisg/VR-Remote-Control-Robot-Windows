@@ -19,10 +19,12 @@ public class DirectManipulation : MonoBehaviour
     private bool isInteracting = false;
     private Hand m_InteractingHand = null;
     private Hand m_OtherHand = null;
+
+    private Vector3 m_InitPos = Vector3.zero;
     private GameObject m_GhostObject = null;
 
-    private readonly float m_Threshold = 10.0f;
-    private readonly float m_ScaleFactor = 0.25f;
+    private readonly float m_Threshold = 50.0f;
+    private readonly float m_ScalingFactor = 0.25f;
 
     private void Awake()
     {
@@ -31,27 +33,30 @@ public class DirectManipulation : MonoBehaviour
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
         m_Interactable = GetComponent<Interactable>();
-        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabPinch");
-        m_Trigger.onStateDown += TriggerGrabbed;
-    }
-
-    private void OnDestroy()
-    {
-        m_Trigger.onStateDown -= TriggerGrabbed;
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
     }
 
     private void Update()
     {
-        if (isInteracting)
+        if (m_ManipulationMode.mode == Mode.DIRECT)
         {
-            if (m_Trigger.GetState(m_InteractingHand.handType))
-                MoveManipulator();
+            if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
+                TriggerGrabbed();
 
-            if (m_Trigger.GetStateUp(m_InteractingHand.handType))
-                TriggerReleased();
+            if (isInteracting)
+            {
+                if (m_Trigger.GetStateUp(m_InteractingHand.handType) || m_Trigger.GetStateUp(m_OtherHand.handType))
+                    TriggerReleased();
 
-            else if (!m_PlanningRobot.isPlanning)
-                m_ROSPublisher.PublishMoveArm();
+                else
+                {
+                    if (m_Trigger.GetStateDown(m_OtherHand.handType))
+                        m_InitPos = gameObject.transform.position;
+
+                    if (m_Trigger.GetState(m_InteractingHand.handType))
+                        MoveManipulator();
+                }
+            }
         }
     }
 
@@ -61,28 +66,20 @@ public class DirectManipulation : MonoBehaviour
             m_InteractingHand = hand;
     }
 
-    private void HandHoverUpdate(Hand hand)
+    private void TriggerGrabbed()
     {
-        if (!isInteracting)
-            m_InteractingHand = hand;
-    }
-
-    private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources hand)
-    {
-        if (m_ManipulationMode.mode == Mode.DIRECT && m_InteractingHand != null && !isInteracting)
+        if (m_InteractingHand.IsStillHovering(m_Interactable))
         {
-            if (m_InteractingHand.IsStillHovering(m_Interactable))
-            {
-                m_GhostObject = new GameObject("GhostObject");
-                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
-                m_GhostObject.transform.SetParent(m_InteractingHand.transform);
-                isInteracting = true;
+            m_GhostObject = new GameObject("GhostObject");
+            m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
+            m_GhostObject.transform.SetParent(m_InteractingHand.transform);
+            isInteracting = true;
+            m_InitPos = gameObject.transform.position;
 
-                if (m_InteractingHand != Player.instance.rightHand)
-                    m_OtherHand = Player.instance.rightHand;
-                else
-                    m_OtherHand = Player.instance.leftHand;
-            }
+            if (m_InteractingHand != Player.instance.rightHand)
+                m_OtherHand = Player.instance.rightHand;
+            else
+                m_OtherHand = Player.instance.leftHand;
         }
     }
 
@@ -90,16 +87,18 @@ public class DirectManipulation : MonoBehaviour
     {
         if(m_OtherHand != null && m_Trigger.GetState(m_OtherHand.handType))
         {
-            Vector3 connectingVector = m_GhostObject.transform.position - gameObject.transform.position;
-            Vector3 position = gameObject.transform.position + connectingVector * m_ScaleFactor;
+            Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
+            Vector3 position = m_InitPos + connectingVector * m_ScalingFactor;
             gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
         }
         else
         {
             Quaternion rotation = Snapping();
             gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, rotation);
-
         }
+
+        if (!m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishMoveArm();
     }
 
     private Quaternion Snapping()
@@ -124,17 +123,15 @@ public class DirectManipulation : MonoBehaviour
 
     private void TriggerReleased()
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT && isInteracting)
-        {
-            GameObject.Destroy(m_GhostObject);
-            m_InteractingHand = null;
-            m_OtherHand = null;
-            isInteracting = false;
+        GameObject.Destroy(m_GhostObject);
+        m_InteractingHand = null;
+        m_OtherHand = null;
+        m_InitPos = Vector3.zero;
+        isInteracting = false;
 
-            if (m_PlanningRobot.isPlanning)
-                m_ROSPublisher.PublishTrajectoryRequest();
-            else
-                m_ROSPublisher.PublishMoveArm();
-        }
+        if (m_PlanningRobot.isPlanning)
+            m_ROSPublisher.PublishTrajectoryRequest();
+        else
+            m_ROSPublisher.PublishMoveArm();
     }
 }

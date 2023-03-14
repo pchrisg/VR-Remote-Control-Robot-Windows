@@ -9,14 +9,6 @@
       "type": "boolean"
     },
     {
-      "name": "/actions/default/in/GrabPinch",
-      "type": "boolean"
-    },
-    {
-      "name": "/actions/default/in/GrabGrip",
-      "type": "boolean"
-    },
-    {
       "name": "/actions/default/in/Pose",
       "type": "pose"
     },
@@ -29,11 +21,6 @@
       "name": "/actions/default/in/SkeletonRightHand",
       "type": "skeleton",
       "skeleton": "/skeleton/hand/right"
-    },
-    {
-      "name": "/actions/default/in/Squeeze",
-      "type": "vector1",
-      "requirement": "optional"
     },
     {
       "name": "/actions/default/in/HeadsetOnHead",
@@ -110,6 +97,45 @@
       "name": "/actions/mixedreality/in/ExternalCamera",
       "type": "pose",
       "requirement": "optional"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/GrabGrip",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/GrabTrigger",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/SqueezeTrigger",
+      "type": "vector1",
+      "requirement": "mandatory"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/TouchTrackpad",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/TouchPosition",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/PressTrackpad",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/PressEast",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/PressWest",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper/in/Press Menu",
+      "type": "boolean"
     }
   ],
   "action_sets": [
@@ -127,6 +153,10 @@
     },
     {
       "name": "/actions/mixedreality",
+      "usage": "single"
+    },
+    {
+      "name": "/actions/chris_ur5_3f_gripper",
       "usage": "single"
     }
   ],
@@ -187,8 +217,6 @@
   "localization": [
     {
       "language_tag": "en_US",
-      "/actions/default/in/GrabGrip": "Grab Grip",
-      "/actions/default/in/GrabPinch": "Grab Pinch",
       "/actions/default/in/HeadsetOnHead": "Headset on head (proximity sensor)",
       "/actions/default/in/InteractUI": "Interact With UI",
       "/actions/default/in/Pose": "Pose",
@@ -204,7 +232,16 @@
       "/actions/default/in/TouchTrackpad": "Touch Trackpad",
       "/actions/default/in/TouchPosition": "Touch Position",
       "/actions/default/in/Forward": "Forward",
-      "/actions/default/in/Reverse": "Reverse"
+      "/actions/default/in/Reverse": "Reverse",
+      "/actions/chris_ur5_3f_gripper/in/GrabGrip": "Grab Grip",
+      "/actions/chris_ur5_3f_gripper/in/GrabTrigger": "Grab Trigger",
+      "/actions/chris_ur5_3f_gripper/in/SqueezeTrigger": "Squeeze Trigger",
+      "/actions/chris_ur5_3f_gripper/in/TouchTrackpad": "Touch Trackpad",
+      "/actions/chris_ur5_3f_gripper/in/TouchPosition": "Touch Position",
+      "/actions/chris_ur5_3f_gripper/in/PressTrackpad": "Press Trackpad",
+      "/actions/chris_ur5_3f_gripper/in/PressEast": "Press East",
+      "/actions/chris_ur5_3f_gripper/in/PressWest": "Press West",
+      "/actions/chris_ur5_3f_gripper/in/Press Menu": "Press Menu"
     }
   ]
 }

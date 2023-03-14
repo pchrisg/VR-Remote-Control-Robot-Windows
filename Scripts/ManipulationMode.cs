@@ -10,7 +10,9 @@ namespace ManipulationOptions
         SDOF,
         RAIL,
         RAILCREATOR,
-        COLOBJCREATOR
+        COLOBJCREATOR,
+        GRIPPER,
+        ATTOBJCREATOR
     };
 }
 
@@ -54,7 +56,7 @@ public class ManipulationMode : MonoBehaviour
 
     public void TogglePlanner()
     {
-        if(mode != Mode.COLOBJCREATOR && mode != Mode.RAILCREATOR)
+        if(mode != Mode.ATTOBJCREATOR && mode != Mode.COLOBJCREATOR && mode != Mode.GRIPPER && mode != Mode.RAILCREATOR)
             m_PlanningRobot.Show();
     }
 
@@ -69,6 +71,60 @@ public class ManipulationMode : MonoBehaviour
         else if (mode == Mode.SDOF)
         {
             m_SDOFWidget.Show(false);
+            mode = Mode.DIRECT;
+        }
+    }
+
+    public void ToggleAttachmentObjectCreator()
+    {
+        if (mode == Mode.DIRECT)
+        {
+            if (m_PlanningRobot.isPlanning)
+                m_PlanningRobot.Show();
+
+            //m_ColObjCreator.Show(true);
+            mode = Mode.ATTOBJCREATOR;
+        }
+
+        else if (mode == Mode.ATTOBJCREATOR)
+        {
+            //m_ColObjCreator.Show(false);
+            mode = Mode.DIRECT;
+        }
+    }
+
+    public void ToggleCollisionObjectCreator()
+    {
+        if (mode == Mode.DIRECT)
+        {
+            if (m_PlanningRobot.isPlanning)
+                m_PlanningRobot.Show();
+
+            m_ColObjCreator.Show(true);
+            mode = Mode.COLOBJCREATOR;
+        }
+
+        else if (mode == Mode.COLOBJCREATOR)
+        {
+            m_ColObjCreator.Show(false);
+            mode = Mode.DIRECT;
+        }
+    }
+
+    public void ToggleGripper()
+    {
+        if (mode == Mode.DIRECT)
+        {
+            if (m_PlanningRobot.isPlanning)
+                m_PlanningRobot.Show();
+
+            //m_ColObjCreator.Show(true);
+            mode = Mode.GRIPPER;
+        }
+
+        else if (mode == Mode.GRIPPER)
+        {
+            //m_ColObjCreator.Show(false);
             mode = Mode.DIRECT;
         }
     }
@@ -90,27 +146,9 @@ public class ManipulationMode : MonoBehaviour
             mode = Mode.RAIL;
         }
 
-        else if(mode == Mode.RAIL)
+        else if (mode == Mode.RAIL)
         {
             m_RailCreator.Clear();
-            mode = Mode.DIRECT;
-        }
-    }
-
-    public void ToggleCollisionObjectCreator()
-    {
-        if (mode == Mode.DIRECT)
-        {
-            if (m_PlanningRobot.isPlanning)
-                m_PlanningRobot.Show();
-
-            m_ColObjCreator.Show(true);
-            mode = Mode.COLOBJCREATOR;
-        }
-
-        else if (mode == Mode.COLOBJCREATOR)
-        {
-            m_ColObjCreator.Show(false);
             mode = Mode.DIRECT;
         }
     }

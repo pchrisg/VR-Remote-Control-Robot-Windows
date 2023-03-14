@@ -16,13 +16,15 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private SpriteRenderer m_SRActiveMode = null;
 
     [Header("Sprites")]
-    [SerializeField] private Sprite[] sprites = new Sprite[10];
+    [SerializeField] private Sprite[] sprites = new Sprite[13];
 
     [Header("Events")]
-    [SerializeField] private RadialSection top = null;
-    [SerializeField] private RadialSection right = null;
-    [SerializeField] private RadialSection bottom = null;
-    [SerializeField] private RadialSection left = null;
+    [SerializeField] private RadialSection north = null;
+    [SerializeField] private RadialSection northeast = null;
+    [SerializeField] private RadialSection southeast = null;
+    [SerializeField] private RadialSection south = null;
+    [SerializeField] private RadialSection southwest = null;
+    [SerializeField] private RadialSection northwest = null;
 
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
@@ -33,7 +35,7 @@ public class RadialMenu : MonoBehaviour
     private RadialSection m_HighlightedSection = null;
     private bool isPlanning = false;
 
-    private readonly float degreeIncrement = 90.0f;
+    private readonly float degreeIncrement = 60.0f;
 
     private void Awake()
     {
@@ -59,10 +61,12 @@ public class RadialMenu : MonoBehaviour
     {
         m_RadialSections = new List<RadialSection>()
         {
-            top,
-            right,
-            bottom,
-            left
+            north,
+            northeast,
+            southeast,
+            south,
+            southwest,
+            northwest
         };
 
         TogglePlanRob();
@@ -76,7 +80,7 @@ public class RadialMenu : MonoBehaviour
     {
         if(m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
         {
-            for(int i = 0; i < 4; i++)
+            for(int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = sprites[i];
             }
@@ -85,40 +89,60 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.SDOF)
         {
-            for (int i = 1; i < 4; i++)
+            for (int i = 1; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[1].iconRenderer.sprite = sprites[5];
+            m_RadialSections[1].iconRenderer.sprite = sprites[7];
             m_MenuMode = ManipulationOptions.Mode.SDOF;
             m_SRActiveMode.sprite = sprites[1];
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.COLOBJCREATOR)
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.ATTOBJCREATOR)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[2].iconRenderer.sprite = sprites[6];
-            m_MenuMode = ManipulationOptions.Mode.COLOBJCREATOR;
+            m_RadialSections[2].iconRenderer.sprite = sprites[8];
+            m_MenuMode = ManipulationOptions.Mode.ATTOBJCREATOR;
             m_SRActiveMode.sprite = sprites[2];
+        }
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.COLOBJCREATOR)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                m_RadialSections[i].iconRenderer.sprite = null;
+            }
+            m_RadialSections[3].iconRenderer.sprite = sprites[9];
+            m_MenuMode = ManipulationOptions.Mode.COLOBJCREATOR;
+            m_SRActiveMode.sprite = sprites[3];
+        }
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.GRIPPER)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                m_RadialSections[i].iconRenderer.sprite = null;
+            }
+            m_RadialSections[4].iconRenderer.sprite = sprites[10];
+            m_MenuMode = ManipulationOptions.Mode.GRIPPER;
+            m_SRActiveMode.sprite = sprites[4];
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAILCREATOR)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[3].iconRenderer.sprite = sprites[7];
+            m_RadialSections[5].iconRenderer.sprite = sprites[11];
             m_MenuMode = ManipulationOptions.Mode.RAILCREATOR;
-            m_SRActiveMode.sprite = sprites[3];
+            m_SRActiveMode.sprite = sprites[5];
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAIL)
         {
             m_RadialSections[0].iconRenderer.sprite = sprites[0];
-            m_RadialSections[3].iconRenderer.sprite = sprites[8];
+            m_RadialSections[5].iconRenderer.sprite = sprites[12];
             m_MenuMode = ManipulationOptions.Mode.RAIL;
-            m_SRActiveMode.sprite = sprites[7];
+            m_SRActiveMode.sprite = sprites[11];
         }
     }
 
@@ -131,7 +155,7 @@ public class RadialMenu : MonoBehaviour
         }
         else
         {
-            m_RadialSections[0].iconRenderer.sprite = sprites[4];
+            m_RadialSections[0].iconRenderer.sprite = sprites[6];
             m_SRPlanRob.sprite = sprites[0];
         }
 
@@ -179,7 +203,7 @@ public class RadialMenu : MonoBehaviour
     {
         int index = GetNearestIncrement(currentRotation);
 
-        if (index == 4)
+        if (index == 6)
             index = 0;
 
         m_HighlightedSection = m_RadialSections[index];
