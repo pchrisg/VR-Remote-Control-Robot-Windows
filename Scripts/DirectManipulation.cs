@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
-using UnityEngine.UIElements;
-using static UnityEngine.ParticleSystem;
+
+[RequireComponent(typeof(Interactable))]
 
 public class DirectManipulation : MonoBehaviour
 {
@@ -66,6 +64,12 @@ public class DirectManipulation : MonoBehaviour
             m_InteractingHand = hand;
     }
 
+    private void HandHoverUpdate(Hand hand)
+    {
+        if (!isInteracting)
+            m_InteractingHand = hand;
+    }
+
     private void TriggerGrabbed()
     {
         if (m_InteractingHand.IsStillHovering(m_Interactable))
@@ -85,7 +89,7 @@ public class DirectManipulation : MonoBehaviour
 
     private void MoveManipulator()
     {
-        if(m_OtherHand != null && m_Trigger.GetState(m_OtherHand.handType))
+        if(m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
             Vector3 position = m_InitPos + connectingVector * m_ScalingFactor;
@@ -93,8 +97,8 @@ public class DirectManipulation : MonoBehaviour
         }
         else
         {
-            Quaternion rotation = Snapping();
-            gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, rotation);
+            //Quaternion rotation = Snapping();
+            gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, m_GhostObject.transform.rotation);
         }
 
         if (!m_PlanningRobot.isPlanning)

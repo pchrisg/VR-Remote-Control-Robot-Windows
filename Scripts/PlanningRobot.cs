@@ -8,9 +8,6 @@ using System.Runtime.CompilerServices;
 
 public class PlanningRobot : MonoBehaviour
 {
-    [Header("Scene Objects")]
-    [SerializeField] private SDOFWidget m_SDOFWidget = null;
-
     [Header("Materials")]
     [SerializeField] private Material m_PlanRobMat = null;
 
@@ -71,16 +68,7 @@ public class PlanningRobot : MonoBehaviour
         if (!isPlanning)
         {
             a = 0.0f;
-
-            if(m_SDOFWidget.isActiveAndEnabled)
-            {
-                m_SDOFWidget.SetEndEffectorAsParent();
-                m_EndEffector.ResetPosition();
-                m_SDOFWidget.SetEndEffectorAsChild();
-            }
-            else
-                m_EndEffector.ResetPosition();
-
+            m_EndEffector.ResetPosition();
             m_Trajectory = null;
             displayPath = false;
         }

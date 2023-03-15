@@ -4,6 +4,8 @@ using Valve.VR.InteractionSystem;
 using ManipulationOptions;
 using UnityEngine.UIElements;
 
+[RequireComponent(typeof(Interactable))]
+
 public class RailManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
@@ -99,6 +101,12 @@ public class RailManipulation : MonoBehaviour
             m_InteractingHand = hand;
     }
 
+    private void HandHoverUpdate(Hand hand)
+    {
+        if (!isInteracting)
+            m_InteractingHand = hand;
+    }
+
     private void TriggerGrabbed()
     {
         if (m_InteractingHand.IsStillHovering(m_Interactable))
@@ -135,7 +143,7 @@ public class RailManipulation : MonoBehaviour
         Vector3 connectingVector = startVectorBigger ? connectingVectorToStart : connectingVectorToEnd;
         Vector3 projectedConnectingVector = Vector3.Project(connectingVector, rail);
 
-        if (m_OtherHand != null && m_Trigger.GetState(m_OtherHand.handType))
+        if (m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 scaledVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
             Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, rail) * m_ScalingFactor;

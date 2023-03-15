@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
@@ -118,7 +115,7 @@ public class RailCreator : MonoBehaviour
     {
         m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
         m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
-        float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * 180 / Mathf.PI;
+        float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         if (Mathf.Abs(90.0f - angle) < m_Threshold)
         {
             Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);

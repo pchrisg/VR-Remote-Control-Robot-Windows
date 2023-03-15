@@ -12,6 +12,7 @@ public class Gripper : MonoBehaviour
     private SteamVR_Action_Boolean m_Trigger = null;
     private SteamVR_Action_Single m_Squeeze = null;
 
+    private bool isInteracting = false;
     private Hand m_InitHand = null;
     private Hand m_InteractingHand = null;
     private Hand m_RightHand = null;
@@ -35,26 +36,28 @@ public class Gripper : MonoBehaviour
     {
         if (m_ManipulationMode.mode == Mode.GRIPPER)
         {
-            if (m_InitHand == null)
+            if (!isInteracting)
             {
                 if (m_Trigger.GetState(m_RightHand.handType))
                 {
                     m_InitHand = m_RightHand;
                     m_InteractingHand = m_LeftHand;
+                    isInteracting = true;
                 }
                 else if (m_Trigger.GetState(m_LeftHand.handType))
                 {
                     m_InitHand = m_LeftHand;
                     m_InteractingHand = m_RightHand;
+                    isInteracting = true;
                 }
             }
             else
             {
+                if (m_Trigger.GetStateUp(m_InitHand.handType))
+                    TriggerReleased();
+
                 if (m_Trigger.GetState(m_InitHand.handType))
                     CloseGripper();
-
-                else
-                    m_InitHand = null;
             }
         }
     }
@@ -66,5 +69,12 @@ public class Gripper : MonoBehaviour
             outputMessage.rPRA = (byte)(m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip);
 
             m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
+    }
+
+    private void TriggerReleased()
+    {
+        m_InitHand = null;
+        m_InteractingHand = null;
+        isInteracting = false;
     }
 }
