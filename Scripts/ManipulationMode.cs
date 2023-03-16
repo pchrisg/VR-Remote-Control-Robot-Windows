@@ -75,20 +75,20 @@ public class ManipulationMode : MonoBehaviour
         }
     }
 
-    public void ToggleAttachmentObjectCreator()
+    public void ToggleAttachableObjectCreator()
     {
         if (mode == Mode.DIRECT)
         {
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show();
 
-            //m_ColObjCreator.Show(true);
+            m_ColObjCreator.Show(true);
             mode = Mode.ATTOBJCREATOR;
         }
 
         else if (mode == Mode.ATTOBJCREATOR)
         {
-            //m_ColObjCreator.Show(false);
+            m_ColObjCreator.Show(false);
             mode = Mode.DIRECT;
         }
     }

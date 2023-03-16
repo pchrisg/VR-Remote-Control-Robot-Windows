@@ -22,16 +22,9 @@ public class ResultSubscriber : MonoBehaviour
 
     private void Awake()
     {
-        string linkname = string.Empty;
-        for(var i = 0; i < JointStateSubscriber.m_UR5LinkNames.Length; i++)
-        {
-            linkname += JointStateSubscriber.m_UR5LinkNames[i];
-        }
-        linkname += "/flange/Gripper";
-
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
-        m_Gripper = m_UR5.transform.Find(linkname).gameObject;
+        m_Gripper = GameObject.FindGameObjectWithTag("Gripper");
         m_Ros = ROSConnection.GetOrCreateInstance();
         m_UR5Renderers = m_UR5.GetComponentsInChildren<Renderer>();
         m_GripperRenderers = m_Gripper.GetComponentsInChildren<Renderer>();

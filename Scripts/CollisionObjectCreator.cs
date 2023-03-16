@@ -16,8 +16,7 @@ public class CollisionObjectCreator : MonoBehaviour
     private Hand m_LeftHand = null;
 
     private GameObject m_NewBox = null;
-
-    [HideInInspector] public string m_KillFinger = String.Empty;
+    private CollisionHandling[] m_CollisionHandlings = null;
 
     private void Awake()
     {
@@ -44,26 +43,20 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private void Update()
     {
-        if(m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+        if(m_ManipulationMode.mode == Mode.COLOBJCREATOR || m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
         {
-            if (m_NewBox != null )
+            if (m_NewBox == null )
+            {
+                if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
+                    MakeCollisionBox();
+            }
+            else
             {
                 if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
                     ScaleCollisionBox();
 
                 else if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
                     RotateCollisionBox();
-            }
-            else
-            {
-                if (m_Grip.GetState(m_RightHand.handType) && m_Grip.GetState(m_LeftHand.handType))
-                    MakeCollisionBox();
-
-                else if (m_Grip.GetState(m_RightHand.handType) || m_Grip.GetState(m_LeftHand.handType))
-                    DeleteCollisionBox();
-
-                else
-                    m_KillFinger = String.Empty;
             }
         }
     }
@@ -75,17 +68,28 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private void MakeCollisionBox()
     {
+        m_CollisionHandlings = gameObject.transform.parent.GetComponentsInChildren<CollisionHandling>();
+        foreach (var colhand in m_CollisionHandlings)
+                colhand.m_isDeleteAble = false;
+
         m_NewBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_EludingMaterial;
 
         m_NewBox.AddComponent<Rigidbody>();
         m_NewBox.GetComponent<Rigidbody>().isKinematic = true;
-        m_NewBox.AddComponent<PlayableArea>();
-        m_NewBox.GetComponent<PlayableArea>().m_EludingMaterial = m_CollisionObjects.m_EludingMaterial;
-        m_NewBox.GetComponent<PlayableArea>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMaterial;
-        m_NewBox.GetComponent<PlayableArea>().m_IsPlayableArea = false;
-        m_NewBox.GetComponent<PlayableArea>().m_isDeleteAble = true;
-        m_NewBox.GetComponent<PlayableArea>().m_ColObjCreator = gameObject.GetComponent<CollisionObjectCreator>();
+        m_NewBox.AddComponent<CollisionHandling>();
+        m_NewBox.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMaterial;
+
+        if(m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+        {
+            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_ColObjMaterial;
+            m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_ColObjMaterial;
+        }
+        else if(m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        {
+            m_NewBox.GetComponent<CollisionHandling>().m_isAttachable = true;
+            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_AttObjMaterial;
+            m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_AttObjMaterial;
+        }
 
         ScaleCollisionBox();
     }
@@ -129,18 +133,19 @@ public class CollisionObjectCreator : MonoBehaviour
     {
         if(m_NewBox != null)
         {
+            foreach (var colhand in m_CollisionHandlings)
+                colhand.m_isDeleteAble = true;
+
+            if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+            {
+                m_NewBox.GetComponent<Rigidbody>().isKinematic = false;
+            }
+            
             m_NewBox.transform.SetParent(gameObject.transform.parent);
+            m_NewBox.GetComponent<CollisionHandling>().m_isDeleteAble = true;
             m_NewBox.AddComponent<CollisionBox>();
             m_NewBox.GetComponent<CollisionBox>().PublishCollisionBox(m_CollisionObjects.GetFreeID().ToString());
             m_NewBox = null;
         }
-    }
-
-    private void DeleteCollisionBox()
-    {
-        if(m_Grip.GetState(m_RightHand.handType))
-            m_KillFinger = "right";
-        else
-            m_KillFinger = "left";
     }
 }

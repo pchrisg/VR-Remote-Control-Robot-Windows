@@ -56,7 +56,7 @@ public class Gripper : MonoBehaviour
                 if (m_Trigger.GetStateUp(m_InitHand.handType))
                     TriggerReleased();
 
-                if (m_Trigger.GetState(m_InitHand.handType))
+                else if (m_Trigger.GetState(m_InitHand.handType))
                     CloseGripper();
             }
         }

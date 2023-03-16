@@ -50,8 +50,8 @@ public class JointStateSubscriber : MonoBehaviour
     private void Awake()
     {
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
+        m_Gripper = GameObject.FindGameObjectWithTag("Gripper");
         m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
-        if (m_EndEffector != null)
 
         m_UR5Angles = new float[6];
         m_UR5Joints = new ArticulationBody[6];
@@ -62,9 +62,7 @@ public class JointStateSubscriber : MonoBehaviour
             linkname += m_UR5LinkNames[i];
             m_UR5Joints[i] = m_UR5.transform.Find(linkname).GetComponent<ArticulationBody>();
         }
-        linkname += "/flange/Gripper";
 
-        m_Gripper = m_UR5.transform.Find(linkname).gameObject;
         m_GripperAngles = new float[11];
         m_GripperJoints = new ArticulationBody[11];
         m_EndEffectorJoints = new ArticulationBody[11];

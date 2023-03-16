@@ -103,7 +103,7 @@ public class RadialMenu : MonoBehaviour
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[2].iconRenderer.sprite = sprites[8];
+            m_RadialSections[2].iconRenderer.sprite = sprites[10];
             m_MenuMode = ManipulationOptions.Mode.ATTOBJCREATOR;
             m_SRActiveMode.sprite = sprites[2];
         }

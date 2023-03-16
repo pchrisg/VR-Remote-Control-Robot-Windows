@@ -12677,7 +12677,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db3391a151a67ed47b934646d803b2a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_KillFinger: 
 --- !u!1 &1274424757
 GameObject:
   m_ObjectHideFlags: 0
@@ -18129,8 +18128,8 @@ MonoBehaviour:
   m_CollidingMaterial: {fileID: 0}
   m_EludingMaterial: {fileID: 0}
   m_IsPlayableArea: 1
+  m_isAttachable: 0
   m_isDeleteAble: 0
-  m_ColObjCreator: {fileID: 0}
 --- !u!1 &1878521732
 GameObject:
   m_ObjectHideFlags: 0
@@ -20590,7 +20589,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e089b2873ae34f42884478f3529615f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_EludingMaterial: {fileID: 2100000, guid: b55dc267eb9f2274cb73f27449d27fc1, type: 2}
+  m_AttObjMaterial: {fileID: 2100000, guid: 9a9f45b06b1332a44825c7a106944515, type: 2}
+  m_ColObjMaterial: {fileID: 2100000, guid: b55dc267eb9f2274cb73f27449d27fc1, type: 2}
   m_CollidingMaterial: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
 --- !u!1 &2139876225
 GameObject:
@@ -25009,7 +25009,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 621543381}
           m_TargetAssemblyTypeName: ManipulationMode, Assembly-CSharp
-          m_MethodName: ToggleAttachmentObjectCreator
+          m_MethodName: ToggleAttachableObjectCreator
           m_Mode: 1
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
