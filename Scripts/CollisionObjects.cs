@@ -6,20 +6,15 @@ public class CollisionObjects : MonoBehaviour
 {
     [Header("Materials")]
     public Material m_AttObjMaterial = null;
+    public Material m_AttachedMaterial = null;
     public Material m_ColObjMaterial = null;
     public Material m_CollidingMaterial = null;
 
     private int m_Id = 0;
 
-    private void Awake()
-    {
-        m_Id = -1;
-        MakeBase();
-    }
-
     private void Start()
     {
-        Invoke("PublishChildren", 0.5f);
+        Invoke("MakeBase", 0.5f);
     }
 
     private void MakeBase()
@@ -28,32 +23,22 @@ public class CollisionObjects : MonoBehaviour
 
         box.transform.position = new Vector3(0.0f, -0.05f, 0);
         box.transform.localScale = new Vector3(1.0f, 0.1f, 1.0f);
-        //box.transform.SetParent(gameObject.transform);
         box.GetComponent<Renderer>().material = m_ColObjMaterial;
 
         box.AddComponent<Rigidbody>();
         box.GetComponent<Rigidbody>().isKinematic = true;
-        box.AddComponent<CollisionBox>();
+        
         box.AddComponent<CollisionHandling>();
         box.GetComponent<CollisionHandling>().m_EludingMaterial = m_ColObjMaterial;
         box.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollidingMaterial;
+
+        box.AddComponent<CollisionBox>();
+        box.GetComponent<CollisionBox>().AddCollisionBox(GetFreeID().ToString());
     }
 
     public int GetFreeID()
     {
         m_Id++;
-        return m_Id;
-    }
-
-    private void PublishChildren()
-    {
-        foreach(Transform child in gameObject.GetComponentInChildren<Transform>())
-        {
-            if (child.GetComponent<CollisionBox>() != null)
-            {
-                m_Id++;
-                child.GetComponent<CollisionBox>().PublishCollisionBox(m_Id.ToString());
-            }
-        }
+        return m_Id - 1;
     }
 }

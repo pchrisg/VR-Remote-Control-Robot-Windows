@@ -3,6 +3,7 @@ using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
 using System;
+using Unity.VisualScripting;
 
 public class CollisionObjectCreator : MonoBehaviour
 {
@@ -70,7 +71,7 @@ public class CollisionObjectCreator : MonoBehaviour
     {
         m_CollisionHandlings = gameObject.transform.parent.GetComponentsInChildren<CollisionHandling>();
         foreach (var colhand in m_CollisionHandlings)
-                colhand.m_isDeleteAble = false;
+            colhand.m_isDeleteAble = false;
 
         m_NewBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
@@ -89,6 +90,8 @@ public class CollisionObjectCreator : MonoBehaviour
             m_NewBox.GetComponent<CollisionHandling>().m_isAttachable = true;
             m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_AttObjMaterial;
             m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_AttObjMaterial;
+            m_NewBox.GetComponent<CollisionHandling>().m_AttachedMaterial = m_CollisionObjects.m_AttachedMaterial;
+            m_NewBox.AddComponent<AttachableObject>();
         }
 
         ScaleCollisionBox();
@@ -103,7 +106,7 @@ public class CollisionObjectCreator : MonoBehaviour
 
         connectingVector = Quaternion.FromToRotation(m_NewBox.transform.right, Vector3.right) * connectingVector;
         m_NewBox.transform.position = midPoint;
-        m_NewBox.transform.localScale = new Vector3(connectingVector.x, connectingVector.y, connectingVector.z);
+        m_NewBox.transform.localScale = new Vector3(Mathf.Abs(connectingVector.x), Mathf.Abs(connectingVector.y), Mathf.Abs(connectingVector.z));
     }
 
     private void RotateCollisionBox()
@@ -135,16 +138,11 @@ public class CollisionObjectCreator : MonoBehaviour
         {
             foreach (var colhand in m_CollisionHandlings)
                 colhand.m_isDeleteAble = true;
-
-            if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-            {
-                m_NewBox.GetComponent<Rigidbody>().isKinematic = false;
-            }
             
             m_NewBox.transform.SetParent(gameObject.transform.parent);
             m_NewBox.GetComponent<CollisionHandling>().m_isDeleteAble = true;
             m_NewBox.AddComponent<CollisionBox>();
-            m_NewBox.GetComponent<CollisionBox>().PublishCollisionBox(m_CollisionObjects.GetFreeID().ToString());
+            m_NewBox.GetComponent<CollisionBox>().AddCollisionBox(m_CollisionObjects.GetFreeID().ToString());
             m_NewBox = null;
         }
     }

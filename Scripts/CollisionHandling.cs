@@ -11,15 +11,17 @@ public class CollisionHandling : MonoBehaviour
     public Material m_OutOfBoundsMaterial = null;
     public Material m_CollidingMaterial = null;
     public Material m_EludingMaterial = null;
+    public Material m_AttachedMaterial = null;
 
     private ManipulationMode m_ManipulationMode = null;
     private SteamVR_Action_Boolean m_Grip = null;
 
     public bool m_IsPlayableArea = false;
     [HideInInspector] public bool m_isAttachable = false;
+    [HideInInspector] public bool m_isAttached = false;
     [HideInInspector] public bool m_isDeleteAble = false;
 
-    private static readonly string[] m_ChildNames = {
+    private static readonly string[] m_FingerNames = {
         "HandColliderRight(Clone)/fingers/finger_index_2_r",
         "HandColliderLeft(Clone)/fingers/finger_index_2_r" };
     private Collider m_RightIndex = null;
@@ -31,11 +33,12 @@ public class CollisionHandling : MonoBehaviour
     private void Awake()
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-
+        
         m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform.Find("palm").GetComponentsInChildren<Collider>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
         m_Gripper = GameObject.FindGameObjectWithTag("Gripper").GetComponentsInChildren<Collider>();
+
+        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     }
 
     private void Start()
@@ -45,15 +48,17 @@ public class CollisionHandling : MonoBehaviour
 
     private void GetFingerColliders()
     {
-        m_RightIndex = Player.instance.transform.Find(m_ChildNames[0]).GetComponent<Collider>();
-        m_LeftIndex = Player.instance.transform.Find(m_ChildNames[1]).GetComponent<Collider>();
+        m_RightIndex = Player.instance.transform.Find(m_FingerNames[0]).GetComponent<Collider>();
+        m_LeftIndex = Player.instance.transform.Find(m_FingerNames[1]).GetComponent<Collider>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (m_ManipulationMode.mode == Mode.GRIPPER)
+        bool isColliding = false;
+
+        if (m_ManipulationMode.mode == Mode.GRIPPER && m_isAttachable)
         {
-            bool isColliding = false;
+            isColliding = false;
 
             foreach (var collider in m_Gripper)
             {
@@ -64,17 +69,21 @@ public class CollisionHandling : MonoBehaviour
                 }
             }
 
-            if(isColliding && m_isAttachable)
+            if (isColliding)
             {
-                gameObject.transform.parent = GameObject.FindGameObjectWithTag("Gripper").transform;
-                gameObject.GetComponent<Rigidbody>().isKinematic = false;
+                Renderer renderer = gameObject.GetComponent<Renderer>();
+                renderer.material = m_AttachedMaterial;
+                //GameObject.FindGameObjectWithTag("EndEffector").GetComponent<AudioSource>().Play();
+
+                //gameObject.transform.parent = GameObject.FindGameObjectWithTag("Gripper").transform;
+                //gameObject.GetComponent<Rigidbody>().isKinematic = true;
+
+                m_isAttached = true;
             }
         }
 
-        else
+        else if(!m_isAttached)
         {
-            bool isColliding = false;
-
             foreach (var collider in m_EndEffector)
             {
                 if (other == collider)
@@ -110,23 +119,22 @@ public class CollisionHandling : MonoBehaviour
             }
         }
 
-        if ((m_ManipulationMode.mode == Mode.COLOBJCREATOR && !m_isAttachable) ||
-                (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && m_isAttachable))
+        if (m_isDeleteAble && ((m_ManipulationMode.mode == Mode.COLOBJCREATOR && !m_isAttachable) ||
+                               (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && m_isAttachable)))
         {
-            if ((other == m_RightIndex || other == m_LeftIndex) && m_isDeleteAble)
-            {
-                if ((other == m_RightIndex && m_Grip.GetState(Player.instance.rightHand.handType)) ||
+            if ((other == m_RightIndex && m_Grip.GetState(Player.instance.rightHand.handType)) ||
                 (other == m_LeftIndex && m_Grip.GetState(Player.instance.leftHand.handType)))
-                    GameObject.Destroy(gameObject);
-            }
+                GameObject.Destroy(gameObject);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (m_ManipulationMode.mode == Mode.GRIPPER)
+        bool isColliding = false;
+
+        if (m_ManipulationMode.mode == Mode.GRIPPER && m_isAttached)
         {
-            bool isColliding = false;
+            isColliding = false;
 
             foreach (var collider in m_Gripper)
             {
@@ -137,17 +145,21 @@ public class CollisionHandling : MonoBehaviour
                 }
             }
 
-            if (isColliding && m_isAttachable)
+            if (isColliding)
             {
+                Renderer renderer = gameObject.GetComponent<Renderer>();
+                renderer.material = m_EludingMaterial;
+                //GameObject.FindGameObjectWithTag("EndEffector").GetComponent<AudioSource>().Play();
+
                 gameObject.transform.parent = GameObject.FindGameObjectWithTag("CollisionObjects").transform;
-                gameObject.GetComponent<Rigidbody>().isKinematic = true;
+                //gameObject.GetComponent<Rigidbody>().isKinematic = false;
+
+                m_isAttached = false;
             }
         }
 
-        else
+        else if(!m_isAttached)
         {
-            bool isColliding = false;
-
             foreach (var collider in m_EndEffector)
             {
                 if (other == collider)
@@ -175,10 +187,11 @@ public class CollisionHandling : MonoBehaviour
 
                 if (!m_IsPlayableArea)
                     renderer.material = m_EludingMaterial;
+
                 else
                 {
                     renderer.material = m_OutOfBoundsMaterial;
-                    m_EndEffector[0].GetComponent<AudioSource>().Play();
+                    GameObject.FindGameObjectWithTag("EndEffector").GetComponent<AudioSource>().Play();
                 }
             }
         }

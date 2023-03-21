@@ -118,15 +118,11 @@ public class ManipulationMode : MonoBehaviour
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show();
 
-            //m_ColObjCreator.Show(true);
             mode = Mode.GRIPPER;
         }
 
         else if (mode == Mode.GRIPPER)
-        {
-            //m_ColObjCreator.Show(false);
             mode = Mode.DIRECT;
-        }
     }
 
     public void ToggleRailCreator()

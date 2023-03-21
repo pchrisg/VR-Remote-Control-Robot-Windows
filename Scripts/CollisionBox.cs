@@ -15,11 +15,14 @@ public class CollisionBox : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
     }
 
-    public void PublishCollisionBox(string id)
+    public void OnDestroy()
+    {
+        RemoveCollisionBox();
+    }
+
+    private void SetParameters()
     {
         m_ColisionBox = new CollisionObjectMsg();
-        m_ColisionBox.header.frame_id = "base_link";
-        m_ColisionBox.id = id;
 
         var primitive = new SolidPrimitiveMsg();
         primitive.type = SolidPrimitiveMsg.BOX;
@@ -39,12 +42,36 @@ public class CollisionBox : MonoBehaviour
         Array.Resize(ref m_ColisionBox.primitive_poses, 1);
         m_ColisionBox.primitive_poses[0] = box_pose;
         m_ColisionBox.operation = CollisionObjectMsg.ADD;
-
-        m_ROSPublisher.PublishCreateCollisionObject(m_ColisionBox);
     }
 
-    public void OnDestroy()
+    public String GetID()
+    {
+        return m_ColisionBox.id;
+    }
+
+    public void AddCollisionBox(string id)
+    {
+        SetParameters();
+        m_ColisionBox.id = id;
+        m_ColisionBox.header.frame_id = "base_link";
+
+        m_ROSPublisher.PublishAddCollisionObject(m_ColisionBox);
+    }
+
+    public void RemoveCollisionBox()
     {
         m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionBox);
+    }
+
+    public void AttachCollisionBox()
+    {
+        m_ColisionBox.header.frame_id = "tool0";
+
+        m_ROSPublisher.PublishAttachCollisionObject(m_ColisionBox);
+    }
+
+    public void DetachCollisionBox()
+    {
+        m_ROSPublisher.PublishDetachCollisionObject(m_ColisionBox);
     }
 }

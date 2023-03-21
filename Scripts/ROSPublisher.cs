@@ -17,6 +17,8 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private readonly string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
     [SerializeField] private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
+    [SerializeField] private readonly string m_AttachCollisionObjectTopic = "chris_attach_collision_object";
+    [SerializeField] private readonly string m_DetachCollisionObjectTopic = "chris_detach_collision_object";
     [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
     private GameObject m_Manipulator = null;
@@ -44,6 +46,9 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
+        m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AttachCollisionObjectTopic);
+        m_Ros.RegisterPublisher<CollisionObjectMsg>(m_DetachCollisionObjectTopic);
+
         m_Ros.RegisterPublisher<Robotiq3FGripperRobotOutputMsg>(m_RoboticSqueezeTopic);
     }
 
@@ -112,7 +117,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.Publish(m_SdofTranslateTopic, sdofTranslation);
     }
 
-    public void PublishCreateCollisionObject(CollisionObjectMsg collisionObject)
+    public void PublishAddCollisionObject(CollisionObjectMsg collisionObject)
     {
         m_Ros.Publish(m_AddCollisionObjectTopic, collisionObject);
     }
@@ -120,6 +125,16 @@ public class ROSPublisher : MonoBehaviour
     public void PublishRemoveCollisionObject(CollisionObjectMsg collisionObject)
     {
         m_Ros.Publish(m_RemoveCollisionObjectTopic, collisionObject);
+    }
+
+    public void PublishAttachCollisionObject(CollisionObjectMsg collisionObject)
+    {
+        m_Ros.Publish(m_AttachCollisionObjectTopic, collisionObject);
+    }
+
+    public void PublishDetachCollisionObject(CollisionObjectMsg collisionObject)
+    {
+        m_Ros.Publish(m_DetachCollisionObjectTopic, collisionObject);
     }
 
     public void PublishRobotiqSqueeze(Robotiq3FGripperRobotOutputMsg outputMessage)
