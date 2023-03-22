@@ -10,6 +10,7 @@ public class DirectManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
+    private CollisionObjects m_CollisionObjects = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -21,7 +22,7 @@ public class DirectManipulation : MonoBehaviour
     private Vector3 m_InitPos = Vector3.zero;
     private GameObject m_GhostObject = null;
 
-    private readonly float m_Threshold = 50.0f;
+    private readonly float m_Threshold = 5.0f;
     private readonly float m_ScalingFactor = 0.25f;
 
     private void Awake()
@@ -29,6 +30,7 @@ public class DirectManipulation : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -52,7 +54,7 @@ public class DirectManipulation : MonoBehaviour
                         m_InitPos = gameObject.transform.position;
 
                     if (m_Trigger.GetState(m_InteractingHand.handType))
-                        MoveManipulator();
+                        MoveEndEffector();
                 }
             }
         }
@@ -87,39 +89,59 @@ public class DirectManipulation : MonoBehaviour
         }
     }
 
-    private void MoveManipulator()
+    private void MoveEndEffector()
     {
-        if(m_Trigger.GetState(m_OtherHand.handType))
+        Vector3 position = m_GhostObject.transform.position;
+        Quaternion rotation = gameObject.transform.rotation;
+
+        if (m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
-            Vector3 position = m_InitPos + connectingVector * m_ScalingFactor;
-            gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
-        }
-        else
-        {
-            //Quaternion rotation = Snapping();
-            gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, m_GhostObject.transform.rotation);
-        }
+            position = m_InitPos + connectingVector * m_ScalingFactor;
+        }            
+
+        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
+            rotation = LookAtFocusObject();
+        else if (!m_Trigger.GetState(m_OtherHand.handType))
+            rotation = Snapping();
+
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
         if (!m_PlanningRobot.isPlanning)
             m_ROSPublisher.PublishMoveArm();
     }
 
+    private Quaternion LookAtFocusObject()
+    {
+        Vector3 right = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
+
+        float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
+        Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+
+        up = Vector3.Cross(forward.normalized, right.normalized);
+
+        return Quaternion.LookRotation(forward, up);
+    }
+
     private Quaternion Snapping()
     {
-        float angle = Mathf.Acos(Vector3.Dot(-m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * 180 / Mathf.PI;
+        float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         if (Mathf.Abs(90.0f - angle) < m_Threshold)
         {
-            Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(-m_GhostObject.transform.right.normalized, Vector3.up);
-            Quaternion rotation = Quaternion.FromToRotation(-m_GhostObject.transform.right.normalized, projectedConnectingVector);
-            return m_GhostObject.transform.rotation * rotation;
+            Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up.normalized);
+            float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+            Vector3 up = ang <= 90 ? Vector3.up : -Vector3.up;
+            return Quaternion.LookRotation(forward, up);
         }
 
-        if (angle < m_Threshold || Mathf.Abs(180.0f - angle) < m_Threshold)
+        if (angle < m_Threshold)
         {
-            Vector3 projectedConnectingVector = Vector3.Project(-m_GhostObject.transform.right.normalized, Vector3.up);
-            Quaternion rotation = Quaternion.FromToRotation(-m_GhostObject.transform.right.normalized, projectedConnectingVector);
-            return m_GhostObject.transform.rotation * rotation;
+            Vector3 right = Vector3.Project(m_GhostObject.transform.right, Vector3.up);
+            Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
+            Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return Quaternion.LookRotation(forward, up);
         }
 
         return m_GhostObject.transform.rotation;

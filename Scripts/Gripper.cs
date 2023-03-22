@@ -64,11 +64,11 @@ public class Gripper : MonoBehaviour
 
     private void CloseGripper()
     {
-            Robotiq3FGripperRobotOutputMsg outputMessage = new Robotiq3FGripperRobotOutputMsg();
-            outputMessage.rACT = 1;
-            outputMessage.rPRA = (byte)(m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip);
+        Robotiq3FGripperRobotOutputMsg outputMessage = new Robotiq3FGripperRobotOutputMsg();
+        outputMessage.rACT = 1;
+        outputMessage.rPRA = (byte)(m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip);
 
-            m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
+        m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
     }
 
     private void TriggerReleased()

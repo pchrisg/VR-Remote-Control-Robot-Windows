@@ -9,6 +9,9 @@ public class CollisionObjects : MonoBehaviour
     public Material m_AttachedMaterial = null;
     public Material m_ColObjMaterial = null;
     public Material m_CollidingMaterial = null;
+    public Material m_FocusObjectMaterial = null;
+
+    [HideInInspector] public GameObject m_FocusObject = null;
 
     private int m_Id = 0;
 

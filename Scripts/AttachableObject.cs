@@ -4,15 +4,8 @@ using UnityEngine;
 
 public class AttachableObject : MonoBehaviour
 {
-    private CollisionObjects m_CollisionObjects = null;
-
     private GameObject m_GhostObject = null;
-    private bool m_isAttached = false;
-
-    private void Awake()
-    {
-        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
-    }
+    public bool m_isAttached = false;
 
     private void Start()
     {

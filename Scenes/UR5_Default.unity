@@ -18129,6 +18129,7 @@ MonoBehaviour:
   m_CollidingMaterial: {fileID: 0}
   m_EludingMaterial: {fileID: 0}
   m_AttachedMaterial: {fileID: 0}
+  m_FocusObjectMaterial: {fileID: 0}
   m_IsPlayableArea: 1
   m_isAttachable: 0
   m_isAttached: 0
@@ -20596,6 +20597,8 @@ MonoBehaviour:
   m_AttachedMaterial: {fileID: 2100000, guid: 407182e7d9468e040bb9b8700ca07d38, type: 2}
   m_ColObjMaterial: {fileID: 2100000, guid: b55dc267eb9f2274cb73f27449d27fc1, type: 2}
   m_CollidingMaterial: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
+  m_FocusObjectMaterial: {fileID: 2100000, guid: 4ec20a9c23b454b4bb42ca8f0577b56b, type: 2}
+  m_FocusObject: {fileID: 0}
 --- !u!1 &2139876225
 GameObject:
   m_ObjectHideFlags: 0
@@ -24961,13 +24964,13 @@ MonoBehaviour:
   sprites:
   - {fileID: 21300000, guid: 937cc1528fd2be1438598ddc97e00c9d, type: 3}
   - {fileID: 21300000, guid: b93e875ed37b53d49b1107f40410393a, type: 3}
-  - {fileID: 21300000, guid: 0f0d5b5c5b72cc640bc04d01aa3f5fe5, type: 3}
+  - {fileID: 21300000, guid: d3d2bd6af258d114bb1a484b9ae83428, type: 3}
   - {fileID: 21300000, guid: 6a34ba714d96865499dfb1bdd1183885, type: 3}
   - {fileID: 21300000, guid: 0f0d5b5c5b72cc640bc04d01aa3f5fe5, type: 3}
   - {fileID: 21300000, guid: 0e1994d3119b1f6499f58952e0e18837, type: 3}
   - {fileID: 21300000, guid: 12c7eb9a7369b024ba4ad3e8b1b78e5b, type: 3}
   - {fileID: 21300000, guid: fbf8dd4e190d8b84eac7b000f6631ca0, type: 3}
-  - {fileID: 21300000, guid: 0f0d5b5c5b72cc640bc04d01aa3f5fe5, type: 3}
+  - {fileID: 21300000, guid: b7e6b76300ea6c14ab262ad5005069df, type: 3}
   - {fileID: 21300000, guid: 100c74586d82a344a9fcadadf7e0f604, type: 3}
   - {fileID: 21300000, guid: 6a37160cba015c84e9900c0a1526e709, type: 3}
   - {fileID: 21300000, guid: dc5d785cbb0fca7448cdf43c3056f951, type: 3}

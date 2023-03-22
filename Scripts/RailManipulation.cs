@@ -11,6 +11,7 @@ public class RailManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
+    private CollisionObjects m_CollisionObjects = null;
     private Rails m_Rails = null;
 
     private Interactable m_Interactable = null;
@@ -37,6 +38,7 @@ public class RailManipulation : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
 
         m_Interactable = GetComponent<Interactable>();
@@ -63,9 +65,15 @@ public class RailManipulation : MonoBehaviour
 
             if (isInteracting)
             {
+                Vector3 position = gameObject.transform.position;
+                Quaternion rotation = gameObject.transform.rotation;
+
+                if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
+                    rotation = LookAtFocusObject();
+
                 if (m_InteractingHand != null)
                 {
-                    if (m_Trigger.GetStateUp(m_InteractingHand.handType) || m_Trigger.GetStateUp(m_OtherHand.handType))
+                    if (m_OtherHand == null || m_Trigger.GetStateUp(m_InteractingHand.handType) || m_Trigger.GetStateUp(m_OtherHand.handType))
                         Released();
 
                     else
@@ -74,23 +82,27 @@ public class RailManipulation : MonoBehaviour
                             m_InitPos = gameObject.transform.position;
 
                         if (m_Trigger.GetState(m_InteractingHand.handType))
-                            FollowRail();
+                            position = FollowRail();
                     }
                 }
 
                 else
                 {
                     SteamVR_Input_Sources leftHand = Player.instance.leftHand.handType;
-
                     if (m_Forward.GetState(leftHand))
-                        Forward();
+                        position = Forward();
 
                     else if (m_Reverse.GetState(leftHand))
-                        Reverse();
+                        position = Reverse();
 
                     else
                         Released();
                 }
+
+                gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
+
+                if (!m_PlanningRobot.isPlanning)
+                    m_ROSPublisher.PublishMoveArm();
             }
         }
     }
@@ -109,7 +121,7 @@ public class RailManipulation : MonoBehaviour
 
     private void TriggerGrabbed()
     {
-        if (m_InteractingHand.IsStillHovering(m_Interactable))
+        if (m_InteractingHand.IsStillHovering(m_Interactable) && m_Trigger.GetState(m_InteractingHand.handType))
         {
             m_InitPos = gameObject.transform.position;
             isInteracting = true;
@@ -133,7 +145,7 @@ public class RailManipulation : MonoBehaviour
             isInteracting = true;
     }
 
-    private void FollowRail()
+    private Vector3 FollowRail()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
         Vector3 connectingVectorToStart = m_InteractingHand.objectAttachmentPoint.position - m_Rails.rails[m_ActiveRail].start;
@@ -197,13 +209,10 @@ public class RailManipulation : MonoBehaviour
             }
         }
 
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
-
-        if (!m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishMoveArm();
+        return position;
     }
 
-    private void Forward()
+    private Vector3 Forward()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
         float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? m_ScalingFactor : 1.0f;
@@ -231,13 +240,10 @@ public class RailManipulation : MonoBehaviour
             period += UnityEngine.Time.deltaTime;
         }
 
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
-
-        if (!m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishMoveArm();
+        return position;
     }
 
-    private void Reverse()
+    private Vector3 Reverse()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
         float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? m_ScalingFactor : 1.0f;
@@ -265,20 +271,31 @@ public class RailManipulation : MonoBehaviour
             period += UnityEngine.Time.deltaTime;
         }
 
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, gameObject.transform.rotation);
+        return position;
+    }
 
-        if (!m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishMoveArm();
+    private Quaternion LookAtFocusObject()
+    {
+        Vector3 right = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
+
+        float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
+        Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+
+        up = Vector3.Cross(forward.normalized, right.normalized);
+
+        return Quaternion.LookRotation(forward, up);
     }
 
     private void Released()
     {
         if (m_ManipulationMode.mode == Mode.RAIL && isInteracting)
         {
-            gameObject.transform.SetParent(null);
             m_InteractingHand = null;
-            isInteracting = false;
+            m_OtherHand = null;
+            m_InitPos = Vector3.zero;
             period = 0.0f;
+            isInteracting = false;
 
             if (m_PlanningRobot.isPlanning)
                 m_ROSPublisher.PublishTrajectoryRequest();

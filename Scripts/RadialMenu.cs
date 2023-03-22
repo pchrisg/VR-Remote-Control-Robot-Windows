@@ -57,6 +57,11 @@ public class RadialMenu : MonoBehaviour
             SetSectionIcons();
     }
 
+    public void Show(bool value)
+    {
+        gameObject.SetActive(value);
+    }
+
     private void CreateAndSetupSections()
     {
         m_RadialSections = new List<RadialSection>()
@@ -80,7 +85,9 @@ public class RadialMenu : MonoBehaviour
     {
         if(m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
         {
-            for(int i = 0; i < 6; i++)
+            TogglePlanRob();
+
+            for(int i = 1; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = sprites[i];
             }
@@ -103,7 +110,7 @@ public class RadialMenu : MonoBehaviour
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[2].iconRenderer.sprite = sprites[10];
+            m_RadialSections[2].iconRenderer.sprite = sprites[8];
             m_MenuMode = ManipulationOptions.Mode.ATTOBJCREATOR;
             m_SRActiveMode.sprite = sprites[2];
         }
@@ -162,11 +169,6 @@ public class RadialMenu : MonoBehaviour
         isPlanning = m_PlanningRobot.isPlanning;
     }
 
-    public void Show(bool value)
-    {
-        gameObject.SetActive(value);
-    }
-    
     private float GetDegree(Vector2 direction)
     {
         float value = Mathf.Atan2(direction.x, direction.y);

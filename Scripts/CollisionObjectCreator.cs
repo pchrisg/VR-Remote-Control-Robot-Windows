@@ -33,8 +33,10 @@ public class CollisionObjectCreator : MonoBehaviour
     private void OnDisable()
     {
         if (m_NewBox != null)
+        {
             Destroy(m_NewBox);
-        m_NewBox = null;
+            m_NewBox = null;
+        }
     }
 
     private void OnDestroy()
@@ -91,6 +93,7 @@ public class CollisionObjectCreator : MonoBehaviour
             m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_AttObjMaterial;
             m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_AttObjMaterial;
             m_NewBox.GetComponent<CollisionHandling>().m_AttachedMaterial = m_CollisionObjects.m_AttachedMaterial;
+            m_NewBox.GetComponent<CollisionHandling>().m_FocusObjectMaterial = m_CollisionObjects.m_FocusObjectMaterial;
             m_NewBox.AddComponent<AttachableObject>();
         }
 
@@ -120,6 +123,7 @@ public class CollisionObjectCreator : MonoBehaviour
 
             m_NewBox.transform.rotation = Quaternion.FromToRotation(centerToRightBackEdge, Vector3.ProjectOnPlane(connectingVector, Vector3.up));
         }
+
         else
         {
             Transform leftIndex = m_LeftHand.skeleton.indexTip.transform;

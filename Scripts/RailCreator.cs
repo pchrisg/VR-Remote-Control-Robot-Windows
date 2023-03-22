@@ -11,10 +11,11 @@ public class RailCreator : MonoBehaviour
     [Header("Material")]
     [SerializeField] private Material m_RailMat;
 
-    private GameObject m_EndEffector = null;
     private ManipulationMode m_ManipulationMode = null;
+    private CollisionObjects m_CollisionObjects = null;
     private Rails m_Rails = null;
 
+    private GameObject m_EndEffector = null;
     private GameObject m_Rail = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
@@ -25,12 +26,14 @@ public class RailCreator : MonoBehaviour
     private Hand m_InteractingHand = null;
 
     private Vector3 m_Pivot = Vector3.zero;
-    private readonly float m_Threshold = 5.0f;
+    private readonly float m_AngleThreshold = 5.0f;
+    private readonly float m_DistanceThreshold = 0.05f;
 
     private void Awake()
     {
         m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
 
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
@@ -116,23 +119,32 @@ public class RailCreator : MonoBehaviour
         m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
         m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        if (Mathf.Abs(90.0f - angle) < m_Threshold)
+        if (Mathf.Abs(90.0f - angle) < m_AngleThreshold)
         {
             Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
             m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 0.0f, 255.0f);
         }
 
-        if (angle < m_Threshold || Mathf.Abs(180.0f - angle) < m_Threshold)
+        if (angle < m_AngleThreshold || Mathf.Abs(180.0f - angle) < m_AngleThreshold)
         {
             Vector3 projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
             m_Rail.GetComponent<Renderer>().material.color = new Color(0.0f, 255.0f, 0.0f);
         }
 
-        if (m_Rails.rails.Length > 1 && (indexFinger.position - m_Rails.rails[0].start).magnitude < m_Threshold * 0.01)
+        if (m_Rails.rails.Length > 1 && (indexFinger.position - m_Rails.rails[0].start).magnitude < m_DistanceThreshold)
         {
             Vector3 projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
+            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
+            m_Rail.transform.localScale = new Vector3(0.0025f, projectedConnectingVector.magnitude * 0.5f, 0.0025f);
+            m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 255.0f, 0.0f);
+            m_RailMat.color = new Color(255.0f, 255.0f, 0.0f);
+        }
+
+        if (m_CollisionObjects.m_FocusObject != null && (indexFinger.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < m_DistanceThreshold)
+        {
+            Vector3 projectedConnectingVector = m_CollisionObjects.m_FocusObject.transform.position - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
             m_Rail.transform.localScale = new Vector3(0.0025f, projectedConnectingVector.magnitude * 0.5f, 0.0025f);
             m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 255.0f, 0.0f);
