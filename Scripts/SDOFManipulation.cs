@@ -25,7 +25,8 @@ public class SDOFManipulation : MonoBehaviour
     [HideInInspector] public Hand m_InteractingHand = null;
     [HideInInspector] public Interactable m_Interactable = null;
 
-    private readonly float m_Threshold = 0.05f;
+    private readonly float m_DistanceThreshold = 0.05f;
+    private readonly float m_AngleThreshold = 2.0f;
     private readonly float m_ScalingFactor = 0.25f;
 
     private void Awake()
@@ -86,7 +87,7 @@ public class SDOFManipulation : MonoBehaviour
         if(!isTranslating && !isRotating)
         {
             Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitHandPos;
-            if (connectingVector.magnitude >= m_Threshold)
+            if (connectingVector.magnitude >= m_DistanceThreshold)
             {
                 Transform handleAxis = m_Interactable.transform.parent;
 
@@ -149,6 +150,8 @@ public class SDOFManipulation : MonoBehaviour
             connectingVector = widget.transform.position - m_InteractingHand.objectAttachmentPoint.position;
 
         Vector3 direction = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
+
+        direction = Snapping(direction);
         float angle = Vector3.SignedAngle(handleAxis.up, direction, m_PlaneNormal);
 
         if (m_Trigger.GetState(m_OtherHand.handType))
@@ -159,6 +162,24 @@ public class SDOFManipulation : MonoBehaviour
 
         Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_EndEffector.transform.rotation;
         m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(m_EndEffector.transform.position, rotation);
+    }
+
+    private Vector3 Snapping(Vector3 direction)
+    {
+        float angleToX = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.right.normalized)) * Mathf.Rad2Deg;
+        float angleToY = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        float angleToZ = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
+
+        if (Mathf.Abs(90.0f - angleToX) < m_AngleThreshold)
+            direction = Vector3.ProjectOnPlane(direction, Vector3.right);
+
+        if (Mathf.Abs(90.0f - angleToY) < m_AngleThreshold)
+            direction = Vector3.ProjectOnPlane(direction, Vector3.up);
+
+        if (Mathf.Abs(90.0f - angleToZ) < m_AngleThreshold)
+            direction = Vector3.ProjectOnPlane(direction, Vector3.forward);
+
+        return direction;
     }
 
     private void TriggerReleased()

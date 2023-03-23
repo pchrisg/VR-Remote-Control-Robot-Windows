@@ -7,7 +7,7 @@ public class EndEffector : MonoBehaviour
 
     private void Start()
     {
-        Invoke("ResetPosition", 1.5f);
+        Invoke("ResetPosition", 1.2f);
     }
 
     public void ResetPosition()

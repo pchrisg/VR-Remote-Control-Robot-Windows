@@ -73,7 +73,12 @@ public class RailCreator : MonoBehaviour
             else
             {
                 if (m_Grip.GetState(m_InteractingHand.handType))
-                    MakeRail();
+                {
+                    if (m_Rail == null)
+                        MakeRail();
+                    else
+                        RotateRail();
+                }
 
                 else
                     m_InteractingHand = null;
@@ -88,25 +93,21 @@ public class RailCreator : MonoBehaviour
 
     private void MakeRail()
     {
+        Transform lastChild = m_Rails.GetLastChild();
+
+        if (lastChild.position == gameObject.transform.parent.position)
+            m_Pivot = m_EndEffector.transform.position;
+        else
+            m_Pivot = lastChild.position + (lastChild.up.normalized * lastChild.localScale.y);
+
+        m_Rail = GameObject.Instantiate(m_RailPrefab);
+        m_Rail.transform.SetParent(gameObject.transform.parent);
+    }
+
+    private void RotateRail()
+    {
         Transform indexFinger = m_InteractingHand.skeleton.indexTip;
-
-        if(m_Pivot == Vector3.zero)
-        {
-            Transform lastChild = m_Rails.GetLastChild();
-
-            if (lastChild.position == gameObject.transform.parent.position)
-                m_Pivot = m_EndEffector.transform.position;
-            else
-                m_Pivot = lastChild.position + (lastChild.up.normalized * lastChild.localScale.y);
-        }
-
         Vector3 connectingVector = indexFinger.position - m_Pivot;
-
-        if (m_Rail == null)
-        {
-            m_Rail = GameObject.Instantiate(m_RailPrefab);
-            m_Rail.transform.SetParent(gameObject.transform.parent);
-        }
 
         m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
         m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);

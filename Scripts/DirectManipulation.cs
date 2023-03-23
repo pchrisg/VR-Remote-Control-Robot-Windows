@@ -2,6 +2,8 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
+using UnityEngine.UIElements;
+using static UnityEngine.ParticleSystem;
 
 [RequireComponent(typeof(Interactable))]
 
@@ -20,6 +22,7 @@ public class DirectManipulation : MonoBehaviour
     private Hand m_OtherHand = null;
 
     private Vector3 m_InitPos = Vector3.zero;
+    private Quaternion m_FocusRot = Quaternion.identity;
     private GameObject m_GhostObject = null;
 
     private readonly float m_Threshold = 5.0f;
@@ -38,6 +41,12 @@ public class DirectManipulation : MonoBehaviour
 
     private void Update()
     {
+        if(m_FocusRot != Quaternion.identity && m_FocusRot != gameObject.transform.rotation)
+        {
+            m_ROSPublisher.PublishMoveArm();
+            m_FocusRot = Quaternion.identity;
+        }
+
         if (m_ManipulationMode.mode == Mode.DIRECT)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
@@ -111,11 +120,19 @@ public class DirectManipulation : MonoBehaviour
             m_ROSPublisher.PublishMoveArm();
     }
 
+    public void FocusObjectSelected()
+    {
+        m_FocusRot = gameObject.transform.rotation;
+        Quaternion rotation = LookAtFocusObject();
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(gameObject.transform.position, rotation);
+        m_ROSPublisher.PublishMoveArm();
+    }
+
     private Quaternion LookAtFocusObject()
     {
         Vector3 right = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
 
-        float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
         Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 

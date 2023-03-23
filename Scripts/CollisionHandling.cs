@@ -142,9 +142,11 @@ public class CollisionHandling : MonoBehaviour
 
                     Renderer renderer = gameObject.GetComponent<Renderer>();
                     renderer.material = m_FocusObjectMaterial;
+
+                    GameObject.FindGameObjectWithTag("EndEffector").GetComponent<DirectManipulation>().FocusObjectSelected();
                 }
 
-                else if (m_CollisionObjects.m_FocusObject == gameObject)
+                else if (m_CollisionObjects.m_FocusObject == gameObject && m_ManipulationMode.mode != Mode.RAILCREATOR)
                 {
                     m_CollisionObjects.m_FocusObject = null;
 
