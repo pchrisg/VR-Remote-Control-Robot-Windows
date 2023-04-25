@@ -2,13 +2,14 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
-using UnityEngine.UIElements;
-using static UnityEngine.ParticleSystem;
 
 [RequireComponent(typeof(Interactable))]
 
 public class DirectManipulation : MonoBehaviour
 {
+    [Header("Material")]
+    [SerializeField] Material m_EndEffectorMat = null;
+
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
@@ -43,6 +44,7 @@ public class DirectManipulation : MonoBehaviour
     {
         if(m_FocusRot != Quaternion.identity && m_FocusRot != gameObject.transform.rotation)
         {
+            m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
             m_ROSPublisher.PublishMoveArm();
             m_FocusRot = Quaternion.identity;
         }
@@ -110,9 +112,13 @@ public class DirectManipulation : MonoBehaviour
         }            
 
         if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
-            rotation = LookAtFocusObject();
+        {
+            position = PositionSnapping(position);
+            rotation = LookAtFocusObject(position);
+        }
+            
         else if (!m_Trigger.GetState(m_OtherHand.handType))
-            rotation = Snapping();
+            rotation = RotationSnapping();
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
@@ -123,14 +129,23 @@ public class DirectManipulation : MonoBehaviour
     public void FocusObjectSelected()
     {
         m_FocusRot = gameObject.transform.rotation;
-        Quaternion rotation = LookAtFocusObject();
+        Quaternion rotation = LookAtFocusObject(gameObject.transform.position);
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(gameObject.transform.position, rotation);
-        m_ROSPublisher.PublishMoveArm();
     }
 
-    private Quaternion LookAtFocusObject()
+    private Quaternion LookAtFocusObject(Vector3 position)
     {
-        Vector3 right = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
+        /*Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
+
+        Vector3 right = position - focusObject.position;
+        Vector3 forward = Vector3.Cross(right.normalized, m_GhostObject.transform.up.normalized);
+        Vector3 up = Vector3.Cross(forward.normalized, right.normalized);
+
+        return Quaternion.LookRotation(forward, up);*/
+
+        Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
+
+        Vector3 right = position - focusObject.position;
 
         float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
@@ -141,7 +156,30 @@ public class DirectManipulation : MonoBehaviour
         return Quaternion.LookRotation(forward, up);
     }
 
-    private Quaternion Snapping()
+    private Vector3 PositionSnapping(Vector3 position)
+    {
+        Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
+        Vector3 connectingVector = position - focusObject.position;
+
+        float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObject.up)) * Mathf.Rad2Deg;
+        if (Mathf.Abs(90.0f - angle) < m_Threshold)
+        {
+            m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
+            return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
+        }
+
+        print(angle);
+        if (angle < m_Threshold)
+        {
+            m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
+            return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
+        }
+
+        m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
+        return position;
+    }
+
+    private Quaternion RotationSnapping()
     {
         float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         if (Mathf.Abs(90.0f - angle) < m_Threshold)
@@ -149,6 +187,8 @@ public class DirectManipulation : MonoBehaviour
             Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up.normalized);
             float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
             Vector3 up = ang <= 90 ? Vector3.up : -Vector3.up;
+
+            m_EndEffectorMat.color = new Color(1.0f, 0.0f, 1.0f, 100.0f/255.0f);
             return Quaternion.LookRotation(forward, up);
         }
 
@@ -158,9 +198,11 @@ public class DirectManipulation : MonoBehaviour
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
             Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 
+            m_EndEffectorMat.color = new Color(0.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return Quaternion.LookRotation(forward, up);
         }
 
+        m_EndEffectorMat.color = new Color(51.0f/255.0f, 51.0f/255.0f, 51.0f/255.0f, 100.0f / 255.0f);
         return m_GhostObject.transform.rotation;
     }
 

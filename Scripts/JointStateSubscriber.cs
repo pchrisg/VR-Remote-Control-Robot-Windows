@@ -24,7 +24,8 @@ public class JointStateSubscriber : MonoBehaviour
     private ArticulationBody[] m_GripperJoints = null;
     private ArticulationBody[] m_EndEffectorJoints = null;
 
-    [HideInInspector] public static readonly string[] m_UR5LinkNames = { 
+    [HideInInspector] 
+    public static readonly string[] m_UR5LinkNames = { 
         "base_link/base_link_inertia/shoulder_pan_joint", 
         "/shoulder_lift_joint",
         "/elbow_joint",
@@ -56,26 +57,26 @@ public class JointStateSubscriber : MonoBehaviour
         m_UR5Angles = new float[6];
         m_UR5Joints = new ArticulationBody[6];
 
-        string linkname = string.Empty;
+        string linkName = string.Empty;
         for (var i = 0; i < k_UR5NumJoints; i++)
         {
-            linkname += m_UR5LinkNames[i];
-            m_UR5Joints[i] = m_UR5.transform.Find(linkname).GetComponent<ArticulationBody>();
+            linkName += m_UR5LinkNames[i];
+            m_UR5Joints[i] = m_UR5.transform.Find(linkName).GetComponent<ArticulationBody>();
         }
 
         m_GripperAngles = new float[11];
         m_GripperJoints = new ArticulationBody[11];
         m_EndEffectorJoints = new ArticulationBody[11];
 
-        linkname = string.Empty;
+        linkName = string.Empty;
         for (var i = 1; i < k_GripperNumJoints; i += 4)
         {
-            linkname = m_GripperLinkNames[0];
+            linkName = m_GripperLinkNames[0];
             for (var j = i; j < i + 4 && j < k_GripperNumJoints + 1; j++)
             {
-                linkname += m_GripperLinkNames[j];
-                m_GripperJoints[j - 1] = m_Gripper.transform.Find(linkname).GetComponent<ArticulationBody>();
-                m_EndEffectorJoints[j - 1] = m_EndEffector.transform.Find(linkname).GetComponent<ArticulationBody>();
+                linkName += m_GripperLinkNames[j];
+                m_GripperJoints[j - 1] = m_Gripper.transform.Find(linkName).GetComponent<ArticulationBody>();
+                m_EndEffectorJoints[j - 1] = m_EndEffector.transform.Find(linkName).GetComponent<ArticulationBody>();
             }
         }
 

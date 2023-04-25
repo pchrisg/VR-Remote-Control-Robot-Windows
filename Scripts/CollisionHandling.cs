@@ -15,6 +15,7 @@ public class CollisionHandling : MonoBehaviour
     public Material m_FocusObjectMaterial = null;
 
     private ManipulationMode m_ManipulationMode = null;
+    private Gripper m_Gripper = null;
     private CollisionObjects m_CollisionObjects = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
@@ -29,18 +30,19 @@ public class CollisionHandling : MonoBehaviour
         "HandColliderLeft(Clone)/fingers/finger_index_2_r" };
     private Collider m_RightIndex = null;
     private Collider m_LeftIndex = null;
-    private Collider[] m_EndEffector = null;
-    private Collider[] m_UR5 = null;
-    private Collider[] m_Gripper = null;
+    private Collider[] m_ColEndEffector = null;
+    private Collider[] m_ColUR5 = null;
+    private Collider[] m_ColGripper = null;
 
     private void Awake()
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
-        
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform.Find("palm").GetComponentsInChildren<Collider>();
-        m_UR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
-        m_Gripper = GameObject.FindGameObjectWithTag("Gripper").GetComponentsInChildren<Collider>();
+
+        m_ColEndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform.Find("palm").GetComponentsInChildren<Collider>();
+        m_ColUR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
+        m_ColGripper = GameObject.FindGameObjectWithTag("Gripper").GetComponentsInChildren<Collider>();
 
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     }
@@ -60,11 +62,11 @@ public class CollisionHandling : MonoBehaviour
     {
         bool isColliding = false;
 
-        if (m_ManipulationMode.mode == Mode.GRIPPER && m_isAttachable)
+        if (m_Gripper.isGripping && m_isAttachable)
         {
             isColliding = false;
 
-            foreach (var collider in m_Gripper)
+            foreach (var collider in m_ColGripper)
             {
                 if (other == collider)
                 {
@@ -77,6 +79,7 @@ public class CollisionHandling : MonoBehaviour
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_AttachedMaterial;
+                m_Gripper.SetAttObjSize();
 
                 m_isAttached = true;
             }
@@ -84,7 +87,7 @@ public class CollisionHandling : MonoBehaviour
 
         else if(!m_isAttached)
         {
-            foreach (var collider in m_EndEffector)
+            foreach (var collider in m_ColEndEffector)
             {
                 if (other == collider)
                 {
@@ -95,7 +98,7 @@ public class CollisionHandling : MonoBehaviour
 
             if (!isColliding)
             {
-                foreach (Collider collider in m_UR5)
+                foreach (Collider collider in m_ColUR5)
                 {
                     if (other == collider)
                     {
@@ -161,11 +164,11 @@ public class CollisionHandling : MonoBehaviour
     {
         bool isntColliding = false;
 
-        if (m_ManipulationMode.mode == Mode.GRIPPER && m_isAttached)
+        if (m_Gripper.isGripping && m_isAttached)
         {
             isntColliding = false;
 
-            foreach (var collider in m_Gripper)
+            foreach (var collider in m_ColGripper)
             {
                 if (other == collider)
                 {
@@ -179,13 +182,14 @@ public class CollisionHandling : MonoBehaviour
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMaterial : m_EludingMaterial;
 
+                m_Gripper.ResetAttObjSize();
                 m_isAttached = false;
             }
         }
 
         else if(!m_isAttached)
         {
-            foreach (var collider in m_EndEffector)
+            foreach (var collider in m_ColEndEffector)
             {
                 if (other == collider)
                 {
@@ -196,7 +200,7 @@ public class CollisionHandling : MonoBehaviour
 
             if (!isntColliding)
             {
-                foreach (Collider collider in m_UR5)
+                foreach (Collider collider in m_ColUR5)
                 {
                     if (other == collider)
                     {

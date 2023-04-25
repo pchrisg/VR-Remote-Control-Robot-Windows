@@ -2,28 +2,33 @@ using RosMessageTypes.Robotiq3fGripperArticulated;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
-using ManipulationOptions;
 
 public class Gripper : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
-    private ManipulationMode m_ManipulationMode = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
     private SteamVR_Action_Single m_Squeeze = null;
 
     private bool isInteracting = false;
+    private bool[] isHandHovering = { false, false };
     private Hand m_InitHand = null;
     private Hand m_InteractingHand = null;
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
 
-    private readonly float m_MaxGrip = 220;
+    private readonly float m_MaxGrip = 220.0f;
+    private float m_ObjGrip = 220.0f;
+    private float m_CurrentGrip = 0.0f;
+    private float m_TargetGrip = 0.0f;
+
+    private readonly float m_GripSpeed = 1.0f;
+
+    [HideInInspector] public bool isGripping = false;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Squeeze = SteamVR_Input.GetAction<SteamVR_Action_Single>("SqueezeTrigger");
@@ -34,27 +39,20 @@ public class Gripper : MonoBehaviour
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.GRIPPER)
+        if (isGripping)
         {
             if (!isInteracting)
             {
-                if (m_Trigger.GetState(m_RightHand.handType))
-                {
-                    m_InitHand = m_RightHand;
-                    m_InteractingHand = m_LeftHand;
-                    isInteracting = true;
-                }
-                else if (m_Trigger.GetState(m_LeftHand.handType))
-                {
-                    m_InitHand = m_LeftHand;
-                    m_InteractingHand = m_RightHand;
-                    isInteracting = true;
-                }
+                if(m_InitHand == null)
+                    TriggerGrabbedCheck();
+
+                else if (!m_Trigger.GetState(m_InitHand.handType) && !m_Trigger.GetState(m_InteractingHand.handType))
+                    TriggerReleased();
             }
             else
             {
                 if (m_Trigger.GetStateUp(m_InitHand.handType))
-                    TriggerReleased();
+                    isInteracting = false;
 
                 else if (m_Trigger.GetState(m_InitHand.handType))
                     CloseGripper();
@@ -62,11 +60,79 @@ public class Gripper : MonoBehaviour
         }
     }
 
+    public void Show()
+    {
+        isGripping = !isGripping;
+
+        TriggerReleased();
+    }
+
+    private void OnHandHoverBegin(Hand hand)
+    {
+        if (hand == m_RightHand)
+            isHandHovering[0] = true;
+        else
+            isHandHovering[1] = true;
+    }
+
+    private void HandHoverUpdate(Hand hand)
+    {
+        if (hand == m_RightHand)
+            isHandHovering[0] = true;
+        else
+            isHandHovering[1] = true;
+    }
+
+    private void TriggerGrabbedCheck()
+    {
+        if (m_Trigger.GetState(m_RightHand.handType) && !isHandHovering[0])
+        {
+            m_InitHand = m_RightHand;
+            m_InteractingHand = m_LeftHand;
+            isInteracting = true;
+        }
+        else if (m_Trigger.GetState(m_LeftHand.handType) && !isHandHovering[1])
+        {
+            m_InitHand = m_LeftHand;
+            m_InteractingHand = m_RightHand;
+            isInteracting = true;
+        }
+    }
+
+    public void SetAttObjSize()
+    {
+        if (m_ObjGrip == m_MaxGrip)
+            m_ObjGrip = m_CurrentGrip;
+    }
+
+    public void ResetAttObjSize()
+    {
+        m_ObjGrip = m_MaxGrip;
+    }
+
     private void CloseGripper()
     {
+        m_TargetGrip = m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip;
+
+        if(m_TargetGrip > m_CurrentGrip)
+        {
+            m_CurrentGrip += m_GripSpeed;
+            if (m_TargetGrip < m_CurrentGrip)
+                m_CurrentGrip = m_TargetGrip;
+
+            if (m_CurrentGrip > m_ObjGrip)
+                m_CurrentGrip = m_ObjGrip;
+        }
+        if (m_TargetGrip < m_CurrentGrip)
+        {
+            m_CurrentGrip -= m_GripSpeed;
+            if (m_TargetGrip > m_CurrentGrip)
+                m_CurrentGrip = m_TargetGrip;
+        }
+
         Robotiq3FGripperRobotOutputMsg outputMessage = new Robotiq3FGripperRobotOutputMsg();
         outputMessage.rACT = 1;
-        outputMessage.rPRA = (byte)(m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip);
+        outputMessage.rPRA = (byte)(m_CurrentGrip);
 
         m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
     }
@@ -76,5 +142,7 @@ public class Gripper : MonoBehaviour
         m_InitHand = null;
         m_InteractingHand = null;
         isInteracting = false;
+        isHandHovering[0] = false;
+        isHandHovering[1] = false;
     }
 }

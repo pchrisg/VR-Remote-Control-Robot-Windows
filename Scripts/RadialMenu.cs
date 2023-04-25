@@ -14,6 +14,7 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private Transform m_CursorTransform = null;
     [SerializeField] private SpriteRenderer m_SRPlanRob = null;
     [SerializeField] private SpriteRenderer m_SRActiveMode = null;
+    [SerializeField] private SpriteRenderer m_SRGripper = null;
 
     [Header("Sprites")]
     [SerializeField] private Sprite[] sprites = new Sprite[13];
@@ -28,12 +29,14 @@ public class RadialMenu : MonoBehaviour
 
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
+    private Gripper m_Gripper = null;
 
     private ManipulationOptions.Mode m_MenuMode = ManipulationOptions.Mode.DIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
     private List<RadialSection> m_RadialSections = null;
     private RadialSection m_HighlightedSection = null;
     private bool isPlanning = false;
+    private bool isGripping = false;
 
     private readonly float degreeIncrement = 60.0f;
 
@@ -41,6 +44,7 @@ public class RadialMenu : MonoBehaviour
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
         CreateAndSetupSections();
     }
 
@@ -74,7 +78,7 @@ public class RadialMenu : MonoBehaviour
             northwest
         };
 
-        TogglePlanRob();
+        //TogglePlanRob();
         SetSectionIcons();
 
         m_SRPlanRob.sprite = null;
@@ -85,24 +89,28 @@ public class RadialMenu : MonoBehaviour
     {
         if(m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
         {
-            TogglePlanRob();
-
-            for(int i = 1; i < 6; i++)
+            for(int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = sprites[i];
             }
             m_MenuMode = ManipulationOptions.Mode.DIRECT;
             m_SRActiveMode.sprite = null;
+
+            SetPlanRobIcon();
+            SetGripIcon();
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.SDOF)
         {
-            for (int i = 1; i < 6; i++)
+            for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[1].iconRenderer.sprite = sprites[7];
             m_MenuMode = ManipulationOptions.Mode.SDOF;
             m_SRActiveMode.sprite = sprites[1];
+
+            SetPlanRobIcon();
+            SetGripIcon();
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.ATTOBJCREATOR)
         {
@@ -124,16 +132,6 @@ public class RadialMenu : MonoBehaviour
             m_MenuMode = ManipulationOptions.Mode.COLOBJCREATOR;
             m_SRActiveMode.sprite = sprites[3];
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.GRIPPER)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                m_RadialSections[i].iconRenderer.sprite = null;
-            }
-            m_RadialSections[4].iconRenderer.sprite = sprites[10];
-            m_MenuMode = ManipulationOptions.Mode.GRIPPER;
-            m_SRActiveMode.sprite = sprites[4];
-        }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAILCREATOR)
         {
             for (int i = 0; i < 6; i++)
@@ -146,27 +144,53 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAIL)
         {
-            m_RadialSections[0].iconRenderer.sprite = sprites[0];
             m_RadialSections[5].iconRenderer.sprite = sprites[12];
             m_MenuMode = ManipulationOptions.Mode.RAIL;
             m_SRActiveMode.sprite = sprites[11];
+
+            SetPlanRobIcon();
+            SetGripIcon();
         }
     }
 
-    private void TogglePlanRob()
+    private void SetPlanRobIcon()
     {
-        if(!m_PlanningRobot.isPlanning)
+        isPlanning = m_PlanningRobot.isPlanning;
+
+        if (!isPlanning)
         {
             m_RadialSections[0].iconRenderer.sprite = sprites[0];
             m_SRPlanRob.sprite = null;
+
+            m_RadialSections[4].iconRenderer.sprite = sprites[4];
         }
         else
         {
             m_RadialSections[0].iconRenderer.sprite = sprites[6];
             m_SRPlanRob.sprite = sprites[0];
-        }
 
-        isPlanning = m_PlanningRobot.isPlanning;
+            m_RadialSections[4].iconRenderer.sprite = null;
+        }
+    }
+
+    private void SetGripIcon()
+    {
+        isGripping = m_Gripper.isGripping;
+
+        if (!isGripping)
+        {
+            m_RadialSections[4].iconRenderer.sprite = sprites[4];
+            m_SRGripper.sprite = null;
+
+            m_RadialSections[0].iconRenderer.sprite = sprites[0];
+        }
+        else
+        {
+            m_RadialSections[4].iconRenderer.sprite = sprites[10];
+            m_SRGripper.sprite = sprites[4];
+
+            m_RadialSections[0].iconRenderer.sprite = null;
+        }
     }
 
     private float GetDegree(Vector2 direction)
@@ -221,7 +245,10 @@ public class RadialMenu : MonoBehaviour
         m_HighlightedSection.onPress.Invoke();
 
         if (isPlanning != m_PlanningRobot.isPlanning)
-            TogglePlanRob();
+            SetPlanRobIcon();
+
+        if (isGripping != m_Gripper.isGripping)
+            SetGripIcon();
 
         if (m_MenuMode != m_ManipulationMode.mode)
             SetSectionIcons();

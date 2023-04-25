@@ -11,7 +11,6 @@ namespace ManipulationOptions
         RAIL,
         RAILCREATOR,
         COLOBJCREATOR,
-        GRIPPER,
         ATTOBJCREATOR
     };
 }
@@ -27,6 +26,7 @@ public class ManipulationMode : MonoBehaviour
     public Mode mode = Mode.DIRECT;
 
     private PlanningRobot m_PlanningRobot = null;
+    private Gripper m_Gripper = null;
 
     private SteamVR_Action_Boolean m_Trackpad = null;
     private SteamVR_Action_Boolean m_Menu = null;
@@ -35,6 +35,7 @@ public class ManipulationMode : MonoBehaviour
     private void Awake()
     {
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
 
         m_Menu = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressMenu");
         m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressTrackpad");
@@ -56,8 +57,13 @@ public class ManipulationMode : MonoBehaviour
 
     public void TogglePlanner()
     {
-        if(mode != Mode.ATTOBJCREATOR && mode != Mode.COLOBJCREATOR && mode != Mode.GRIPPER && mode != Mode.RAILCREATOR)
+        if(!m_Gripper.isGripping &&
+           (mode == Mode.DIRECT ||
+           mode == Mode.SDOF ||
+           mode == Mode.RAIL))
+        {
             m_PlanningRobot.Show();
+        }
     }
 
     public void ToggleWidget()
@@ -82,6 +88,9 @@ public class ManipulationMode : MonoBehaviour
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show();
 
+            if (m_Gripper.isGripping)
+                m_Gripper.Show();
+
             m_ColObjCreator.Show(true);
             mode = Mode.ATTOBJCREATOR;
         }
@@ -100,6 +109,9 @@ public class ManipulationMode : MonoBehaviour
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show();
 
+            if (m_Gripper.isGripping)
+                m_Gripper.Show();
+
             m_ColObjCreator.Show(true);
             mode = Mode.COLOBJCREATOR;
         }
@@ -113,16 +125,13 @@ public class ManipulationMode : MonoBehaviour
 
     public void ToggleGripper()
     {
-        if (mode == Mode.DIRECT)
+        if (!m_PlanningRobot.isPlanning &&
+           (mode == Mode.DIRECT ||
+           mode == Mode.SDOF ||
+           mode == Mode.RAIL))
         {
-            if (m_PlanningRobot.isPlanning)
-                m_PlanningRobot.Show();
-
-            mode = Mode.GRIPPER;
+            m_Gripper.Show();
         }
-
-        else if (mode == Mode.GRIPPER)
-            mode = Mode.DIRECT;
     }
 
     public void ToggleRailCreator()
@@ -131,6 +140,9 @@ public class ManipulationMode : MonoBehaviour
         {
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show();
+
+            if (m_Gripper.isGripping)
+                m_Gripper.Show();
 
             m_RailCreator.Show(true);
             mode = Mode.RAILCREATOR;
