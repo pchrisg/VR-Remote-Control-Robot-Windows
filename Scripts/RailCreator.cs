@@ -26,8 +26,6 @@ public class RailCreator : MonoBehaviour
     private Hand m_InteractingHand = null;
 
     private Vector3 m_Pivot = Vector3.zero;
-    private readonly float m_AngleThreshold = 5.0f;
-    private readonly float m_DistanceThreshold = 0.05f;
 
     private void Awake()
     {
@@ -102,6 +100,8 @@ public class RailCreator : MonoBehaviour
 
         m_Rail = GameObject.Instantiate(m_RailPrefab);
         m_Rail.transform.SetParent(gameObject.transform.parent);
+
+        RotateRail();
     }
 
     private void RotateRail()
@@ -120,21 +120,23 @@ public class RailCreator : MonoBehaviour
         m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
         m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        if (Mathf.Abs(90.0f - angle) < m_AngleThreshold)
+        if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
             Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
             m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 0.0f, 255.0f);
         }
 
-        if (angle < m_AngleThreshold || Mathf.Abs(180.0f - angle) < m_AngleThreshold)
+        if (angle < ManipulationMode.ANGLETHRESHOLD ||
+            Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
             Vector3 projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
             m_Rail.GetComponent<Renderer>().material.color = new Color(0.0f, 255.0f, 0.0f);
         }
 
-        if (m_Rails.rails.Length > 1 && (indexFinger.position - m_Rails.rails[0].start).magnitude < m_DistanceThreshold)
+        if (m_Rails.rails.Length > 1 &&
+            (indexFinger.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
             Vector3 projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
@@ -143,7 +145,8 @@ public class RailCreator : MonoBehaviour
             m_RailMat.color = new Color(255.0f, 255.0f, 0.0f);
         }
 
-        if (m_CollisionObjects.m_FocusObject != null && (indexFinger.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < m_DistanceThreshold)
+        if (m_CollisionObjects.m_FocusObject != null && 
+            (indexFinger.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
             Vector3 projectedConnectingVector = m_CollisionObjects.m_FocusObject.transform.position - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));

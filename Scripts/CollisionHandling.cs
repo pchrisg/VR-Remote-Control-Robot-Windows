@@ -40,9 +40,9 @@ public class CollisionHandling : MonoBehaviour
         m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
 
-        m_ColEndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform.Find("palm").GetComponentsInChildren<Collider>();
+        m_ColEndEffector = m_Gripper.transform.Find("palm").GetComponentsInChildren<Collider>();
         m_ColUR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
-        m_ColGripper = GameObject.FindGameObjectWithTag("Gripper").GetComponentsInChildren<Collider>();
+        m_ColGripper = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Collider>();
 
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     }
@@ -79,7 +79,7 @@ public class CollisionHandling : MonoBehaviour
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_AttachedMaterial;
-                m_Gripper.SetAttObjSize();
+                m_Gripper.SetObjGripSize();
 
                 m_isAttached = true;
             }
@@ -115,7 +115,7 @@ public class CollisionHandling : MonoBehaviour
                 if (!m_IsPlayableArea)
                 {
                     renderer.material = m_CollidingMaterial;
-                    GameObject.FindGameObjectWithTag("EndEffector").GetComponent<AudioSource>().Play();
+                    m_Gripper.Collide();
                 }
                 else
                     renderer.material = m_InBoundsMaterial;
@@ -146,7 +146,7 @@ public class CollisionHandling : MonoBehaviour
                     Renderer renderer = gameObject.GetComponent<Renderer>();
                     renderer.material = m_FocusObjectMaterial;
 
-                    GameObject.FindGameObjectWithTag("EndEffector").GetComponent<DirectManipulation>().FocusObjectSelected();
+                    m_Gripper.GetComponent<DirectManipulation>().FocusObjectSelected();
                 }
 
                 else if (m_CollisionObjects.m_FocusObject == gameObject && m_ManipulationMode.mode != Mode.RAILCREATOR)
@@ -162,22 +162,22 @@ public class CollisionHandling : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        bool isntColliding = false;
+        bool isNotColliding = false;
 
         if (m_Gripper.isGripping && m_isAttached)
         {
-            isntColliding = false;
+            isNotColliding = false;
 
             foreach (var collider in m_ColGripper)
             {
                 if (other == collider)
                 {
-                    isntColliding = true;
+                    isNotColliding = true;
                     break;
                 }
             }
 
-            if (isntColliding)
+            if (isNotColliding)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMaterial : m_EludingMaterial;
@@ -193,24 +193,24 @@ public class CollisionHandling : MonoBehaviour
             {
                 if (other == collider)
                 {
-                    isntColliding = true;
+                    isNotColliding = true;
                     break;
                 }
             }
 
-            if (!isntColliding)
+            if (!isNotColliding)
             {
                 foreach (Collider collider in m_ColUR5)
                 {
                     if (other == collider)
                     {
-                        isntColliding = true;
+                        isNotColliding = true;
                         break;
                     }
                 }
             }
 
-            if (isntColliding)
+            if (isNotColliding)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
 
@@ -220,7 +220,7 @@ public class CollisionHandling : MonoBehaviour
                 else
                 {
                     renderer.material = m_OutOfBoundsMaterial;
-                    GameObject.FindGameObjectWithTag("EndEffector").GetComponent<AudioSource>().Play();
+                    m_Gripper.Collide();
                 }
             }
         }

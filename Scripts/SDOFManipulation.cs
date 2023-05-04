@@ -8,7 +8,8 @@ public class SDOFManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private PlanningRobot m_PlanningRobot = null;
     private ManipulationMode m_ManipulationMode = null;
-    private GameObject m_EndEffector = null;
+    private Transform m_EndEffector = null;
+    private Gripper m_Gripper = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -25,23 +26,20 @@ public class SDOFManipulation : MonoBehaviour
     [HideInInspector] public Hand m_InteractingHand = null;
     [HideInInspector] public Interactable m_Interactable = null;
 
-    private readonly float m_DistanceThreshold = 0.05f;
-    private readonly float m_AngleThreshold = 2.0f;
-    private readonly float m_ScalingFactor = 0.25f;
-
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform;
+        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
     }
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.SDOF)
+        if (m_ManipulationMode.mode == Mode.SDOF && !m_Gripper.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -87,7 +85,7 @@ public class SDOFManipulation : MonoBehaviour
         if(!isTranslating && !isRotating)
         {
             Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitHandPos;
-            if (connectingVector.magnitude >= m_DistanceThreshold)
+            if (connectingVector.magnitude >= ManipulationMode.DISTANCETHRESHOLD)
             {
                 Transform handleAxis = m_Interactable.transform.parent;
 
@@ -128,14 +126,14 @@ public class SDOFManipulation : MonoBehaviour
         if (m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 scaledVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
-            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, handleAxis.up) * m_ScalingFactor;
+            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, handleAxis.up) * ManipulationMode.SCALINGFACTOR;
 
             projectedConnectingVector = scaledPos - m_Interactable.transform.position;
         }
 
-        Vector3 position = m_EndEffector.transform.position + projectedConnectingVector;
+        Vector3 position = m_EndEffector.position + projectedConnectingVector;
 
-        m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(position, m_EndEffector.transform.rotation);
+        m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(position, m_EndEffector.rotation);
     }
 
     void Rotate()
@@ -156,12 +154,12 @@ public class SDOFManipulation : MonoBehaviour
 
         if (m_Trigger.GetState(m_OtherHand.handType))
         {
-            angle = Vector3.SignedAngle(m_InitDir, direction, m_PlaneNormal) * m_ScalingFactor;
+            angle = Vector3.SignedAngle(m_InitDir, direction, m_PlaneNormal) * ManipulationMode.SCALINGFACTOR;
             m_InitDir = direction;
         }
 
-        Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_EndEffector.transform.rotation;
-        m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(m_EndEffector.transform.position, rotation);
+        Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_EndEffector.rotation;
+        m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(m_EndEffector.position, rotation);
     }
 
     private Vector3 Snapping(Vector3 direction)
@@ -170,13 +168,13 @@ public class SDOFManipulation : MonoBehaviour
         float angleToY = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         float angleToZ = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
 
-        if (Mathf.Abs(90.0f - angleToX) < m_AngleThreshold)
+        if (Mathf.Abs(90.0f - angleToX) < ManipulationMode.ANGLETHRESHOLD)
             direction = Vector3.ProjectOnPlane(direction, Vector3.right);
 
-        if (Mathf.Abs(90.0f - angleToY) < m_AngleThreshold)
+        if (Mathf.Abs(90.0f - angleToY) < ManipulationMode.ANGLETHRESHOLD)
             direction = Vector3.ProjectOnPlane(direction, Vector3.up);
 
-        if (Mathf.Abs(90.0f - angleToZ) < m_AngleThreshold)
+        if (Mathf.Abs(90.0f - angleToZ) < ManipulationMode.ANGLETHRESHOLD)
             direction = Vector3.ProjectOnPlane(direction, Vector3.forward);
 
         return direction;

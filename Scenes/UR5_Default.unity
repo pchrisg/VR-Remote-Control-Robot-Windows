@@ -10472,6 +10472,8 @@ MonoBehaviour:
   m_GreyMat: {fileID: 2100000, guid: 1d5e920faef5f1245965b62d711697a0, type: 2}
   m_LightGreyMat: {fileID: 2100000, guid: 8b4c1a8a3d7a356459d078e6c651f9d0, type: 2}
   m_CollisionMat: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
+  m_Collision: {fileID: 8300000, guid: 560f6c1b9d8d7c1428cfb61148461a67, type: 3}
+  m_Motion: {fileID: 8300000, guid: a9f17655e65caef41bdeead5a5c80490, type: 3}
 --- !u!1 &904790811
 GameObject:
   m_ObjectHideFlags: 0
@@ -10856,6 +10858,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c25ef9b6f59eb9649af3a15f983fc2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Collision: {fileID: 8300000, guid: 560f6c1b9d8d7c1428cfb61148461a67, type: 3}
+  m_Attach: {fileID: 8300000, guid: fc0019bd3c91f034eb4d4979494f7d52, type: 3}
+  m_Detach: {fileID: 8300000, guid: cc5a5933d71a57f43b5333a85281644b, type: 3}
   isGripping: 0
 --- !u!114 &933266410
 MonoBehaviour:
@@ -10881,6 +10886,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0633283ebd4c462489eb2c87ec9dc44b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_EndEffectorMat: {fileID: 2100000, guid: 4522a65d2a35c24439c401a1b93394b3, type: 2}
 --- !u!114 &933266412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20152,7 +20158,7 @@ GameObject:
   - component: {fileID: 1741333626}
   - component: {fileID: 1741333625}
   m_Layer: 0
-  m_Name: Gripper
+  m_Name: Robotiq
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23383,8 +23389,8 @@ GameObject:
   - component: {fileID: 2008214767}
   - component: {fileID: 2008214766}
   m_Layer: 0
-  m_Name: Gripper
-  m_TagString: Gripper
+  m_Name: Robotiq
+  m_TagString: Robotiq
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

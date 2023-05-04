@@ -5,6 +5,11 @@ using Valve.VR.InteractionSystem;
 
 public class Gripper : MonoBehaviour
 {
+    [Header("Audio Clips")]
+    [SerializeField] private AudioClip m_Collision = null;
+    [SerializeField] private AudioClip m_Attach = null;
+    [SerializeField] private AudioClip m_Detach = null;
+
     private ROSPublisher m_ROSPublisher = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -99,15 +104,27 @@ public class Gripper : MonoBehaviour
         }
     }
 
-    public void SetAttObjSize()
+    public void SetObjGripSize()
     {
         if (m_ObjGrip == m_MaxGrip)
             m_ObjGrip = m_CurrentGrip;
+
+        gameObject.GetComponent<AudioSource>().clip = m_Attach;
+        gameObject.GetComponent<AudioSource>().Play();
     }
 
     public void ResetAttObjSize()
     {
         m_ObjGrip = m_MaxGrip;
+
+        gameObject.GetComponent<AudioSource>().clip = m_Detach;
+        gameObject.GetComponent<AudioSource>().Play();
+    }
+
+    public void Collide()
+    {
+        gameObject.GetComponent<AudioSource>().clip = m_Collision;
+        gameObject.GetComponent<AudioSource>().Play();
     }
 
     private void CloseGripper()

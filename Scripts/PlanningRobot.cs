@@ -1,10 +1,7 @@
-using RosMessageTypes.ChrisUr5Moveit;
 using System.Collections;
 using UnityEngine;
 using System.Linq;
 using RosMessageTypes.Moveit;
-using System;
-using System.Runtime.CompilerServices;
 
 public class PlanningRobot : MonoBehaviour
 {
@@ -49,8 +46,8 @@ public class PlanningRobot : MonoBehaviour
             m_UR5Joints[joint] = ur5.transform.Find(linkName).GetComponent<ArticulationBody>();
         }
 
-        GameObject gripper = GameObject.FindGameObjectWithTag("Gripper");
-        string connectingLink = linkName + "/flange/Gripper/";
+        GameObject gripper = GameObject.FindGameObjectWithTag("Robotiq");
+        string connectingLink = linkName + "/flange/Robotiq/";
         linkName = string.Empty;
         for (var i = 1; i < k_GripperNumJoints; i += 4)
         {
@@ -129,28 +126,28 @@ public class PlanningRobot : MonoBehaviour
                 m_PlanRobJoints[joint].xDrive = joint1XDrive;
             }
         }
+
+        if(!displayPath)
+            m_Trajectory = null;
     }
 
     public void DisplayTrajectory(RobotTrajectoryMsg trajectory)
     {
         m_Trajectory = trajectory;
+        displayPath = true;
         StopAllCoroutines();
         StartCoroutine(DisplayPath());
     }
 
     IEnumerator DisplayPath()
     {
-        if (m_Trajectory != null)
+        while(displayPath)
         {
-            displayPath = true;
-            while(displayPath)
-            {
-                GoToManipulator();
-                yield return new WaitForSeconds(0.5f);
+            GoToManipulator();
+            yield return new WaitForSeconds(0.5f);
 
-                GoToUR5();
-                yield return new WaitForSeconds(0.5f);
-            }
+            GoToUR5();
+            yield return new WaitForSeconds(0.5f);
         }
     }
 
@@ -162,7 +159,6 @@ public class PlanningRobot : MonoBehaviour
             m_ROSPublisher.PublishExecutePlan(m_Trajectory);
 
             GoToManipulator();
-            m_Trajectory = null;
         }
     }
 }

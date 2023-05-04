@@ -2,7 +2,6 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
-using UnityEngine.UIElements;
 
 [RequireComponent(typeof(Interactable))]
 
@@ -13,6 +12,7 @@ public class RailManipulation : MonoBehaviour
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
     private Rails m_Rails = null;
+    private Gripper m_Gripper = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -30,8 +30,7 @@ public class RailManipulation : MonoBehaviour
     private const float m_TimeInterval = 0.5f;
     private float period = 0.0f;
 
-    public readonly float m_Speed = 0.005f;
-    private readonly float m_ScalingFactor = 0.25f;
+    public readonly float m_Speed = 0.001f;
 
     private void Awake()
     {
@@ -40,6 +39,7 @@ public class RailManipulation : MonoBehaviour
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
+        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -58,7 +58,7 @@ public class RailManipulation : MonoBehaviour
 
     private void Update()
     {
-        if(m_ManipulationMode.mode == Mode.RAIL)
+        if(m_ManipulationMode.mode == Mode.RAIL && !m_Gripper.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -158,7 +158,7 @@ public class RailManipulation : MonoBehaviour
         if (m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 scaledVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
-            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, rail) * m_ScalingFactor;
+            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, rail) * ManipulationMode.SCALINGFACTOR;
 
 
             projectedConnectingVector = startVectorBigger ?
@@ -215,7 +215,7 @@ public class RailManipulation : MonoBehaviour
     private Vector3 Forward()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
-        float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? m_ScalingFactor : 1.0f;
+        float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? ManipulationMode.SCALINGFACTOR : 1.0f;
 
         Vector3 position = gameObject.transform.position += rail.normalized * m_Speed * scaling;
 
@@ -246,7 +246,7 @@ public class RailManipulation : MonoBehaviour
     private Vector3 Reverse()
     {
         Vector3 rail = m_Rails.rails[m_ActiveRail].end - m_Rails.rails[m_ActiveRail].start;
-        float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? m_ScalingFactor : 1.0f;
+        float scaling = m_Trigger.GetState(Player.instance.rightHand.handType) ? ManipulationMode.SCALINGFACTOR : 1.0f;
 
         Vector3 position = gameObject.transform.position -= rail.normalized * m_Speed * scaling;
 

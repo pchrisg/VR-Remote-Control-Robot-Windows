@@ -17,6 +17,10 @@ namespace ManipulationOptions
 
 public class ManipulationMode : MonoBehaviour
 {
+    [HideInInspector] public const float ANGLETHRESHOLD = 5.0f;     //5deg
+    [HideInInspector] public const float DISTANCETHRESHOLD = 0.05f; //5cm
+    [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
+
     [Header("Scene Objects")]
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
     [SerializeField] private RailCreator m_RailCreator = null;
@@ -28,8 +32,6 @@ public class ManipulationMode : MonoBehaviour
     private PlanningRobot m_PlanningRobot = null;
     private Gripper m_Gripper = null;
 
-    private SteamVR_Action_Boolean m_Trackpad = null;
-    private SteamVR_Action_Boolean m_Menu = null;
     private SteamVR_Action_Boolean m_Grip = null;
 
     private void Awake()
@@ -37,19 +39,16 @@ public class ManipulationMode : MonoBehaviour
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
 
-        m_Menu = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressMenu");
-        m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressTrackpad");
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-
-        m_Menu.onStateDown += MenuPressed;
+        m_Grip.onStateDown += GripGrabbed;
     }
 
     private void OnDestroy()
     {
-        m_Menu.onStateDown -= MenuPressed;
+        m_Grip.onStateDown -= GripGrabbed;
     }
 
-    private void MenuPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources any)
+    private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
         if (m_PlanningRobot.isPlanning)
             m_PlanningRobot.ExecuteTrajectory();

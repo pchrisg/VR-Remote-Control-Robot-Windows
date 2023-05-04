@@ -36,7 +36,7 @@ public class AttachableObject : MonoBehaviour
         colBox.AttachCollisionBox();
 
         m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
-        m_GhostObject.transform.SetParent(GameObject.FindGameObjectWithTag("Gripper").transform);
+        m_GhostObject.transform.SetParent(GameObject.FindGameObjectWithTag("Robotiq").transform);
         m_isAttached = true;
     }
 

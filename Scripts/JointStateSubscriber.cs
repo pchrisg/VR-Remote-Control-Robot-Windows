@@ -11,7 +11,7 @@ public class JointStateSubscriber : MonoBehaviour
     [SerializeField] private float[] m_GripperAngles = null;
 
     private GameObject m_UR5 = null;
-    private GameObject m_Gripper = null;
+    private GameObject m_Robotiq = null;
     private GameObject m_EndEffector = null;
 
     private ROSConnection m_Ros = null;
@@ -51,7 +51,7 @@ public class JointStateSubscriber : MonoBehaviour
     private void Awake()
     {
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
-        m_Gripper = GameObject.FindGameObjectWithTag("Gripper");
+        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
         m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
 
         m_UR5Angles = new float[6];
@@ -75,7 +75,7 @@ public class JointStateSubscriber : MonoBehaviour
             for (var j = i; j < i + 4 && j < k_GripperNumJoints + 1; j++)
             {
                 linkName += m_GripperLinkNames[j];
-                m_GripperJoints[j - 1] = m_Gripper.transform.Find(linkName).GetComponent<ArticulationBody>();
+                m_GripperJoints[j - 1] = m_Robotiq.transform.Find(linkName).GetComponent<ArticulationBody>();
                 m_EndEffectorJoints[j - 1] = m_EndEffector.transform.Find(linkName).GetComponent<ArticulationBody>();
             }
         }

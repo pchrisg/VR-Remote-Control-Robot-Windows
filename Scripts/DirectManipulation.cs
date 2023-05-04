@@ -14,6 +14,7 @@ public class DirectManipulation : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
+    private Gripper m_Gripper = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -26,15 +27,13 @@ public class DirectManipulation : MonoBehaviour
     private Quaternion m_FocusRot = Quaternion.identity;
     private GameObject m_GhostObject = null;
 
-    private readonly float m_Threshold = 5.0f;
-    private readonly float m_ScalingFactor = 0.25f;
-
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -49,7 +48,7 @@ public class DirectManipulation : MonoBehaviour
             m_FocusRot = Quaternion.identity;
         }
 
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.DIRECT && !m_Gripper.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -108,10 +107,11 @@ public class DirectManipulation : MonoBehaviour
         if (m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
-            position = m_InitPos + connectingVector * m_ScalingFactor;
+            position = m_InitPos + connectingVector * ManipulationMode.SCALINGFACTOR;
         }            
 
-        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
+        if (m_CollisionObjects.m_FocusObject != null && 
+            !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
         {
             position = PositionSnapping(position);
             rotation = LookAtFocusObject(position);
@@ -162,14 +162,14 @@ public class DirectManipulation : MonoBehaviour
         Vector3 connectingVector = position - focusObject.position;
 
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObject.up)) * Mathf.Rad2Deg;
-        if (Mathf.Abs(90.0f - angle) < m_Threshold)
+        if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
             m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
         }
 
         print(angle);
-        if (angle < m_Threshold)
+        if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
             m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
@@ -182,7 +182,7 @@ public class DirectManipulation : MonoBehaviour
     private Quaternion RotationSnapping()
     {
         float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        if (Mathf.Abs(90.0f - angle) < m_Threshold)
+        if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
             Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up.normalized);
             float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
@@ -192,7 +192,7 @@ public class DirectManipulation : MonoBehaviour
             return Quaternion.LookRotation(forward, up);
         }
 
-        if (angle < m_Threshold)
+        if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
             Vector3 right = Vector3.Project(m_GhostObject.transform.right, Vector3.up);
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
