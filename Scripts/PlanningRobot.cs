@@ -47,16 +47,15 @@ public class PlanningRobot : MonoBehaviour
         }
 
         GameObject gripper = GameObject.FindGameObjectWithTag("Robotiq");
-        string connectingLink = linkName + "/flange/Robotiq/";
-        linkName = string.Empty;
-        for (var i = 1; i < k_GripperNumJoints; i += 4)
+        string connectingLink = linkName + "/flange/Robotiq/palm/";
+        for (var i = 0; i < k_GripperNumJoints; i += 4)
         {
-            linkName = JointStateSubscriber.m_GripperLinkNames[0];
-            for (var j = i; j < i + 4 && j < k_GripperNumJoints + 1; j++)
+            linkName = string.Empty;
+            for (var j = i; j < i + 4 && j < k_GripperNumJoints; j++)
             {
                 linkName += JointStateSubscriber.m_GripperLinkNames[j];
-                m_GripperJoints[j - 1] = gripper.transform.Find(linkName).GetComponent<ArticulationBody>();
-                m_PlanGripJoints[j - 1] = gameObject.transform.Find(connectingLink+linkName).GetComponent<ArticulationBody>();
+                m_GripperJoints[j] = gripper.transform.Find(linkName).GetComponent<ArticulationBody>();
+                m_PlanGripJoints[j] = gameObject.transform.Find(connectingLink+linkName).GetComponent<ArticulationBody>();
             }
         }
 

@@ -26,25 +26,24 @@ public class JointStateSubscriber : MonoBehaviour
 
     [HideInInspector] 
     public static readonly string[] m_UR5LinkNames = { 
-        "base_link/base_link_inertia/shoulder_pan_joint", 
-        "/shoulder_lift_joint",
-        "/elbow_joint",
-        "/wrist_1_joint",
-        "/wrist_2_joint",
-        "/wrist_3_joint" };
+        "base_link/base_link_inertia/shoulder_link", 
+        "/upper_arm_link",
+        "/forearm_link",
+        "/wrist_1_link",
+        "/wrist_2_link",
+        "/wrist_3_link" };
 
     [HideInInspector]
     public static readonly string[] m_GripperLinkNames = {
-        "palm",
-        "/finger_1_link_0",
+        "finger_1_link_0",
         "/finger_1_link_1",
         "/finger_1_link_2",
         "/finger_1_link_3",
-        "/finger_2_link_0",
+        "finger_2_link_0",
         "/finger_2_link_1",
         "/finger_2_link_2",
         "/finger_2_link_3",
-        "/finger_middle_link_0/finger_middle_link_1",
+        "finger_middle_link_0/finger_middle_link_1",
         "/finger_middle_link_2",
         "/finger_middle_link_3" };
 
@@ -68,15 +67,15 @@ public class JointStateSubscriber : MonoBehaviour
         m_GripperJoints = new ArticulationBody[11];
         m_EndEffectorJoints = new ArticulationBody[11];
 
-        linkName = string.Empty;
-        for (var i = 1; i < k_GripperNumJoints; i += 4)
+        
+        for (var i = 0; i < k_GripperNumJoints; i += 4)
         {
-            linkName = m_GripperLinkNames[0];
-            for (var j = i; j < i + 4 && j < k_GripperNumJoints + 1; j++)
+            linkName = string.Empty;
+            for (var j = i; j < i + 4 && j < k_GripperNumJoints; j++)
             {
                 linkName += m_GripperLinkNames[j];
-                m_GripperJoints[j - 1] = m_Robotiq.transform.Find(linkName).GetComponent<ArticulationBody>();
-                m_EndEffectorJoints[j - 1] = m_EndEffector.transform.Find(linkName).GetComponent<ArticulationBody>();
+                m_GripperJoints[j] = m_Robotiq.transform.Find(linkName).GetComponent<ArticulationBody>();
+                m_EndEffectorJoints[j] = m_EndEffector.transform.Find("palm/"+linkName).GetComponent<ArticulationBody>();
             }
         }
 
