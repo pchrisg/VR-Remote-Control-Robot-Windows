@@ -5,11 +5,11 @@ using UnityEngine;
 public class CollisionObjects : MonoBehaviour
 {
     [Header("Materials")]
-    public Material m_AttObjMaterial = null;
-    public Material m_AttachedMaterial = null;
-    public Material m_ColObjMaterial = null;
-    public Material m_CollidingMaterial = null;
-    public Material m_FocusObjectMaterial = null;
+    public Material m_AttObjMat = null;
+    public Material m_AttachedMat = null;
+    public Material m_ColObjMat = null;
+    public Material m_CollidingMat = null;
+    public Material m_FocusObjectMat = null;
 
     [HideInInspector] public GameObject m_FocusObject = null;
 
@@ -17,23 +17,33 @@ public class CollisionObjects : MonoBehaviour
 
     private void Start()
     {
-        Invoke("MakeBase", 0.5f);
+        Invoke("MakeGloveBox", 0.5f);
     }
 
-    private void MakeBase()
+    private void MakeGloveBox()
+    {
+        MakeBox(new Vector3(0.0f, -0.025f, -0.4f), new Vector3(1.3f, 0.05f, 1.3f)); // left
+        MakeBox(new Vector3(-0.64f, 0.5f, -0.4f), new Vector3(0.02f, 1.0f, 1.3f)); // left
+        MakeBox(new Vector3(0.64f, 0.5f, -0.4f), new Vector3(0.02f, 1.0f, 1.3f)); // right
+        MakeBox(new Vector3(0.0f, 0.5f, -1.04f), new Vector3(1.3f, 1.0f, 0.02f)); // front
+        MakeBox(new Vector3(0.0f, 0.5f, 0.24f), new Vector3(1.3f, 1.0f, 0.02f)); // back
+        MakeBox(new Vector3(0.0f, 1.01f, -0.4f), new Vector3(1.3f, 0.02f, 1.3f)); // top
+    }
+
+    private void MakeBox(Vector3 position, Vector3 scale)
     {
         GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-        box.transform.position = new Vector3(0.0f, -0.05f, 0);
-        box.transform.localScale = new Vector3(1.0f, 0.1f, 1.0f);
-        box.GetComponent<Renderer>().material = m_ColObjMaterial;
+        box.transform.position = position;
+        box.transform.localScale = scale;
+        box.GetComponent<Renderer>().material = m_ColObjMat;
 
         box.AddComponent<Rigidbody>();
         box.GetComponent<Rigidbody>().isKinematic = true;
         
         box.AddComponent<CollisionHandling>();
-        box.GetComponent<CollisionHandling>().m_EludingMaterial = m_ColObjMaterial;
-        box.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollidingMaterial;
+        box.GetComponent<CollisionHandling>().m_EludingMaterial = m_ColObjMat;
+        box.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollidingMat;
 
         box.AddComponent<CollisionBox>();
         box.GetComponent<CollisionBox>().AddCollisionBox(GetFreeID().ToString());

@@ -6,6 +6,7 @@ namespace ManipulationOptions
 {
     public enum Mode
     {
+        SIMPLEDIRECT,
         DIRECT,
         SDOF,
         RAIL,
@@ -17,6 +18,9 @@ namespace ManipulationOptions
 
 public class ManipulationMode : MonoBehaviour
 {
+    [Header("Simple Direct")]
+    public bool simpleDirect = false;
+
     [HideInInspector] public const float ANGLETHRESHOLD = 5.0f;     //5deg
     [HideInInspector] public const float DISTANCETHRESHOLD = 0.05f; //5cm
     [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
@@ -41,6 +45,11 @@ public class ManipulationMode : MonoBehaviour
 
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Grip.onStateDown += GripGrabbed;
+
+        if (simpleDirect)
+            mode = Mode.SIMPLEDIRECT;
+        else
+            mode = Mode.DIRECT;
     }
 
     private void OnDestroy()
@@ -57,7 +66,8 @@ public class ManipulationMode : MonoBehaviour
     public void TogglePlanner()
     {
         if(!m_Gripper.isGripping &&
-           (mode == Mode.DIRECT ||
+           (mode == Mode.SIMPLEDIRECT ||
+           mode == Mode.DIRECT ||
            mode == Mode.SDOF ||
            mode == Mode.RAIL))
         {
@@ -125,7 +135,8 @@ public class ManipulationMode : MonoBehaviour
     public void ToggleGripper()
     {
         if (!m_PlanningRobot.isPlanning &&
-           (mode == Mode.DIRECT ||
+           (mode == Mode.SIMPLEDIRECT ||
+           mode == Mode.DIRECT ||
            mode == Mode.SDOF ||
            mode == Mode.RAIL))
         {

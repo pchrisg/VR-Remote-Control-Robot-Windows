@@ -8,7 +8,8 @@ using RosMessageTypes.Robotiq3fGripperArticulated;
 
 public class ROSPublisher : MonoBehaviour
 {
-    public bool m_Gazebo = false;
+    //Change to false if using real robotiq gripper
+    public bool m_Gazebo = true;
 
     [Header("ROS Topics")]
     [SerializeField] private readonly string m_PlanTrajTopic = "chris_plan_trajectory";

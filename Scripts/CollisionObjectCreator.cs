@@ -7,6 +7,9 @@ using Unity.VisualScripting;
 
 public class CollisionObjectCreator : MonoBehaviour
 {
+    [Header("Material")]
+    [SerializeField] private Material m_ColObjMat = null;
+
     private ManipulationMode m_ManipulationMode = null;
     private CollisionObjects m_CollisionObjects = null;
 
@@ -66,6 +69,12 @@ public class CollisionObjectCreator : MonoBehaviour
 
     public void Show(bool value)
     {
+        Color color = m_ColObjMat.color;
+        if (value)
+            m_ColObjMat.color = new Color(color.r, color.g, color.b, 1.0f);
+        else
+            m_ColObjMat.color = new Color(color.r, color.g, color.b, 0.0f);
+
         gameObject.SetActive(value);
     }
 
@@ -80,20 +89,20 @@ public class CollisionObjectCreator : MonoBehaviour
         m_NewBox.AddComponent<Rigidbody>();
         m_NewBox.GetComponent<Rigidbody>().isKinematic = true;
         m_NewBox.AddComponent<CollisionHandling>();
-        m_NewBox.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMaterial;
+        m_NewBox.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollisionObjects.m_CollidingMat;
 
         if(m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
-            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_ColObjMaterial;
-            m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_ColObjMaterial;
+            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_ColObjMat;
+            m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_ColObjMat;
         }
         else if(m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
         {
             m_NewBox.GetComponent<CollisionHandling>().m_isAttachable = true;
-            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_AttObjMaterial;
-            m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_AttObjMaterial;
-            m_NewBox.GetComponent<CollisionHandling>().m_AttachedMaterial = m_CollisionObjects.m_AttachedMaterial;
-            m_NewBox.GetComponent<CollisionHandling>().m_FocusObjectMaterial = m_CollisionObjects.m_FocusObjectMaterial;
+            m_NewBox.GetComponent<Renderer>().material = m_CollisionObjects.m_AttObjMat;
+            m_NewBox.GetComponent<CollisionHandling>().m_EludingMaterial = m_CollisionObjects.m_AttObjMat;
+            m_NewBox.GetComponent<CollisionHandling>().m_AttachedMaterial = m_CollisionObjects.m_AttachedMat;
+            m_NewBox.GetComponent<CollisionHandling>().m_FocusObjectMaterial = m_CollisionObjects.m_FocusObjectMat;
             m_NewBox.AddComponent<AttachableObject>();
         }
 

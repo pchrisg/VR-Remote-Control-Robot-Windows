@@ -87,7 +87,16 @@ public class RadialMenu : MonoBehaviour
 
     private void SetSectionIcons()
     {
-        if(m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.SIMPLEDIRECT)
+        {
+            m_MenuMode = ManipulationOptions.Mode.SIMPLEDIRECT;
+            m_SRActiveMode.sprite = null;
+
+            SetPlanRobIcon();
+            SetGripIcon();
+        }
+
+        if (m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
         {
             for(int i = 0; i < 6; i++)
             {
