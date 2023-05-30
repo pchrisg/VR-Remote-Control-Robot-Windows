@@ -28,13 +28,13 @@ public class ManipulationMode : MonoBehaviour
     [Header("Scene Objects")]
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
     [SerializeField] private RailCreator m_RailCreator = null;
-    [SerializeField] private CollisionObjectCreator m_ColObjCreator = null;
 
     [Header ("Mode")]
     public Mode mode = Mode.DIRECT;
 
     private PlanningRobot m_PlanningRobot = null;
     private Gripper m_Gripper = null;
+    private CollisionObjects m_CollisionObjects = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
 
@@ -42,6 +42,8 @@ public class ManipulationMode : MonoBehaviour
     {
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+
 
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Grip.onStateDown += GripGrabbed;
@@ -100,13 +102,13 @@ public class ManipulationMode : MonoBehaviour
             if (m_Gripper.isGripping)
                 m_Gripper.Show();
 
-            m_ColObjCreator.Show(true);
+            m_CollisionObjects.isCreating = true;
             mode = Mode.ATTOBJCREATOR;
         }
 
         else if (mode == Mode.ATTOBJCREATOR)
         {
-            m_ColObjCreator.Show(false);
+            m_CollisionObjects.isCreating = false;
             mode = Mode.DIRECT;
         }
     }
@@ -121,13 +123,13 @@ public class ManipulationMode : MonoBehaviour
             if (m_Gripper.isGripping)
                 m_Gripper.Show();
 
-            m_ColObjCreator.Show(true);
+            m_CollisionObjects.isCreating = true;
             mode = Mode.COLOBJCREATOR;
         }
 
         else if (mode == Mode.COLOBJCREATOR)
         {
-            m_ColObjCreator.Show(false);
+            m_CollisionObjects.isCreating = false;
             mode = Mode.DIRECT;
         }
     }

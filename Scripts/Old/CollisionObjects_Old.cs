@@ -1,10 +1,6 @@
 using UnityEngine;
-using Valve.VR;
-using Valve.VR.InteractionSystem;
-using ManipulationOptions;
-using Unity.VisualScripting;
 
-public class CollisionObjects : MonoBehaviour
+public class CollisionObjects_Old : MonoBehaviour
 {
     [Header("Materials")]
     public Material m_AttachedMat = null;
@@ -12,28 +8,12 @@ public class CollisionObjects : MonoBehaviour
     public Material m_FocusObjectMat = null;
 
     [HideInInspector] public GameObject m_FocusObject = null;
-    private static readonly string[] m_FingerNames = {
-        "HandColliderRight(Clone)/fingers/finger_index_2_r",
-        "HandColliderLeft(Clone)/fingers/finger_index_2_r" };
 
     private int m_Id = 0;
 
-    public bool isCreating = false;
-
     private void Start()
     {
-        Invoke("SetFingerColliderScript", 0.5f);   //Adds CollisionObjectCreator to fingers
-    }
-
-    private void SetFingerColliderScript()
-    {
-        GameObject rightIndex = Player.instance.transform.Find(m_FingerNames[0]).gameObject;
-        rightIndex.AddComponent<CollisionObjectCreator>();
-        rightIndex.GetComponent<CollisionObjectCreator>().hand = Player.instance.rightHand;
-
-        GameObject leftIndex = Player.instance.transform.Find(m_FingerNames[1]).gameObject;
-        leftIndex.AddComponent<CollisionObjectCreator>();
-        leftIndex.GetComponent<CollisionObjectCreator>().hand = Player.instance.leftHand;
+        Invoke("MakeGloveBox", 0.5f);   //Adds CollisionObjectCreator to fingers
     }
 
     /*private void MakeGloveBox()
