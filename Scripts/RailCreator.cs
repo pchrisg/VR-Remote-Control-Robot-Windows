@@ -2,6 +2,7 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
+using UnityEngine.UIElements;
 
 public class RailCreator : MonoBehaviour
 {
@@ -18,12 +19,10 @@ public class RailCreator : MonoBehaviour
     private GameObject m_EndEffector = null;
     private GameObject m_Rail = null;
 
-    private SteamVR_Action_Boolean m_Grip = null;
     private SteamVR_Action_Boolean m_Trigger = null;
 
-    private Hand m_RightHand = null;
-    private Hand m_LeftHand = null;
-    private Hand m_InteractingHand = null;
+    public Hand m_InteractingHand = null;
+    public bool isInteracting = false;
 
     private Vector3 m_Pivot = Vector3.zero;
 
@@ -34,12 +33,7 @@ public class RailCreator : MonoBehaviour
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
 
-        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
-        m_Trigger.onStateDown += SetRail;
-
-        m_LeftHand = Player.instance.leftHand;
-        m_RightHand = Player.instance.rightHand;
     }
 
     private void OnDisable()
@@ -50,37 +44,59 @@ public class RailCreator : MonoBehaviour
             m_Rail = null;
             m_Pivot = Vector3.zero;
         }
-    }
-
-    private void OnDestroy()
-    {
-        m_Trigger.onStateDown -= SetRail;
+        m_EndEffector.GetComponent<EndEffector>().ResetPosition();
     }
 
     private void Update()
     {
-        if(m_ManipulationMode.mode == Mode.RAILCREATOR)
+        if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            if (m_InteractingHand == null)
+            m_InteractingHand = m_EndEffector.GetComponent<DirectManipulation>().m_InteractingHand;
+
+            if (!isInteracting)
             {
-                if (m_Grip.GetState(m_RightHand.handType))
-                    m_InteractingHand = m_RightHand;
-                else if (m_Grip.GetState(m_LeftHand.handType))
-                    m_InteractingHand = m_LeftHand;
+                if( m_Trigger.GetStateDown(Player.instance.rightHand.handType) || 
+                    m_Trigger.GetStateDown(Player.instance.leftHand.handType))
+                    TriggerGrabbed();
             }
-            else
+
+            if (isInteracting)
             {
-                if (m_Grip.GetState(m_InteractingHand.handType))
-                {
-                    if (m_Rail == null)
-                        MakeRail();
-                    else
-                        RotateRail();
-                }
+                if (m_Trigger.GetStateUp(m_InteractingHand.handType))
+                    TriggerReleased();
 
                 else
-                    m_InteractingHand = null;
+                {
+                    if (m_Trigger.GetState(m_InteractingHand.handType))
+                        RotateRail();
+                }
             }
+        }
+    }
+
+    private void TriggerGrabbed()
+    {
+        if (m_InteractingHand != null && m_Trigger.GetState(m_InteractingHand.handType))
+        {
+            if (m_Rail == null)
+                MakeRail();
+
+            isInteracting = true;
+        }
+
+        else if(m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
+        {
+            Vector3 position = m_EndEffector.transform.position;
+            Quaternion rotation = m_EndEffector.transform.rotation;
+
+            Transform lastChild = m_Rails.GetLastChild();
+
+            position = lastChild.position - (lastChild.up.normalized * lastChild.localScale.y);
+
+            Destroy(lastChild.gameObject);
+            m_Rails.RemoveLastRail();
+
+            m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
         }
     }
 
@@ -106,13 +122,12 @@ public class RailCreator : MonoBehaviour
 
     private void RotateRail()
     {
-        Transform indexFinger = m_InteractingHand.skeleton.indexTip;
-        Vector3 connectingVector = indexFinger.position - m_Pivot;
+        Vector3 connectingVector = m_EndEffector.transform.position - m_Pivot;
 
         m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
         m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
 
-        Snapping(indexFinger, connectingVector);
+        Snapping(m_EndEffector.transform, connectingVector);
     }
 
     private void Snapping(Transform indexFinger, Vector3 connectingVector)
@@ -156,26 +171,19 @@ public class RailCreator : MonoBehaviour
         }
     }
 
-    private void SetRail(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    private void TriggerReleased()
     {
-        if(m_ManipulationMode.mode == Mode.RAILCREATOR)
+        if (m_Rail != null)
         {
-            if (m_Rail != null)
-            {
-                m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
-                m_Rails.AddRail(m_Rail);
+            m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
+            m_Rails.AddRail(m_Rail);
 
-                m_Rail.GetComponent<Renderer>().material = m_RailMat;
-                m_Rail = null;
-                m_Pivot = Vector3.zero;
-            }
-            else if (m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
-            {
-                GameObject lastChild = m_Rails.GetLastChild().gameObject;
-                Destroy(lastChild);
-                m_Rails.RemoveLastRail();
-            }
+            m_Rail.GetComponent<Renderer>().material = m_RailMat;
+            m_Rail = null;
+            m_Pivot = Vector3.zero;
         }
+
+        isInteracting = false;
     }
 
     public void Clear()

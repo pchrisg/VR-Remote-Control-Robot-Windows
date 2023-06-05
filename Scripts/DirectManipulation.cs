@@ -20,7 +20,7 @@ public class DirectManipulation : MonoBehaviour
     private SteamVR_Action_Boolean m_Trigger = null;
     
     private bool isInteracting = false;
-    private Hand m_InteractingHand = null;
+    public Hand m_InteractingHand = null;
     private Hand m_OtherHand = null;
 
     private Vector3 m_InitPos = Vector3.zero;
@@ -48,7 +48,7 @@ public class DirectManipulation : MonoBehaviour
             m_FocusRot = Quaternion.identity;
         }
 
-        if (m_ManipulationMode.mode == Mode.DIRECT && !m_Gripper.isGripping)
+        if ((m_ManipulationMode.mode == Mode.DIRECT || m_ManipulationMode.mode == Mode.RAILCREATOR) && !m_Gripper.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -80,6 +80,12 @@ public class DirectManipulation : MonoBehaviour
     {
         if (!isInteracting)
             m_InteractingHand = hand;
+    }
+
+    private void OnHandHoverEnd(Hand hand)
+    {
+        if (!isInteracting)
+            m_InteractingHand = null;
     }
 
     private void TriggerGrabbed()
@@ -117,43 +123,13 @@ public class DirectManipulation : MonoBehaviour
             rotation = LookAtFocusObject(position);
         }
             
-        else if (!m_Trigger.GetState(m_OtherHand.handType))
+        else if (m_ManipulationMode.mode == Mode.DIRECT && !m_Trigger.GetState(m_OtherHand.handType))
             rotation = RotationSnapping();
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
-        if (!m_PlanningRobot.isPlanning)
+        if (m_ManipulationMode.mode == Mode.DIRECT && !m_PlanningRobot.isPlanning)
             m_ROSPublisher.PublishMoveArm();
-    }
-
-    public void FocusObjectSelected()
-    {
-        m_FocusRot = gameObject.transform.rotation;
-        Quaternion rotation = LookAtFocusObject(gameObject.transform.position);
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(gameObject.transform.position, rotation);
-    }
-
-    private Quaternion LookAtFocusObject(Vector3 position)
-    {
-        /*Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
-
-        Vector3 right = position - focusObject.position;
-        Vector3 forward = Vector3.Cross(right.normalized, m_GhostObject.transform.up.normalized);
-        Vector3 up = Vector3.Cross(forward.normalized, right.normalized);
-
-        return Quaternion.LookRotation(forward, up);*/
-
-        Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
-
-        Vector3 right = position - focusObject.position;
-
-        float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
-        Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
-
-        up = Vector3.Cross(forward.normalized, right.normalized);
-
-        return Quaternion.LookRotation(forward, up);
     }
 
     private Vector3 PositionSnapping(Vector3 position)
@@ -206,17 +182,49 @@ public class DirectManipulation : MonoBehaviour
         return m_GhostObject.transform.rotation;
     }
 
+    public void FocusObjectSelected()
+    {
+        m_FocusRot = gameObject.transform.rotation;
+        Quaternion rotation = LookAtFocusObject(gameObject.transform.position);
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(gameObject.transform.position, rotation);
+    }
+
+    private Quaternion LookAtFocusObject(Vector3 position)
+    {
+        /*Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
+
+        Vector3 right = position - focusObject.position;
+        Vector3 forward = Vector3.Cross(right.normalized, m_GhostObject.transform.up.normalized);
+        Vector3 up = Vector3.Cross(forward.normalized, right.normalized);
+
+        return Quaternion.LookRotation(forward, up);*/
+
+        Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
+
+        Vector3 right = position - focusObject.position;
+
+        float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
+        Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+
+        up = Vector3.Cross(forward.normalized, right.normalized);
+
+        return Quaternion.LookRotation(forward, up);
+    }
+
     private void TriggerReleased()
     {
         GameObject.Destroy(m_GhostObject);
-        m_InteractingHand = null;
         m_OtherHand = null;
         m_InitPos = Vector3.zero;
         isInteracting = false;
 
-        if (m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishTrajectoryRequest();
-        else
-            m_ROSPublisher.PublishMoveArm();
+        if (m_ManipulationMode.mode == Mode.DIRECT)
+        {
+            if (m_PlanningRobot.isPlanning)
+                m_ROSPublisher.PublishTrajectoryRequest();
+            else
+                m_ROSPublisher.PublishMoveArm();
+        }
     }
 }
