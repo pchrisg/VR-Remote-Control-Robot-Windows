@@ -2,7 +2,6 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
-using UnityEngine.UIElements;
 
 public class RailCreator : MonoBehaviour
 {
@@ -127,11 +126,13 @@ public class RailCreator : MonoBehaviour
         m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
         m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
 
-        Snapping(m_EndEffector.transform, connectingVector);
+        Snapping();
     }
 
-    private void Snapping(Transform indexFinger, Vector3 connectingVector)
+    private void Snapping()
     {
+        Vector3 connectingVector = m_EndEffector.transform.position - m_Pivot;
+
         m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
         m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
@@ -151,7 +152,7 @@ public class RailCreator : MonoBehaviour
         }
 
         if (m_Rails.rails.Length > 1 &&
-            (indexFinger.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+            (m_EndEffector.transform.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
             Vector3 projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
@@ -161,7 +162,7 @@ public class RailCreator : MonoBehaviour
         }
 
         if (m_CollisionObjects.m_FocusObject != null && 
-            (indexFinger.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+            (m_EndEffector.transform.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
             Vector3 projectedConnectingVector = m_CollisionObjects.m_FocusObject.transform.position - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));

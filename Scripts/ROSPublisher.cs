@@ -5,6 +5,9 @@ using RosMessageTypes.Geometry;
 using RosMessageTypes.Moveit;
 using RosMessageTypes.ChrisUr5Moveit;
 using RosMessageTypes.Robotiq3fGripperArticulated;
+using RosMessageTypes.Std;
+using System.Collections;
+using System;
 
 public class ROSPublisher : MonoBehaviour
 {
@@ -15,6 +18,7 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
     [SerializeField] private readonly string m_ExecPlanTopic = "chris_execute_plan";
     [SerializeField] private readonly string m_MoveArmTopic = "chris_move_arm";
+    [SerializeField] private readonly string m_EmergencyStopTopic = "chris_emergency_stop";
     [SerializeField] private readonly string m_SdofTranslateTopic = "chris_sdof_translate";
     [SerializeField] private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
     [SerializeField] private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
@@ -26,6 +30,7 @@ public class ROSPublisher : MonoBehaviour
     private PlanningRobot m_PlanningRobot = null;
 
     private ROSConnection m_Ros = null;
+    public bool locked = false;
 
     private void Awake()
     {
@@ -44,6 +49,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterRosService<TrajectoryPlannerServiceRequest, TrajectoryPlannerServiceResponse>(m_PlanTrajTopic);
         m_Ros.RegisterPublisher<RobotTrajectoryMsg>(m_ExecPlanTopic);
         m_Ros.RegisterPublisher<PoseMsg>(m_MoveArmTopic);
+        m_Ros.RegisterPublisher<EmptyMsg>(m_EmergencyStopTopic);
         m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
@@ -51,6 +57,18 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_DetachCollisionObjectTopic);
 
         m_Ros.RegisterPublisher<Robotiq3FGripperRobotOutputMsg>(m_RoboticSqueezeTopic);
+    }
+
+    private void Start()
+    {
+        Invoke("RemoveAnyCollisionObjects", 0.5f);
+    }
+
+    private void RemoveAnyCollisionObjects()
+    {
+        CollisionObjectMsg colobjmsg = new CollisionObjectMsg();
+        colobjmsg.id = "-1";
+        PublishAddCollisionObject(colobjmsg);
     }
 
     public void OnDestroy()
@@ -83,12 +101,33 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishMoveArm()
     {
-        var destination = new PoseMsg
+        if (!locked)
         {
-            position = m_Manipulator.transform.position.To<FLU>(),
-            orientation = m_Manipulator.transform.rotation.To<FLU>()
-        };
-        m_Ros.Publish(m_MoveArmTopic, destination);
+            var destination = new PoseMsg
+            {
+                position = m_Manipulator.transform.position.To<FLU>(),
+                orientation = m_Manipulator.transform.rotation.To<FLU>()
+            };
+            m_Ros.Publish(m_MoveArmTopic, destination);
+        }
+    }
+
+    public void PublishEmergencyStop()
+    {
+            EmptyMsg msg = new EmptyMsg();
+        m_Ros.Publish(m_EmergencyStopTopic, msg);
+
+        StartCoroutine(Lock());
+    }
+
+    IEnumerator Lock()
+    {
+        locked = true;
+
+        yield return new WaitForSeconds(4.0f);
+
+        locked = false;
+        yield return null;
     }
 
     public void PublishConstrainedMovement()

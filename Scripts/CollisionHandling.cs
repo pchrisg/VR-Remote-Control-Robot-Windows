@@ -9,28 +9,31 @@ public class CollisionHandling : MonoBehaviour
     public Material m_AttachedMat = null;
     public Material m_FocusObjectMat = null;
 
-    private ManipulationMode m_ManipulationMode = null;
-    private Gripper m_Gripper = null;
-    private CollisionObjects m_CollisionObjects = null;
+    private ManipulationMode m_ManipulationModeScript = null;
+    private Gripper m_GripperScript = null;
+    private EndEffector m_EndEffectorScript = null;
+    private CollisionObjects m_CollisionObjectsScript = null;
 
     [HideInInspector] public bool m_isAttachable = false;
     [HideInInspector] public bool m_isAttached = false;
     
-    private Collider[] m_ColEndEffector = null;
-    private Collider[] m_ColUR5 = null;
-    private Collider[] m_ColGripper = null;
+    private Collider[] m_EndEffectorColliders = null;
+    private Collider[] m_UR5Colliders = null;
+    private Collider[] m_RobotiqColliders = null;
 
     private bool isCreating = false;
 
     private void Awake()
     {
-        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
-        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        m_ManipulationModeScript = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_GripperScript = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_EndEffectorScript = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
+        m_CollisionObjectsScript = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        
 
-        m_ColEndEffector = m_Gripper.transform.Find("palm").GetComponentsInChildren<Collider>();
-        m_ColUR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
-        m_ColGripper = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Collider>();
+        m_EndEffectorColliders = m_GripperScript.transform.Find("palm").GetComponentsInChildren<Collider>();
+        m_UR5Colliders = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
+        m_RobotiqColliders = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Collider>();
     }
 
     private void OnDestroy()
@@ -40,26 +43,24 @@ public class CollisionHandling : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        bool isColliding = false;
-
-        if (m_Gripper.isGripping && m_isAttachable)
+        if (m_GripperScript.isGripping && m_isAttachable)
         {
-            isColliding = false;
+            bool otherIsRobot = false;
 
-            foreach (var collider in m_ColGripper)
+            foreach (var collider in m_RobotiqColliders)
             {
                 if (other == collider)
                 {
-                    isColliding = true;
+                    otherIsRobot = true;
                     break;
                 }
             }
 
-            if (isColliding)
+            if (otherIsRobot)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_AttachedMat;
-                m_Gripper.SetObjGripSize();
+                m_GripperScript.SetObjGripSize();
 
                 m_isAttached = true;
             }
@@ -67,33 +68,37 @@ public class CollisionHandling : MonoBehaviour
 
         else if (!m_isAttached)
         {
-            foreach (var collider in m_ColEndEffector)
+            bool otherIsEndEffector = false;
+
+            foreach (var collider in m_EndEffectorColliders)
             {
                 if (other == collider)
                 {
-                    isColliding = true;
+                    otherIsEndEffector = true;
                     break;
                 }
             }
 
-            if (!isColliding)
+            /*if (!otherIsEndEffector)
             {
-                foreach (Collider collider in m_ColUR5)
+                foreach (Collider collider in m_UR5Colliders)
                 {
                     if (other == collider)
                     {
-                        isColliding = true;
+                        otherIsRobot = true;
                         break;
                     }
                 }
-            }
+            }*/
 
-            if (isColliding)
+            if (otherIsEndEffector)
             {
+                print("colliding");
                 Renderer renderer = gameObject.GetComponent<Renderer>();
 
                 renderer.material = m_CollidingMat;
-                m_Gripper.Collide();
+                m_EndEffectorScript.Colliding();
+                m_GripperScript.Collide();
             }
         }
 
@@ -137,78 +142,80 @@ public class CollisionHandling : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        bool isNotColliding = false;
-
-        if (m_Gripper.isGripping && m_isAttached)
+        if (m_GripperScript.isGripping && m_isAttached)
         {
-            isNotColliding = false;
+            bool otherIsRobot = false;
 
-            foreach (var collider in m_ColGripper)
+            foreach (var collider in m_RobotiqColliders)
             {
                 if (other == collider)
                 {
-                    isNotColliding = true;
+                    otherIsRobot = true;
                     break;
                 }
             }
 
-            if (isNotColliding)
+            if (otherIsRobot)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
-                renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
+                renderer.material = m_CollisionObjectsScript.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
 
-                m_Gripper.ResetAttObjSize();
+                m_GripperScript.ResetAttObjSize();
                 m_isAttached = false;
             }
         }
 
         else if (!m_isAttached)
         {
-            foreach (var collider in m_ColEndEffector)
+            bool otherIsEndEffector = false;
+
+            foreach (var collider in m_EndEffectorColliders)
             {
                 if (other == collider)
                 {
-                    isNotColliding = true;
+                    otherIsEndEffector = true;
                     break;
                 }
             }
 
-            if (!isNotColliding)
+            /*if (!otherIsEndEffector)
             {
-                foreach (Collider collider in m_ColUR5)
+                foreach (Collider collider in m_UR5Colliders)
                 {
                     if (other == collider)
                     {
-                        isNotColliding = true;
+                        otherIsRobot = true;
                         break;
                     }
                 }
-            }
+            }*/
 
-            if (isNotColliding)
+            if (otherIsEndEffector)
             {
+                print("not colliding");
                 Renderer renderer = gameObject.GetComponent<Renderer>();
-                renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
+                renderer.material = m_CollisionObjectsScript.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
+                m_EndEffectorScript.NotColliding();
             }
         }
     }
 
     private void Update()
     {
-        if(isCreating != m_CollisionObjects.isCreating)
+        if(isCreating != m_CollisionObjectsScript.isCreating)
         {
-            if (!m_CollisionObjects.isCreating)
+            if (!m_CollisionObjectsScript.isCreating)
                 gameObject.GetComponent<Renderer>().material = m_OriginalMat;
 
             else
             {
-                if (m_ManipulationMode.mode == Mode.COLOBJCREATOR && !m_isAttachable)
+                if (m_ManipulationModeScript.mode == Mode.COLOBJCREATOR && !m_isAttachable)
                     gameObject.GetComponent<Renderer>().material = m_CollidingMat;
 
-                else if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && m_isAttachable)
+                else if (m_ManipulationModeScript.mode == Mode.ATTOBJCREATOR && m_isAttachable)
                     gameObject.GetComponent<Renderer>().material = m_AttachedMat;
             }
-            isCreating = m_CollisionObjects.isCreating;
+            isCreating = m_CollisionObjectsScript.isCreating;
         }
     }
 

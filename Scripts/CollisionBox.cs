@@ -20,30 +20,6 @@ public class CollisionBox : MonoBehaviour
         RemoveCollisionBox();
     }
 
-    private void SetParameters()
-    {
-        m_ColisionBox = new CollisionObjectMsg();
-
-        var primitive = new SolidPrimitiveMsg();
-        primitive.type = SolidPrimitiveMsg.BOX;
-        Array.Resize(ref primitive.dimensions, 3);
-        primitive.dimensions[SolidPrimitiveMsg.BOX_X] = gameObject.transform.lossyScale.z;
-        primitive.dimensions[SolidPrimitiveMsg.BOX_Y] = gameObject.transform.lossyScale.x;
-        primitive.dimensions[SolidPrimitiveMsg.BOX_Z] = gameObject.transform.lossyScale.y;
-
-        var box_pose = new PoseMsg
-        {
-            position = gameObject.transform.position.To<FLU>(),
-            orientation = gameObject.transform.rotation.To<FLU>()
-        };
-
-        Array.Resize(ref m_ColisionBox.primitives, 1);
-        m_ColisionBox.primitives[0] = primitive;
-        Array.Resize(ref m_ColisionBox.primitive_poses, 1);
-        m_ColisionBox.primitive_poses[0] = box_pose;
-        m_ColisionBox.operation = CollisionObjectMsg.ADD;
-    }
-
     public String GetID()
     {
         return m_ColisionBox.id;
@@ -56,6 +32,35 @@ public class CollisionBox : MonoBehaviour
         m_ColisionBox.header.frame_id = "base_link";
 
         m_ROSPublisher.PublishAddCollisionObject(m_ColisionBox);
+    }
+
+    private void SetParameters()
+    {
+        m_ColisionBox = new CollisionObjectMsg();
+
+        var primitive = new SolidPrimitiveMsg();
+        primitive.type = SolidPrimitiveMsg.BOX;
+        Array.Resize(ref primitive.dimensions, 3);
+
+        float scale_x = gameObject.transform.lossyScale.x * gameObject.GetComponent<BoxCollider>().size.x;
+        float scale_y = gameObject.transform.lossyScale.y * gameObject.GetComponent<BoxCollider>().size.y;
+        float scale_z = gameObject.transform.lossyScale.z * gameObject.GetComponent<BoxCollider>().size.z;
+
+        primitive.dimensions[SolidPrimitiveMsg.BOX_X] = scale_z;
+        primitive.dimensions[SolidPrimitiveMsg.BOX_Y] = scale_x;
+        primitive.dimensions[SolidPrimitiveMsg.BOX_Z] = scale_y;
+
+        var box_pose = new PoseMsg
+        {
+            position = gameObject.transform.position.To<FLU>(),
+            orientation = gameObject.transform.rotation.To<FLU>()
+        };
+
+        Array.Resize(ref m_ColisionBox.primitives, 1);
+        m_ColisionBox.primitives[0] = primitive;
+        Array.Resize(ref m_ColisionBox.primitive_poses, 1);
+        m_ColisionBox.primitive_poses[0] = box_pose;
+        m_ColisionBox.operation = CollisionObjectMsg.ADD;
     }
 
     public void RemoveCollisionBox()

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8780d4cdaea618d44845172aab34fb92
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_GreyMat: {fileID: 2100000, guid: 1d5e920faef5f1245965b62d711697a0, type: 2}
+  - m_LightGreyMat: {fileID: 2100000, guid: 8b4c1a8a3d7a356459d078e6c651f9d0, type: 2}
+  - m_CollidingMat: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
+  - m_CollisionClip: {fileID: 8300000, guid: 560f6c1b9d8d7c1428cfb61148461a67, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

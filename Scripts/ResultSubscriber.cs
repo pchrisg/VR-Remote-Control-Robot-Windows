@@ -5,35 +5,39 @@ using System;
 
 public class ResultSubscriber : MonoBehaviour
 {
-    [Header("Materials")]
+    /*[Header("Materials")]
     [SerializeField] private Material m_GreyMat = null;
     [SerializeField] private Material m_LightGreyMat = null;
-    [SerializeField] private Material m_CollisionMat = null;
+    [SerializeField] private Material m_CollidingMat = null;
+    */
 
     [Header("Sounds")]
-    [SerializeField] private AudioClip m_Collision = null;
-    [SerializeField] private AudioClip m_Motion = null;
+    [SerializeField] private AudioClip m_CollisionClip = null;
+    [SerializeField] private AudioClip m_MotionClip = null;
 
+    private ROSConnection m_Ros = null;
 
     private PlanningRobot m_PlanningRobot = null;
     private GameObject m_UR5 = null;
-    private GameObject m_Robotiq = null;
-    private ROSConnection m_Ros = null;
     private readonly string m_FeedbackTopic = "/move_group/feedback";
+
+    private EndEffector m_EndEffector = null;
     
     private bool isPlanExecuted = true;
     private readonly string NotExecuted = "No motion plan found. No execution attempted.";
-    private Renderer[] m_UR5Renderers = null;
-    private Renderer[] m_GripperRenderers = null;
+    //private Renderer[] m_UR5Renderers = null;
+    //private Renderer[] m_RobotiqRenderers = null;
 
     private void Awake()
     {
+        m_Ros = ROSConnection.GetOrCreateInstance();
+
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
-        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
-        m_Ros = ROSConnection.GetOrCreateInstance();
-        m_UR5Renderers = m_UR5.GetComponentsInChildren<Renderer>();
-        m_GripperRenderers = m_Robotiq.GetComponentsInChildren<Renderer>();
+
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
+        //m_UR5Renderers = m_UR5.GetComponentsInChildren<Renderer>();
+        //m_RobotiqRenderers = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Renderer>();
     }
 
     private void Start()
@@ -55,10 +59,11 @@ public class ResultSubscriber : MonoBehaviour
             ur5AudioSource.Stop();
             if (message.status.text == NotExecuted && isPlanExecuted)
             {
-                foreach (Renderer renderer in m_UR5Renderers)
-                    renderer.material = m_CollisionMat;
+                //foreach (Renderer renderer in m_UR5Renderers)
+                //    renderer.material = m_CollidingMat;
+                m_EndEffector.Colliding();
 
-                ur5AudioSource.clip = m_Collision;
+                ur5AudioSource.clip = m_CollisionClip;
                 ur5AudioSource.Play();
                 isPlanExecuted = false;
             }
@@ -67,17 +72,18 @@ public class ResultSubscriber : MonoBehaviour
         {
             if (!ur5AudioSource.isPlaying && !m_PlanningRobot.isPlanning)
             {
-                ur5AudioSource.clip = m_Motion;
+                ur5AudioSource.clip = m_MotionClip;
                 ur5AudioSource.Play();
             }
 
             if (message.status.text != NotExecuted && !isPlanExecuted)
             {
-                foreach (Renderer renderer in m_UR5Renderers)
-                    renderer.material = m_LightGreyMat;
+                //foreach (Renderer renderer in m_UR5Renderers)
+                //    renderer.material = m_LightGreyMat;
 
-                foreach (Renderer renderer in m_GripperRenderers)
-                    renderer.material = m_GreyMat;
+                //foreach (Renderer renderer in m_RobotiqRenderers)
+                //    renderer.material = m_GreyMat;
+                m_EndEffector.NotColliding();
 
                 isPlanExecuted = true;
             }
@@ -86,7 +92,7 @@ public class ResultSubscriber : MonoBehaviour
         {
             if (!ur5AudioSource.isPlaying)
             {
-                ur5AudioSource.clip = m_Motion;
+                ur5AudioSource.clip = m_MotionClip;
                 ur5AudioSource.Play();
             }
         }

@@ -7,14 +7,15 @@ using ManipulationOptions;
 
 public class DirectManipulation : MonoBehaviour
 {
-    [Header("Material")]
-    [SerializeField] Material m_EndEffectorMat = null;
+    //[Header("Material")]
+    //[SerializeField] Material m_EndEffectorMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
     private Gripper m_Gripper = null;
+    private EndEffector m_EndEffector = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -34,6 +35,7 @@ public class DirectManipulation : MonoBehaviour
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -43,7 +45,8 @@ public class DirectManipulation : MonoBehaviour
     {
         if(m_FocusRot != Quaternion.identity && m_FocusRot != gameObject.transform.rotation)
         {
-            m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
+            m_EndEffector.ResetColour();
+            //m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
             m_ROSPublisher.PublishMoveArm();
             m_FocusRot = Quaternion.identity;
         }
@@ -140,18 +143,21 @@ public class DirectManipulation : MonoBehaviour
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObject.up)) * Mathf.Rad2Deg;
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
-            m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
+            m_EndEffector.AlignedWithYAxis();
+            //m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
         }
 
         print(angle);
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
-            m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
+            m_EndEffector.AlignedWithYAxis();
+            //m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
         }
 
-        m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
+        m_EndEffector.ResetColour();
+        //m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
         return position;
     }
 
@@ -164,7 +170,8 @@ public class DirectManipulation : MonoBehaviour
             float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
             Vector3 up = ang <= 90 ? Vector3.up : -Vector3.up;
 
-            m_EndEffectorMat.color = new Color(1.0f, 0.0f, 1.0f, 100.0f/255.0f);
+            m_EndEffector.AlignedWithYAxis();
+            //m_EndEffectorMat.color = new Color(1.0f, 0.0f, 1.0f, 100.0f/255.0f);
             return Quaternion.LookRotation(forward, up);
         }
 
@@ -174,11 +181,13 @@ public class DirectManipulation : MonoBehaviour
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
             Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 
-            m_EndEffectorMat.color = new Color(0.0f, 1.0f, 0.0f, 100.0f / 255.0f);
+            m_EndEffector.AlignedWithYAxis();
+            //m_EndEffectorMat.color = new Color(0.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return Quaternion.LookRotation(forward, up);
         }
 
-        m_EndEffectorMat.color = new Color(51.0f/255.0f, 51.0f/255.0f, 51.0f/255.0f, 100.0f / 255.0f);
+        m_EndEffector.ResetColour();
+        //m_EndEffectorMat.color = new Color(51.0f/255.0f, 51.0f/255.0f, 51.0f/255.0f, 100.0f / 255.0f);
         return m_GhostObject.transform.rotation;
     }
 
