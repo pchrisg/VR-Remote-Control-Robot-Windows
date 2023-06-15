@@ -15,6 +15,7 @@ public class ROSPublisher : MonoBehaviour
     public bool m_Gazebo = true;
 
     [Header("ROS Topics")]
+    [SerializeField] private readonly string m_ResetPoseTopic = "chris_reset_pose";
     [SerializeField] private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
     [SerializeField] private readonly string m_ExecPlanTopic = "chris_execute_plan";
     [SerializeField] private readonly string m_MoveArmTopic = "chris_move_arm";
@@ -46,6 +47,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros = ROSConnection.GetOrCreateInstance();
 
         // Register ROS communication
+        m_Ros.RegisterPublisher<EmptyMsg>(m_ResetPoseTopic);
         m_Ros.RegisterRosService<TrajectoryPlannerServiceRequest, TrajectoryPlannerServiceResponse>(m_PlanTrajTopic);
         m_Ros.RegisterPublisher<RobotTrajectoryMsg>(m_ExecPlanTopic);
         m_Ros.RegisterPublisher<PoseMsg>(m_MoveArmTopic);
@@ -53,7 +55,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
-        m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AttachCollisionObjectTopic);
+        m_Ros.RegisterPublisher<AttachedCollisionObjectMsg>(m_AttachCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_DetachCollisionObjectTopic);
 
         m_Ros.RegisterPublisher<Robotiq3FGripperRobotOutputMsg>(m_RoboticSqueezeTopic);
@@ -71,9 +73,16 @@ public class ROSPublisher : MonoBehaviour
         PublishAddCollisionObject(colobjmsg);
     }
 
-    public void OnDestroy()
+    private void OnDestroy()
     {
         m_Ros.Disconnect();
+    }
+
+    public void PublishResetPose()
+    {
+        EmptyMsg msg = new EmptyMsg();
+
+        m_Ros.Publish(m_ResetPoseTopic, msg);
     }
 
     public void PublishTrajectoryRequest()
@@ -114,17 +123,19 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishEmergencyStop()
     {
-            EmptyMsg msg = new EmptyMsg();
-        m_Ros.Publish(m_EmergencyStopTopic, msg);
-
         StartCoroutine(Lock());
+
+
     }
 
     IEnumerator Lock()
     {
         locked = true;
 
-        yield return new WaitForSeconds(4.0f);
+        EmptyMsg msg = new EmptyMsg();
+        m_Ros.Publish(m_EmergencyStopTopic, msg);
+        m_Ros.Publish(m_EmergencyStopTopic, msg);
+        yield return new WaitForSeconds(1.0f);
 
         locked = false;
         yield return null;
@@ -167,9 +178,9 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.Publish(m_RemoveCollisionObjectTopic, collisionObject);
     }
 
-    public void PublishAttachCollisionObject(CollisionObjectMsg collisionObject)
+    public void PublishAttachCollisionObject(AttachedCollisionObjectMsg attColObj)
     {
-        m_Ros.Publish(m_AttachCollisionObjectTopic, collisionObject);
+        m_Ros.Publish(m_AttachCollisionObjectTopic, attColObj);
     }
 
     public void PublishDetachCollisionObject(CollisionObjectMsg collisionObject)

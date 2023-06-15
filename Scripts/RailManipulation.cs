@@ -68,7 +68,7 @@ public class RailManipulation : MonoBehaviour
                 Vector3 position = gameObject.transform.position;
                 Quaternion rotation = gameObject.transform.rotation;
 
-                if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
+                if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
                     rotation = LookAtFocusObject();
 
                 if (m_InteractingHand != null)

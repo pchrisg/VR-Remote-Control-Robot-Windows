@@ -18,10 +18,18 @@ public class CollisionHandling : MonoBehaviour
     [HideInInspector] public bool m_isAttached = false;
     
     private Collider[] m_EndEffectorColliders = null;
-    private Collider[] m_UR5Colliders = null;
-    private Collider[] m_RobotiqColliders = null;
+    private string[] m_FingerLinkNames = {
+        "finger_middle_link_0",
+        "finger_1_link_0",
+        "finger_2_link_0"};
+    private Collider[] m_FingerMColliders = null;
+    private Collider[] m_Finger1Colliders = null;
+    private Collider[] m_Finger2Colliders = null;
 
     private bool isCreating = false;
+    public int fingerMTouching = 0;
+    public int finger1Touching = 0;
+    public int finger2Touching = 0;
 
     private void Awake()
     {
@@ -32,8 +40,10 @@ public class CollisionHandling : MonoBehaviour
         
 
         m_EndEffectorColliders = m_GripperScript.transform.Find("palm").GetComponentsInChildren<Collider>();
-        m_UR5Colliders = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
-        m_RobotiqColliders = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Collider>();
+        GameObject robotiq = GameObject.FindGameObjectWithTag("Robotiq");
+        m_FingerMColliders = robotiq.transform.Find(m_FingerLinkNames[0]).GetComponentsInChildren<Collider>();
+        m_Finger1Colliders = robotiq.transform.Find(m_FingerLinkNames[1]).GetComponentsInChildren<Collider>();
+        m_Finger2Colliders = robotiq.transform.Find(m_FingerLinkNames[2]).GetComponentsInChildren<Collider>();
     }
 
     private void OnDestroy()
@@ -41,168 +51,9 @@ public class CollisionHandling : MonoBehaviour
         gameObject.GetComponent<Renderer>().material = m_OriginalMat;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (m_GripperScript.isGripping && m_isAttachable)
-        {
-            bool otherIsRobot = false;
-
-            foreach (var collider in m_RobotiqColliders)
-            {
-                if (other == collider)
-                {
-                    otherIsRobot = true;
-                    break;
-                }
-            }
-
-            if (otherIsRobot)
-            {
-                Renderer renderer = gameObject.GetComponent<Renderer>();
-                renderer.material = m_AttachedMat;
-                m_GripperScript.SetObjGripSize();
-
-                m_isAttached = true;
-            }
-        }
-
-        else if (!m_isAttached)
-        {
-            bool otherIsEndEffector = false;
-
-            foreach (var collider in m_EndEffectorColliders)
-            {
-                if (other == collider)
-                {
-                    otherIsEndEffector = true;
-                    break;
-                }
-            }
-
-            /*if (!otherIsEndEffector)
-            {
-                foreach (Collider collider in m_UR5Colliders)
-                {
-                    if (other == collider)
-                    {
-                        otherIsRobot = true;
-                        break;
-                    }
-                }
-            }*/
-
-            if (otherIsEndEffector)
-            {
-                print("colliding");
-                Renderer renderer = gameObject.GetComponent<Renderer>();
-
-                renderer.material = m_CollidingMat;
-                m_EndEffectorScript.Colliding();
-                m_GripperScript.Collide();
-            }
-        }
-
-        /*if (m_isDeleteAble && ((m_ManipulationMode.mode == Mode.COLOBJCREATOR && !m_isAttachable) ||
-                               (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && m_isAttachable)))
-        {
-            if ((other == m_RightIndex && m_Grip.GetState(Player.instance.rightHand.handType)) ||
-                (other == m_LeftIndex && m_Grip.GetState(Player.instance.leftHand.handType)))
-            {
-                if (m_CollisionObjects.m_FocusObject == gameObject)
-                    m_CollisionObjects.m_FocusObject = null;
-                GameObject.Destroy(gameObject);
-            }
-        }*/
-
-        /*if (m_isAttachable && m_ManipulationMode.mode != Mode.ATTOBJCREATOR)
-        {
-            if ((other == m_RightIndex && m_Grip.GetState(Player.instance.rightHand.handType)) ||
-                (other == m_LeftIndex && m_Grip.GetState(Player.instance.leftHand.handType)))
-            {
-                if (m_CollisionObjects.m_FocusObject == null)
-                {
-                    m_CollisionObjects.m_FocusObject = gameObject;
-
-                    Renderer renderer = gameObject.GetComponent<Renderer>();
-                    renderer.material = m_FocusObjectMaterial;
-
-                    m_Gripper.GetComponent<DirectManipulation>().FocusObjectSelected();
-                }
-
-                else if (m_CollisionObjects.m_FocusObject == gameObject && m_ManipulationMode.mode != Mode.RAILCREATOR)
-                {
-                    m_CollisionObjects.m_FocusObject = null;
-
-                    Renderer renderer = gameObject.GetComponent<Renderer>();
-                    renderer.material = m_EludingMaterial;
-                }
-            }
-        }*/
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (m_GripperScript.isGripping && m_isAttached)
-        {
-            bool otherIsRobot = false;
-
-            foreach (var collider in m_RobotiqColliders)
-            {
-                if (other == collider)
-                {
-                    otherIsRobot = true;
-                    break;
-                }
-            }
-
-            if (otherIsRobot)
-            {
-                Renderer renderer = gameObject.GetComponent<Renderer>();
-                renderer.material = m_CollisionObjectsScript.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
-
-                m_GripperScript.ResetAttObjSize();
-                m_isAttached = false;
-            }
-        }
-
-        else if (!m_isAttached)
-        {
-            bool otherIsEndEffector = false;
-
-            foreach (var collider in m_EndEffectorColliders)
-            {
-                if (other == collider)
-                {
-                    otherIsEndEffector = true;
-                    break;
-                }
-            }
-
-            /*if (!otherIsEndEffector)
-            {
-                foreach (Collider collider in m_UR5Colliders)
-                {
-                    if (other == collider)
-                    {
-                        otherIsRobot = true;
-                        break;
-                    }
-                }
-            }*/
-
-            if (otherIsEndEffector)
-            {
-                print("not colliding");
-                Renderer renderer = gameObject.GetComponent<Renderer>();
-                renderer.material = m_CollisionObjectsScript.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
-                m_EndEffectorScript.NotColliding();
-            }
-        }
-    }
-
     private void Update()
     {
-        if(isCreating != m_CollisionObjectsScript.isCreating)
+        if (isCreating != m_CollisionObjectsScript.isCreating)
         {
             if (!m_CollisionObjectsScript.isCreating)
                 gameObject.GetComponent<Renderer>().material = m_OriginalMat;
@@ -219,7 +70,120 @@ public class CollisionHandling : MonoBehaviour
         }
     }
 
-    public void ToggleFocusObject(bool isFocusObj)
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!m_isAttached)
+        {
+            bool otherIsEndEffector = false;
+            foreach (var collider in m_EndEffectorColliders)
+            {
+                if (other == collider)
+                {
+                    otherIsEndEffector = true;
+                    break;
+                }
+            }
+
+            if (otherIsEndEffector)
+            {
+                Renderer renderer = gameObject.GetComponent<Renderer>();
+
+                renderer.material = m_CollidingMat;
+                m_EndEffectorScript.Colliding();
+                m_GripperScript.Collide();
+            }
+        }
+
+        if (m_GripperScript.isGripping && m_isAttachable && !m_isAttached)
+        {
+            foreach (var collider in m_FingerMColliders)
+            {
+                if(other == collider)
+                    fingerMTouching++;
+            }
+
+            foreach (var collider in m_Finger1Colliders)
+            {
+                if (other == collider)
+                    finger1Touching++;
+            }
+
+            foreach (var collider in m_Finger2Colliders)
+            {
+                if (other == collider)
+                    finger2Touching++;
+            }
+
+            if (fingerMTouching > 0 && finger1Touching > 0 && finger2Touching > 0)
+            {
+                Renderer renderer = gameObject.GetComponent<Renderer>();
+                renderer.material = m_AttachedMat;
+                m_GripperScript.SetObjGripSize();
+
+                gameObject.GetComponent<CollisionObject>().AttachCollisionObject();
+
+                m_isAttached = true;
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (!m_isAttached)
+        {
+            bool otherIsEndEffector = false;
+
+            foreach (var collider in m_EndEffectorColliders)
+            {
+                if (other == collider)
+                {
+                    otherIsEndEffector = true;
+                    break;
+                }
+            }
+
+            if (otherIsEndEffector)
+            {
+                Renderer renderer = gameObject.GetComponent<Renderer>();
+                renderer.material = m_CollisionObjectsScript.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
+                m_EndEffectorScript.NotColliding();
+            }
+        }
+
+        if (m_isAttached)
+        {
+            foreach (var collider in m_FingerMColliders)
+            {
+                if (other == collider)
+                    fingerMTouching--;
+            }
+
+            foreach (var collider in m_Finger1Colliders)
+            {
+                if (other == collider)
+                    finger1Touching--;
+            }
+
+            foreach (var collider in m_Finger2Colliders)
+            {
+                if (other == collider)
+                    finger2Touching--;
+            }
+
+            if (fingerMTouching == 0 || finger1Touching == 0 || finger2Touching == 0)
+            {
+                Renderer renderer = gameObject.GetComponent<Renderer>();
+                renderer.material = m_CollisionObjectsScript.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
+
+                m_GripperScript.ResetAttObjSize();
+
+                gameObject.GetComponent<CollisionObject>().DetachCollisionObject();
+                m_isAttached = false;
+            }
+        }
+    }
+
+    public void SetFocusObject(bool isFocusObj)
     {
         Renderer renderer = gameObject.GetComponent<Renderer>();
 

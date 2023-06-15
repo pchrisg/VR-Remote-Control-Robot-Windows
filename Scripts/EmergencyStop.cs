@@ -29,7 +29,7 @@ public class EmergencyStop : MonoBehaviour
         m_OriginalMat = gameObject.transform.Find("Visuals").GetComponentInChildren<Renderer>().material;
     }
 
-    void OnCollisionEnter(Collision collision)
+    /*void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag != "Moveable")
         {
@@ -44,22 +44,39 @@ public class EmergencyStop : MonoBehaviour
 
             m_ROSPublisher.PublishEmergencyStop();
         }
+    }*/
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "PlanningScene")
+        {
+            m_CollisionTime = Time.time;
+            print(gameObject.name + " collided with " + other.transform.parent.gameObject.name);
+
+            foreach (Renderer renderer in m_Renderers)
+                renderer.material = m_CollidingMat;
+
+            m_AudioSource.clip = m_CollisionClip;
+            m_AudioSource.Play();
+
+            m_ROSPublisher.PublishEmergencyStop();
+        }
     }
 
-    private void OnCollisionExit(Collision collision)
+    private void OnTriggerExit(Collider other)
     {
-        if (collision.gameObject.tag != "Moveable")
+        if (other.gameObject.tag == "PlanningScene")
         {
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_OriginalMat;
         }
     }
 
-    void OnCollisionStay(Collision collision)
+    /*void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.tag != "Moveable")
         {
-            if(Time.time - m_CollisionTime >= 5f)
+            if (Time.time - m_CollisionTime >= 5f)
             {
                 m_CollisionTime = Time.time;
                 print(gameObject.name + " still in collision with " + collision.gameObject.name);
@@ -71,4 +88,14 @@ public class EmergencyStop : MonoBehaviour
             }
         }
     }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.tag != "Moveable")
+        {
+            foreach (Renderer renderer in m_Renderers)
+                renderer.material = m_OriginalMat;
+        }
+    }*/
+
 }

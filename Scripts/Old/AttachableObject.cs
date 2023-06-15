@@ -1,4 +1,4 @@
-using System.Collections;
+/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,8 +32,8 @@ public class AttachableObject : MonoBehaviour
 
     private void AttachObject()
     {
-        CollisionBox colBox = gameObject.GetComponent<CollisionBox>();
-        colBox.AttachCollisionBox();
+        CollisionObject colBox = gameObject.GetComponent<CollisionObject>();
+        //colBox.AttachCollisionBox();
 
         m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
         m_GhostObject.transform.SetParent(GameObject.FindGameObjectWithTag("Robotiq").transform);
@@ -49,9 +49,9 @@ public class AttachableObject : MonoBehaviour
     {
         if(m_isAttached)
         {
-            CollisionBox colBox = gameObject.GetComponent<CollisionBox>();
-            colBox.DetachCollisionBox();
-            colBox.AddCollisionBox(colBox.GetID());
+            CollisionObject colBox = gameObject.GetComponent<CollisionObject>();
+            //colBox.DetachCollisionBox();
+            colBox.AddCollisionObject(colBox.GetID());
 
             m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
             m_GhostObject.transform.SetParent(gameObject.transform);
@@ -59,4 +59,4 @@ public class AttachableObject : MonoBehaviour
             m_isAttached = false;
         }
     }
-}
+}*/

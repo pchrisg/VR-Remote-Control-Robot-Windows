@@ -120,7 +120,7 @@ public class DirectManipulation : MonoBehaviour
         }            
 
         if (m_CollisionObjects.m_FocusObject != null && 
-            !m_CollisionObjects.m_FocusObject.GetComponent<AttachableObject>().m_isAttached)
+            !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
         {
             position = PositionSnapping(position);
             rotation = LookAtFocusObject(position);
@@ -148,7 +148,7 @@ public class DirectManipulation : MonoBehaviour
             return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
         }
 
-        print(angle);
+        //print(angle);
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
             m_EndEffector.AlignedWithYAxis();

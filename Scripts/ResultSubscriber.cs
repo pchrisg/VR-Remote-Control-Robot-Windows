@@ -25,6 +25,9 @@ public class ResultSubscriber : MonoBehaviour
     
     private bool isPlanExecuted = true;
     private readonly string NotExecuted = "No motion plan found. No execution attempted.";
+
+    [HideInInspector] public string m_RobotState = "";
+
     //private Renderer[] m_UR5Renderers = null;
     //private Renderer[] m_RobotiqRenderers = null;
 
@@ -52,6 +55,8 @@ public class ResultSubscriber : MonoBehaviour
 
     private void CheckResult(ActionFeedbackUnity message)
     {
+        m_RobotState = message.feedback.state;
+
         AudioSource ur5AudioSource = m_UR5.GetComponent<AudioSource>();
 
         if (message.feedback.state == "IDLE")

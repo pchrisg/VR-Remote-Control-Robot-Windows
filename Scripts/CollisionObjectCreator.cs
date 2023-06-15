@@ -14,7 +14,7 @@ public class CollisionObjectCreator : MonoBehaviour
     private Collider[] m_ColEndEffector = null;
     private Collider[] m_ColUR5 = null;
 
-    public Hand hand = null;
+    [HideInInspector]public Hand hand = null;
 
     private void Awake()
     {
@@ -30,96 +30,77 @@ public class CollisionObjectCreator : MonoBehaviour
     {
         if(m_Grip.GetState(hand.handType))
         {
-            bool isOtherRobot = false;
             foreach (var collider in m_ColEndEffector)
             {
                 if (other == collider)
-                {
-                    isOtherRobot = true;
-                    break;
-                }
+                    return;
             }
-
-            if (!isOtherRobot)
+            foreach (var collider in m_ColUR5)
             {
-                foreach (Collider collider in m_ColUR5)
-                {
-                    if (other == collider)
-                    {
-                        isOtherRobot = true;
-                        break;
-                    }
-                }
+                if (other == collider)
+                    return;
             }
 
-            if(!isOtherRobot)
+            if (other.tag == "PlanningScene")
+                return;
+
+            if (m_ManipulationMode.mode == Mode.COLOBJCREATOR || m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
             {
-                if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
-                {
-                    if (other.GetComponent<CollisionHandling>() != null)
-                    {
-                        if (other.GetComponent<AttachableObject>() == null)
-                        {
-                            Destroy(other.GetComponent<CollisionHandling>());
-                            Destroy(other.GetComponent<CollisionBox>());
-                        }
-                    }
-                    else
-                    {
-                        other.AddComponent<CollisionHandling>();
-                        other.GetComponent<CollisionHandling>().m_OriginalMat = other.GetComponent<Renderer>().material;
-                        other.GetComponent<CollisionHandling>().m_CollidingMat = m_CollisionObjects.m_CollidingMat;
-
-                        other.AddComponent<CollisionBox>();
-                        other.GetComponent<CollisionBox>().AddCollisionBox(m_CollisionObjects.GetFreeID().ToString());
-                    }
-                }
-                else if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-                {
-                    if (other.GetComponent<CollisionHandling>() != null)
-                    {
-                        if (other.GetComponent<AttachableObject>() != null)
-                        {
-                            Destroy(other.GetComponent<CollisionHandling>());
-                            Destroy(other.GetComponent<CollisionBox>());
-                            Destroy(other.GetComponent<AttachableObject>());
-                        }
-                    }
-                    else
-                    {
-                        other.AddComponent<CollisionHandling>();
-                        other.GetComponent<CollisionHandling>().m_isAttachable = true;
-                        other.GetComponent<CollisionHandling>().m_OriginalMat = other.GetComponent<Renderer>().material;
-                        other.GetComponent<CollisionHandling>().m_CollidingMat = m_CollisionObjects.m_CollidingMat;
-                        other.GetComponent<CollisionHandling>().m_AttachedMat = m_CollisionObjects.m_AttachedMat;
-                        other.GetComponent<CollisionHandling>().m_FocusObjectMat = m_CollisionObjects.m_FocusObjectMat;
-
-                        other.AddComponent<AttachableObject>();
-
-                        other.AddComponent<CollisionBox>();
-                        other.GetComponent<CollisionBox>().AddCollisionBox(m_CollisionObjects.GetFreeID().ToString());
-                    }
-                }
-                else if (other.GetComponent<AttachableObject>() != null)
-                {
-                    if (m_CollisionObjects.m_FocusObject == null)
-                    {
-                        m_CollisionObjects.m_FocusObject = other.gameObject;
-
-
-                        other.GetComponent<CollisionHandling>().ToggleFocusObject(true);
-                        Gripper gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
-                        gripper.GetComponent<DirectManipulation>().FocusObjectSelected();
-                    }
-
-                    else if (m_CollisionObjects.m_FocusObject == other.gameObject)
-                    {
-                        m_CollisionObjects.m_FocusObject = null;
-
-                        other.GetComponent<CollisionHandling>().ToggleFocusObject(false);
-                    }
-                }
+                if (other.GetComponent<CollisionHandling>() == null)
+                    AddCollisionObject(other);
+                else
+                    RemoveCollisionObject(other);
             }
+
+            else if (other.GetComponent<CollisionHandling>().m_isAttachable)
+                SetFocusObject(other);
+        }
+    }
+
+    private void AddCollisionObject(Collider other)
+    {
+        other.AddComponent<CollisionHandling>();
+        other.GetComponent<CollisionHandling>().m_OriginalMat = other.GetComponent<Renderer>().material;
+        other.GetComponent<CollisionHandling>().m_CollidingMat = m_CollisionObjects.m_CollidingMat;
+
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        {
+            other.GetComponent<CollisionHandling>().m_isAttachable = true;
+            other.GetComponent<CollisionHandling>().m_AttachedMat = m_CollisionObjects.m_AttachedMat;
+            other.GetComponent<CollisionHandling>().m_FocusObjectMat = m_CollisionObjects.m_FocusObjectMat;
+        }
+
+        if(other.GetComponentInChildren<Collider>() != null)
+        {
+            other.AddComponent<CollisionObject>();
+            other.GetComponent<CollisionObject>().AddCollisionObject(m_CollisionObjects.GetFreeID().ToString());
+        }
+    }
+
+    private void RemoveCollisionObject(Collider other)
+    {
+        Destroy(other.GetComponent<CollisionHandling>());
+
+        if (other.GetComponent<CollisionObject>() != null)
+            Destroy(other.GetComponent<CollisionObject>());
+    }
+
+    private void SetFocusObject(Collider other)
+    {
+        if (m_CollisionObjects.m_FocusObject == null)
+        {
+            m_CollisionObjects.m_FocusObject = other.gameObject;
+
+            other.GetComponent<CollisionHandling>().SetFocusObject(true);
+            Gripper gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+            gripper.GetComponent<DirectManipulation>().FocusObjectSelected();
+        }
+
+        else if (m_CollisionObjects.m_FocusObject == other.gameObject)
+        {
+            m_CollisionObjects.m_FocusObject = null;
+
+            other.GetComponent<CollisionHandling>().SetFocusObject(false);
         }
     }
 
