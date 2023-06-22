@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class SDOFWidget : MonoBehaviour
 {
-    private GameObject m_EndEffector = null;
+    private Manipulator m_Manipulator = null;
 
     private void Awake()
     {
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
     }
 
     public void Show(bool value)
@@ -14,6 +14,6 @@ public class SDOFWidget : MonoBehaviour
         gameObject.SetActive(value);
 
         if (!value)
-            m_EndEffector.GetComponent<EndEffector>().ResetPosition();
+            m_Manipulator.ResetPosition();
     }
 }

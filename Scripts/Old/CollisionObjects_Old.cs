@@ -1,4 +1,4 @@
-using UnityEngine;
+/*using UnityEngine;
 
 public class CollisionObjects_Old : MonoBehaviour
 {
@@ -16,7 +16,7 @@ public class CollisionObjects_Old : MonoBehaviour
         Invoke("MakeGloveBox", 0.5f);   //Adds CollisionObjectCreator to fingers
     }
 
-    /*private void MakeGloveBox()
+    private void MakeGloveBox()
     {
         MakeBox(new Vector3(0.0f, -0.025f, -0.4f), new Vector3(1.3f, 0.05f, 1.3f)); // base
         //MakeBox(new Vector3(-0.64f, 0.5f, -0.4f), new Vector3(0.02f, 1.0f, 1.3f)); // left
@@ -24,9 +24,9 @@ public class CollisionObjects_Old : MonoBehaviour
         //MakeBox(new Vector3(0.0f, 0.5f, -1.04f), new Vector3(1.3f, 1.0f, 0.02f)); // front
         //MakeBox(new Vector3(0.0f, 0.5f, 0.24f), new Vector3(1.3f, 1.0f, 0.02f)); // back
         //MakeBox(new Vector3(0.0f, 1.01f, -0.4f), new Vector3(1.3f, 0.02f, 1.3f)); // top
-    }*/
+    }
 
-    /*private void MakeBox(Vector3 position, Vector3 scale)
+    private void MakeBox(Vector3 position, Vector3 scale)
     {
         GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
@@ -43,11 +43,11 @@ public class CollisionObjects_Old : MonoBehaviour
 
         box.AddComponent<CollisionBox>();
         box.GetComponent<CollisionBox>().AddCollisionBox(GetFreeID().ToString());
-    }*/
+    }
 
     public int GetFreeID()
     {
         m_Id++;
         return m_Id - 1;
     }
-}
+}*/

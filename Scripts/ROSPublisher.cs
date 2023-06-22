@@ -27,7 +27,7 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private readonly string m_DetachCollisionObjectTopic = "chris_detach_collision_object";
     [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
-    private GameObject m_Manipulator = null;
+    private Transform m_Manipulator = null;
     private PlanningRobot m_PlanningRobot = null;
 
     private ROSConnection m_Ros = null;
@@ -40,7 +40,7 @@ public class ROSPublisher : MonoBehaviour
         else
             m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
 
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose").transform;
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
         // Get ROS connection static instance
@@ -91,8 +91,8 @@ public class ROSPublisher : MonoBehaviour
 
         request.destination = new PoseMsg
         {
-            position = m_Manipulator.transform.position.To<FLU>(),
-            orientation = m_Manipulator.transform.rotation.To<FLU>()
+            position = m_Manipulator.position.To<FLU>(),
+            orientation = m_Manipulator.rotation.To<FLU>()
         };
         m_Ros.SendServiceMessage<TrajectoryPlannerServiceResponse>(m_PlanTrajTopic, request, HandleTrajectoryResponse);
     }
@@ -114,8 +114,8 @@ public class ROSPublisher : MonoBehaviour
         {
             var destination = new PoseMsg
             {
-                position = m_Manipulator.transform.position.To<FLU>(),
-                orientation = m_Manipulator.transform.rotation.To<FLU>()
+                position = m_Manipulator.position.To<FLU>(),
+                orientation = m_Manipulator.rotation.To<FLU>()
             };
             m_Ros.Publish(m_MoveArmTopic, destination);
         }
@@ -145,13 +145,13 @@ public class ROSPublisher : MonoBehaviour
     {
         var dest = new PoseMsg
         {
-            position = m_Manipulator.transform.position.To<FLU>(),
-            orientation = m_Manipulator.transform.rotation.To<FLU>()
+            position = m_Manipulator.position.To<FLU>(),
+            orientation = m_Manipulator.rotation.To<FLU>()
         };
         var ocm = new OrientationConstraintMsg
         {
             link_name = "tool0",
-            orientation = m_Manipulator.transform.rotation.To<FLU>(),
+            orientation = m_Manipulator.rotation.To<FLU>(),
             absolute_x_axis_tolerance = 0.01f,
             absolute_y_axis_tolerance = 0.01f,
             absolute_z_axis_tolerance = 0.01f,

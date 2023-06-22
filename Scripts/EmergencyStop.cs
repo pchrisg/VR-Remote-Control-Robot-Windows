@@ -23,7 +23,7 @@ public class EmergencyStop : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        m_AudioSource = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<AudioSource>();
+        m_AudioSource = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<AudioSource>();
 
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
         m_OriginalMat = gameObject.transform.Find("Visuals").GetComponentInChildren<Renderer>().material;

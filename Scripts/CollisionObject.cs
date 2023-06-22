@@ -26,6 +26,25 @@ public class CollisionObject : MonoBehaviour
         return m_ColisionObject.id;
     }
 
+    public void AddCollisionObject()
+    {
+        if(m_ColisionObject == null)
+        {
+            print("Cannot add empty Object");
+            return;
+        }
+
+        var pose = new PoseMsg
+        {
+            position = gameObject.transform.position.To<FLU>(),
+            orientation = gameObject.transform.rotation.To<FLU>()
+        };
+
+        m_ColisionObject.primitive_poses[0] = pose;
+
+        m_ROSPublisher.PublishAddCollisionObject(m_ColisionObject);
+    }
+
     public void AddCollisionObject(string id)
     {
         var pose = new PoseMsg

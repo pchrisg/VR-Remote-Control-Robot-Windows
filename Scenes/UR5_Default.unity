@@ -3772,7 +3772,7 @@ Transform:
   - {fileID: 1900970189}
   - {fileID: 231677425}
   m_Father: {fileID: 933266415}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!171741748 &246627542
 ArticulationBody:
@@ -6462,7 +6462,7 @@ Transform:
   - {fileID: 470876012}
   - {fileID: 1057633528}
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!82 &395806168
 AudioSource:
@@ -16729,7 +16729,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_UR5Angles: []
-  m_GripperAngles: []
+  m_RobotiqAngles: []
 --- !u!4 &896024448
 Transform:
   m_ObjectHideFlags: 0
@@ -17346,8 +17346,8 @@ GameObject:
   - component: {fileID: 933266409}
   - component: {fileID: 933266416}
   m_Layer: 3
-  m_Name: EndEffector
-  m_TagString: EndEffector
+  m_Name: Manipulator
+  m_TagString: Manipulator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -17367,6 +17367,22 @@ MonoBehaviour:
   m_Collision: {fileID: 8300000, guid: 560f6c1b9d8d7c1428cfb61148461a67, type: 3}
   m_Attach: {fileID: 8300000, guid: fc0019bd3c91f034eb4d4979494f7d52, type: 3}
   m_Detach: {fileID: 8300000, guid: cc5a5933d71a57f43b5333a85281644b, type: 3}
+  m_ROSPublisher: {fileID: 0}
+  m_Trigger:
+    actionPath: 
+    needsReinit: 0
+  m_Squeeze:
+    actionPath: 
+    needsReinit: 0
+  isInteracting: 0
+  isHandHovering: 
+  m_InitHand: {fileID: 0}
+  m_InteractingHand: {fileID: 0}
+  m_RightHand: {fileID: 0}
+  m_LeftHand: {fileID: 0}
+  m_ObjGrip: 220
+  m_CurrentGrip: 0
+  m_TargetGrip: 0
   isGripping: 0
 --- !u!114 &933266410
 MonoBehaviour:
@@ -17457,10 +17473,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ce9c737c53d921498428df95e0cb5e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Robotiq3FGripper: {fileID: 138873234}
   m_EndEffectorMat: {fileID: 2100000, guid: 4522a65d2a35c24439c401a1b93394b3, type: 2}
   m_CollidingMat: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
   m_YAxisMat: {fileID: 2100000, guid: 762788b6dcf4a3842bcc5663a2e7306b, type: 2}
+  isGripping: 0
 --- !u!171741748 &933266414
 ArticulationBody:
   m_ObjectHideFlags: 0
@@ -17525,11 +17541,11 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 246627541}
   - {fileID: 4216500284383032851}
+  - {fileID: 246627541}
   - {fileID: 7659439181079122305}
   m_Father: {fileID: 0}
-  m_RootOrder: 8
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!82 &933266416
 AudioSource:
@@ -34130,7 +34146,6 @@ GameObject:
   - component: {fileID: 1877038140}
   - component: {fileID: 1877038139}
   - component: {fileID: 1877038138}
-  - component: {fileID: 1877038142}
   m_Layer: 0
   m_Name: Boundary
   m_TagString: Untagged
@@ -34216,28 +34231,6 @@ Transform:
   m_Father: {fileID: 1606913283}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1877038142
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1877038137}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5620b96a5defe04daaad4016150c260, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_InBoundsMaterial: {fileID: 2100000, guid: 45ba0ac336ffceb44ac9bbfcb3907fca, type: 2}
-  m_OutOfBoundsMaterial: {fileID: 2100000, guid: a3b524b25e34f9549b19c1f44548c3b7, type: 2}
-  m_CollidingMaterial: {fileID: 0}
-  m_EludingMaterial: {fileID: 0}
-  m_AttachedMaterial: {fileID: 0}
-  m_FocusObjectMaterial: {fileID: 0}
-  m_IsPlayableArea: 1
-  m_isAttachable: 0
-  m_isAttached: 0
-  m_isDeleteAble: 0
 --- !u!1 &1878521732
 GameObject:
   m_ObjectHideFlags: 0
@@ -37310,22 +37303,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: de014c310fd01cd49819f0730b73004f, type: 3}
   m_PrefabInstance: {fileID: 779719816}
   m_PrefabAsset: {fileID: 0}
---- !u!54 &2042404658
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 919132147505560367}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &2043768014
 GameObject:
   m_ObjectHideFlags: 0
@@ -40336,7 +40313,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 543450652026970517}
-  - component: {fileID: 2042404658}
   m_Layer: 0
   m_Name: Crate
   m_TagString: Untagged
@@ -40442,7 +40418,7 @@ Transform:
   - {fileID: 9180979069262740458}
   - {fileID: 7486270842876654117}
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1077897460460986735
 Transform:
@@ -43835,8 +43811,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4216500284383032851}
   m_Layer: 3
-  m_Name: Manipulator
-  m_TagString: Manipulator
+  m_Name: Pose
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -43854,7 +43830,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 933266415}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4231706996295126049
 GameObject:

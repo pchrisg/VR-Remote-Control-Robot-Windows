@@ -9,7 +9,8 @@ public class SimpleDirectManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
-    private Gripper m_Gripper = null;
+    private Manipulator m_Manipulator = null;
+    private GripperControl m_GripperControl = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -24,7 +25,8 @@ public class SimpleDirectManipulation : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
-        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -32,7 +34,7 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT && !m_Gripper.isGripping)
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT && !m_GripperControl.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();

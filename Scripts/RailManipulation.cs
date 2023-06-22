@@ -12,7 +12,8 @@ public class RailManipulation : MonoBehaviour
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
     private Rails m_Rails = null;
-    private Gripper m_Gripper = null;
+    private Manipulator m_Manipulator = null;
+    private GripperControl m_GripperControl = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -39,7 +40,8 @@ public class RailManipulation : MonoBehaviour
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
-        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -58,7 +60,7 @@ public class RailManipulation : MonoBehaviour
 
     private void Update()
     {
-        if(m_ManipulationMode.mode == Mode.RAIL && !m_Gripper.isGripping)
+        if(m_ManipulationMode.mode == Mode.RAIL && !m_GripperControl.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();

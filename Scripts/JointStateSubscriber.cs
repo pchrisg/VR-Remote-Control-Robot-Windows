@@ -8,11 +8,11 @@ public class JointStateSubscriber : MonoBehaviour
 {
     [Header("Joint Angles")]
     [SerializeField] private float[] m_UR5Angles = null;
-    [SerializeField] private float[] m_GripperAngles = null;
+    [SerializeField] private float[] m_RobotiqAngles = null;
 
     private GameObject m_UR5 = null;
     private GameObject m_Robotiq = null;
-    private GameObject m_EndEffector = null;
+    private GameObject m_Manipulator = null;
 
     private ROSConnection m_Ros = null;
     private readonly string m_JointStatesTopic = "/joint_states";
@@ -20,9 +20,9 @@ public class JointStateSubscriber : MonoBehaviour
     private const int k_UR5NumJoints = 6;
     private ArticulationBody[] m_UR5Joints = null;
     
-    private const int k_GripperNumJoints = 11;
-    private ArticulationBody[] m_GripperJoints = null;
-    private ArticulationBody[] m_EndEffectorJoints = null;
+    private const int k_RobotiqNumJoints = 11;
+    private ArticulationBody[] m_RobotiqJoints = null;
+    private ArticulationBody[] m_ManipulatorJoints = null;
 
     [HideInInspector] 
     public static readonly string[] m_UR5LinkNames = { 
@@ -34,7 +34,7 @@ public class JointStateSubscriber : MonoBehaviour
         "/wrist_3_link" };
 
     [HideInInspector]
-    public static readonly string[] m_GripperLinkNames = {
+    public static readonly string[] m_RobotiqLinkNames = {
         "finger_1_link_0",
         "/finger_1_link_1",
         "/finger_1_link_2",
@@ -51,7 +51,7 @@ public class JointStateSubscriber : MonoBehaviour
     {
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator");
 
         m_UR5Angles = new float[6];
         m_UR5Joints = new ArticulationBody[6];
@@ -63,19 +63,19 @@ public class JointStateSubscriber : MonoBehaviour
             m_UR5Joints[i] = m_UR5.transform.Find(linkName).GetComponent<ArticulationBody>();
         }
 
-        m_GripperAngles = new float[11];
-        m_GripperJoints = new ArticulationBody[11];
-        m_EndEffectorJoints = new ArticulationBody[11];
+        m_RobotiqAngles = new float[11];
+        m_RobotiqJoints = new ArticulationBody[11];
+        m_ManipulatorJoints = new ArticulationBody[11];
 
         
-        for (var i = 0; i < k_GripperNumJoints; i += 4)
+        for (var i = 0; i < k_RobotiqNumJoints; i += 4)
         {
             linkName = string.Empty;
-            for (var j = i; j < i + 4 && j < k_GripperNumJoints; j++)
+            for (var j = i; j < i + 4 && j < k_RobotiqNumJoints; j++)
             {
-                linkName += m_GripperLinkNames[j];
-                m_GripperJoints[j] = m_Robotiq.transform.Find(linkName).GetComponent<ArticulationBody>();
-                m_EndEffectorJoints[j] = m_EndEffector.transform.Find("palm/"+linkName).GetComponent<ArticulationBody>();
+                linkName += m_RobotiqLinkNames[j];
+                m_RobotiqJoints[j] = m_Robotiq.transform.Find(linkName).GetComponent<ArticulationBody>();
+                m_ManipulatorJoints[j] = m_Manipulator.transform.Find("palm/"+linkName).GetComponent<ArticulationBody>();
             }
         }
 
@@ -118,13 +118,13 @@ public class JointStateSubscriber : MonoBehaviour
         }
         else if (message.name[0] == "palm_finger_1_joint")
         {
-            for (var i = 0; i < k_GripperNumJoints; i++)
+            for (var i = 0; i < k_RobotiqNumJoints; i++)
             {
-                var jointXDrive = m_GripperJoints[i].xDrive;
-                m_GripperAngles[i] = (float)(message.position[i]) * Mathf.Rad2Deg;
-                jointXDrive.target = m_GripperAngles[i];
-                m_GripperJoints[i].xDrive = jointXDrive;
-                m_EndEffectorJoints[i].xDrive = m_GripperJoints[i].xDrive;
+                var jointXDrive = m_RobotiqJoints[i].xDrive;
+                m_RobotiqAngles[i] = (float)(message.position[i]) * Mathf.Rad2Deg;
+                jointXDrive.target = m_RobotiqAngles[i];
+                m_RobotiqJoints[i].xDrive = jointXDrive;
+                m_ManipulatorJoints[i].xDrive = m_RobotiqJoints[i].xDrive;
             }
         }
 

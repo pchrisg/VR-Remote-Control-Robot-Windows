@@ -39,7 +39,7 @@ public class Experiment1 : MonoBehaviour
 
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
-        GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>().ResetPosition();
+        GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPosition();
 
         m_Glassbox.SetActive(true);
         m_Objects.SetActive(true);

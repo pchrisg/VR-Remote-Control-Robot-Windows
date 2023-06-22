@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AttachableObject : MonoBehaviour
+public class AttachableObject_Old : MonoBehaviour
 {
     private GameObject m_GhostObject = null;
     public bool m_isAttached = false;

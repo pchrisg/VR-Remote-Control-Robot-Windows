@@ -29,7 +29,8 @@ public class RadialMenu : MonoBehaviour
 
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
-    private Gripper m_Gripper = null;
+    private Manipulator m_Manipulator = null;
+    private GripperControl m_GripperControl = null;
 
     private ManipulationOptions.Mode m_MenuMode = ManipulationOptions.Mode.DIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
@@ -44,7 +45,8 @@ public class RadialMenu : MonoBehaviour
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
-        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         CreateAndSetupSections();
     }
 
@@ -184,7 +186,7 @@ public class RadialMenu : MonoBehaviour
 
     private void SetGripIcon()
     {
-        isGripping = m_Gripper.isGripping;
+        isGripping = m_GripperControl.isGripping;
 
         if (!isGripping)
         {
@@ -256,7 +258,7 @@ public class RadialMenu : MonoBehaviour
         if (isPlanning != m_PlanningRobot.isPlanning)
             SetPlanRobIcon();
 
-        if (isGripping != m_Gripper.isGripping)
+        if (isGripping != m_GripperControl.isGripping)
             SetGripIcon();
 
         if (m_MenuMode != m_ManipulationMode.mode)

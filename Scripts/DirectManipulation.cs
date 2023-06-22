@@ -14,8 +14,8 @@ public class DirectManipulation : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
-    private Gripper m_Gripper = null;
-    private EndEffector m_EndEffector = null;
+    private Manipulator m_Manipulator = null;
+    private GripperControl m_GripperControl = null;
 
     private Interactable m_Interactable = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -34,8 +34,8 @@ public class DirectManipulation : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
-        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
@@ -45,13 +45,13 @@ public class DirectManipulation : MonoBehaviour
     {
         if(m_FocusRot != Quaternion.identity && m_FocusRot != gameObject.transform.rotation)
         {
-            m_EndEffector.ResetColour();
+            m_Manipulator.ResetColour();
             //m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
             m_ROSPublisher.PublishMoveArm();
             m_FocusRot = Quaternion.identity;
         }
 
-        if ((m_ManipulationMode.mode == Mode.DIRECT || m_ManipulationMode.mode == Mode.RAILCREATOR) && !m_Gripper.isGripping)
+        if ((m_ManipulationMode.mode == Mode.DIRECT || m_ManipulationMode.mode == Mode.RAILCREATOR) && !m_GripperControl.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -143,7 +143,7 @@ public class DirectManipulation : MonoBehaviour
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObject.up)) * Mathf.Rad2Deg;
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
-            m_EndEffector.AlignedWithYAxis();
+            m_Manipulator.AlignedWithYAxis();
             //m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
         }
@@ -151,12 +151,12 @@ public class DirectManipulation : MonoBehaviour
         //print(angle);
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
-            m_EndEffector.AlignedWithYAxis();
+            m_Manipulator.AlignedWithYAxis();
             //m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
         }
 
-        m_EndEffector.ResetColour();
+        m_Manipulator.ResetColour();
         //m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
         return position;
     }
@@ -170,7 +170,7 @@ public class DirectManipulation : MonoBehaviour
             float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
             Vector3 up = ang <= 90 ? Vector3.up : -Vector3.up;
 
-            m_EndEffector.AlignedWithYAxis();
+            m_Manipulator.AlignedWithYAxis();
             //m_EndEffectorMat.color = new Color(1.0f, 0.0f, 1.0f, 100.0f/255.0f);
             return Quaternion.LookRotation(forward, up);
         }
@@ -181,12 +181,12 @@ public class DirectManipulation : MonoBehaviour
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
             Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 
-            m_EndEffector.AlignedWithYAxis();
+            m_Manipulator.AlignedWithYAxis();
             //m_EndEffectorMat.color = new Color(0.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return Quaternion.LookRotation(forward, up);
         }
 
-        m_EndEffector.ResetColour();
+        m_Manipulator.ResetColour();
         //m_EndEffectorMat.color = new Color(51.0f/255.0f, 51.0f/255.0f, 51.0f/255.0f, 100.0f / 255.0f);
         return m_GhostObject.transform.rotation;
     }

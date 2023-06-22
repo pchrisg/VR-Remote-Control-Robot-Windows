@@ -3,7 +3,7 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 
-public class Gripper : MonoBehaviour
+public class GripperControl : MonoBehaviour
 {
     [Header("Audio Clips")]
     [SerializeField] private AudioClip m_Collision = null;

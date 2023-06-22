@@ -21,7 +21,7 @@ public class ResultSubscriber : MonoBehaviour
     private GameObject m_UR5 = null;
     private readonly string m_FeedbackTopic = "/move_group/feedback";
 
-    private EndEffector m_EndEffector = null;
+    private Manipulator m_Manipulator = null;
     
     private bool isPlanExecuted = true;
     private readonly string NotExecuted = "No motion plan found. No execution attempted.";
@@ -38,7 +38,7 @@ public class ResultSubscriber : MonoBehaviour
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
 
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         //m_UR5Renderers = m_UR5.GetComponentsInChildren<Renderer>();
         //m_RobotiqRenderers = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Renderer>();
     }
@@ -66,7 +66,7 @@ public class ResultSubscriber : MonoBehaviour
             {
                 //foreach (Renderer renderer in m_UR5Renderers)
                 //    renderer.material = m_CollidingMat;
-                m_EndEffector.Colliding();
+                m_Manipulator.Collide();
 
                 ur5AudioSource.clip = m_CollisionClip;
                 ur5AudioSource.Play();
@@ -88,7 +88,7 @@ public class ResultSubscriber : MonoBehaviour
 
                 //foreach (Renderer renderer in m_RobotiqRenderers)
                 //    renderer.material = m_GreyMat;
-                m_EndEffector.NotColliding();
+                m_Manipulator.NotColliding();
 
                 isPlanExecuted = true;
             }

@@ -9,7 +9,7 @@ public class PlanningRobot : MonoBehaviour
     [SerializeField] private Material m_PlanRobMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
-    private EndEffector m_EndEffector = null;
+    private Manipulator m_Manipulator = null;
 
     private RobotTrajectoryMsg m_Trajectory = null;
 
@@ -17,9 +17,9 @@ public class PlanningRobot : MonoBehaviour
     private ArticulationBody[] m_PlanRobJoints = null;
     private ArticulationBody[] m_UR5Joints = null;
 
-    private const int k_GripperNumJoints = 11;
+    private const int k_RobotiqNumJoints = 11;
     private ArticulationBody[] m_PlanGripJoints = null;
-    private ArticulationBody[] m_GripperJoints = null;
+    private ArticulationBody[] m_RobotiqJoints = null;
 
     private bool followUR5 = false;
     private bool displayPath = false;
@@ -29,13 +29,13 @@ public class PlanningRobot : MonoBehaviour
     public void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<EndEffector>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
 
         m_PlanRobJoints = new ArticulationBody[k_UR5NumJoints];
         m_UR5Joints = new ArticulationBody[k_UR5NumJoints];
 
-        m_PlanGripJoints = new ArticulationBody[k_GripperNumJoints];
-        m_GripperJoints = new ArticulationBody[k_GripperNumJoints];
+        m_PlanGripJoints = new ArticulationBody[k_RobotiqNumJoints];
+        m_RobotiqJoints = new ArticulationBody[k_RobotiqNumJoints];
 
         GameObject ur5 = GameObject.FindGameObjectWithTag("robot");
         var linkName = string.Empty;
@@ -46,15 +46,15 @@ public class PlanningRobot : MonoBehaviour
             m_UR5Joints[joint] = ur5.transform.Find(linkName).GetComponent<ArticulationBody>();
         }
 
-        GameObject gripper = GameObject.FindGameObjectWithTag("Robotiq");
+        GameObject robotiq = GameObject.FindGameObjectWithTag("Robotiq");
         string connectingLink = linkName + "/flange/Robotiq/palm/";
-        for (var i = 0; i < k_GripperNumJoints; i += 4)
+        for (var i = 0; i < k_RobotiqNumJoints; i += 4)
         {
             linkName = string.Empty;
-            for (var j = i; j < i + 4 && j < k_GripperNumJoints; j++)
+            for (var j = i; j < i + 4 && j < k_RobotiqNumJoints; j++)
             {
-                linkName += JointStateSubscriber.m_GripperLinkNames[j];
-                m_GripperJoints[j] = gripper.transform.Find(linkName).GetComponent<ArticulationBody>();
+                linkName += JointStateSubscriber.m_RobotiqLinkNames[j];
+                m_RobotiqJoints[j] = robotiq.transform.Find(linkName).GetComponent<ArticulationBody>();
                 m_PlanGripJoints[j] = gameObject.transform.Find(connectingLink+linkName).GetComponent<ArticulationBody>();
             }
         }
@@ -85,7 +85,7 @@ public class PlanningRobot : MonoBehaviour
         if (!isPlanning)
         {
             a = 0.0f;
-            m_EndEffector.ResetPosition();
+            m_Manipulator.ResetPosition();
             m_Trajectory = null;
             displayPath = false;
         }
@@ -102,10 +102,10 @@ public class PlanningRobot : MonoBehaviour
             m_PlanRobJoints[joint].xDrive = joint1XDrive;
         }
 
-        for (var joint = 0; joint < k_GripperNumJoints; joint++)
+        for (var joint = 0; joint < k_RobotiqNumJoints; joint++)
         {
             var joint1XDrive = m_PlanGripJoints[joint].xDrive;
-            joint1XDrive.target = m_GripperJoints[joint].xDrive.target;
+            joint1XDrive.target = m_RobotiqJoints[joint].xDrive.target;
             m_PlanGripJoints[joint].xDrive = joint1XDrive;
         }
     }

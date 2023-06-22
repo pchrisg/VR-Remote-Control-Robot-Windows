@@ -15,7 +15,7 @@ public class RailCreator : MonoBehaviour
     private CollisionObjects m_CollisionObjects = null;
     private Rails m_Rails = null;
 
-    private GameObject m_EndEffector = null;
+    private Transform m_Manipulator = null;
     private GameObject m_Rail = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -27,7 +27,7 @@ public class RailCreator : MonoBehaviour
 
     private void Awake()
     {
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector");
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").transform;
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
@@ -43,14 +43,14 @@ public class RailCreator : MonoBehaviour
             m_Rail = null;
             m_Pivot = Vector3.zero;
         }
-        m_EndEffector.GetComponent<EndEffector>().ResetPosition();
+        m_Manipulator.GetComponent<Manipulator>().ResetPosition();
     }
 
     private void Update()
     {
         if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            m_InteractingHand = m_EndEffector.GetComponent<DirectManipulation>().m_InteractingHand;
+            m_InteractingHand = m_Manipulator.GetComponent<DirectManipulation>().m_InteractingHand;
 
             if (!isInteracting)
             {
@@ -85,8 +85,8 @@ public class RailCreator : MonoBehaviour
 
         else if(m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
         {
-            Vector3 position = m_EndEffector.transform.position;
-            Quaternion rotation = m_EndEffector.transform.rotation;
+            Vector3 position = m_Manipulator.position;
+            Quaternion rotation = m_Manipulator.rotation;
 
             Transform lastChild = m_Rails.GetLastChild();
 
@@ -95,7 +95,7 @@ public class RailCreator : MonoBehaviour
             Destroy(lastChild.gameObject);
             m_Rails.RemoveLastRail();
 
-            m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
+            m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
         }
     }
 
@@ -109,7 +109,7 @@ public class RailCreator : MonoBehaviour
         Transform lastChild = m_Rails.GetLastChild();
 
         if (lastChild.position == gameObject.transform.parent.position)
-            m_Pivot = m_EndEffector.transform.position;
+            m_Pivot = m_Manipulator.position;
         else
             m_Pivot = lastChild.position + (lastChild.up.normalized * lastChild.localScale.y);
 
@@ -121,7 +121,7 @@ public class RailCreator : MonoBehaviour
 
     private void RotateRail()
     {
-        Vector3 connectingVector = m_EndEffector.transform.position - m_Pivot;
+        Vector3 connectingVector = m_Manipulator.position - m_Pivot;
 
         m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
         m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
@@ -131,7 +131,7 @@ public class RailCreator : MonoBehaviour
 
     private void Snapping()
     {
-        Vector3 connectingVector = m_EndEffector.transform.position - m_Pivot;
+        Vector3 connectingVector = m_Manipulator.position - m_Pivot;
 
         m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
         m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
@@ -152,7 +152,7 @@ public class RailCreator : MonoBehaviour
         }
 
         if (m_Rails.rails.Length > 1 &&
-            (m_EndEffector.transform.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+            (m_Manipulator.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
             Vector3 projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
@@ -162,7 +162,7 @@ public class RailCreator : MonoBehaviour
         }
 
         if (m_CollisionObjects.m_FocusObject != null && 
-            (m_EndEffector.transform.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+            (m_Manipulator.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
             Vector3 projectedConnectingVector = m_CollisionObjects.m_FocusObject.transform.position - m_Pivot;
             m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));

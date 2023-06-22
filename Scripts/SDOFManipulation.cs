@@ -8,8 +8,8 @@ public class SDOFManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private PlanningRobot m_PlanningRobot = null;
     private ManipulationMode m_ManipulationMode = null;
-    private Transform m_EndEffector = null;
-    private Gripper m_Gripper = null;
+    private Manipulator m_Manipulator = null;
+    private GripperControl m_GripperControl = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -31,15 +31,15 @@ public class SDOFManipulation : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_EndEffector = GameObject.FindGameObjectWithTag("EndEffector").transform;
-        m_Gripper = GameObject.FindGameObjectWithTag("EndEffector").GetComponent<Gripper>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
     }
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.SDOF && !m_Gripper.isGripping)
+        if (m_ManipulationMode.mode == Mode.SDOF && !m_GripperControl.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -131,9 +131,9 @@ public class SDOFManipulation : MonoBehaviour
             projectedConnectingVector = scaledPos - m_Interactable.transform.position;
         }
 
-        Vector3 position = m_EndEffector.position + projectedConnectingVector;
+        Vector3 position = m_Manipulator.transform.position + projectedConnectingVector;
 
-        m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(position, m_EndEffector.rotation);
+        m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, m_Manipulator.transform.rotation);
     }
 
     void Rotate()
@@ -158,8 +158,8 @@ public class SDOFManipulation : MonoBehaviour
             m_InitDir = direction;
         }
 
-        Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_EndEffector.rotation;
-        m_EndEffector.GetComponent<ArticulationBody>().TeleportRoot(m_EndEffector.position, rotation);
+        Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_Manipulator.transform.rotation;
+        m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
     }
 
     private Vector3 Snapping(Vector3 direction)

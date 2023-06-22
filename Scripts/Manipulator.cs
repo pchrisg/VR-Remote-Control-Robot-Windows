@@ -1,14 +1,16 @@
 using UnityEngine;
+using RosMessageTypes.Robotiq3fGripperArticulated;
+using Valve.VR;
+using Valve.VR.InteractionSystem;
 
-public class EndEffector : MonoBehaviour
+public class Manipulator : MonoBehaviour
 {
-    [Header("Scene Object")]
-    [SerializeField] private Transform m_Robotiq3FGripper;
-
     [Header("Material")]
     [SerializeField] private Material m_EndEffectorMat;
     [SerializeField] private Material m_CollidingMat;
     [SerializeField] private Material m_YAxisMat;
+
+    private Transform m_Robotiq;
 
     Renderer[] m_Renderers = null;
 
@@ -17,6 +19,7 @@ public class EndEffector : MonoBehaviour
     private void Awake()
     {
         m_Renderers = gameObject.transform.Find("palm").GetComponentsInChildren<Renderer>();
+        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
     }
 
     private void Start()
@@ -26,12 +29,12 @@ public class EndEffector : MonoBehaviour
 
     public void ResetPosition()
     {
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq3FGripper.transform.position, m_Robotiq3FGripper.transform.rotation);
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
     }
 
     public void ResetColour()
     {
-        if(!isColliding)
+        if (!isColliding)
         {
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_EndEffectorMat;
@@ -47,7 +50,7 @@ public class EndEffector : MonoBehaviour
         }
     }
 
-    public void Colliding()
+    public void Collide()
     {
         isColliding = true;
         foreach (Renderer renderer in m_Renderers)
