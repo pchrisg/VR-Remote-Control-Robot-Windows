@@ -7,14 +7,10 @@ using ManipulationOptions;
 
 public class DirectManipulation : MonoBehaviour
 {
-    //[Header("Material")]
-    //[SerializeField] Material m_EndEffectorMat = null;
-
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
-    private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
 
     private Interactable m_Interactable = null;
@@ -34,7 +30,6 @@ public class DirectManipulation : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
 
         m_Interactable = GetComponent<Interactable>();
@@ -45,8 +40,6 @@ public class DirectManipulation : MonoBehaviour
     {
         if(m_FocusRot != Quaternion.identity && m_FocusRot != gameObject.transform.rotation)
         {
-            m_Manipulator.ResetColour();
-            //m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
             m_ROSPublisher.PublishMoveArm();
             m_FocusRot = Quaternion.identity;
         }
@@ -67,7 +60,7 @@ public class DirectManipulation : MonoBehaviour
                         m_InitPos = gameObject.transform.position;
 
                     if (m_Trigger.GetState(m_InteractingHand.handType))
-                        MoveEndEffector();
+                        MoveManipulator();
                 }
             }
         }
@@ -108,7 +101,7 @@ public class DirectManipulation : MonoBehaviour
         }
     }
 
-    private void MoveEndEffector()
+    private void MoveManipulator()
     {
         Vector3 position = m_GhostObject.transform.position;
         Quaternion rotation = gameObject.transform.rotation;
@@ -143,51 +136,40 @@ public class DirectManipulation : MonoBehaviour
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObject.up)) * Mathf.Rad2Deg;
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
-            m_Manipulator.AlignedWithYAxis();
-            //m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
         }
 
-        //print(angle);
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
-            m_Manipulator.AlignedWithYAxis();
-            //m_EndEffectorMat.color = new Color(1.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
         }
 
-        m_Manipulator.ResetColour();
-        //m_EndEffectorMat.color = new Color(51.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 100.0f / 255.0f);
         return position;
     }
 
     private Quaternion RotationSnapping()
     {
         float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
+            // snap to xz plane
             Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up.normalized);
             float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
             Vector3 up = ang <= 90 ? Vector3.up : -Vector3.up;
 
-            m_Manipulator.AlignedWithYAxis();
-            //m_EndEffectorMat.color = new Color(1.0f, 0.0f, 1.0f, 100.0f/255.0f);
             return Quaternion.LookRotation(forward, up);
         }
-
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
+            //snap to y axis
             Vector3 right = Vector3.Project(m_GhostObject.transform.right, Vector3.up);
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
             Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 
-            m_Manipulator.AlignedWithYAxis();
-            //m_EndEffectorMat.color = new Color(0.0f, 1.0f, 0.0f, 100.0f / 255.0f);
             return Quaternion.LookRotation(forward, up);
         }
 
-        m_Manipulator.ResetColour();
-        //m_EndEffectorMat.color = new Color(51.0f/255.0f, 51.0f/255.0f, 51.0f/255.0f, 100.0f / 255.0f);
         return m_GhostObject.transform.rotation;
     }
 

@@ -1,11 +1,5 @@
-using JetBrains.Annotations;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Xml.Serialization;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class RadialMenu : MonoBehaviour
 {
@@ -15,6 +9,8 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private SpriteRenderer m_SRPlanRob = null;
     [SerializeField] private SpriteRenderer m_SRActiveMode = null;
     [SerializeField] private SpriteRenderer m_SRGripper = null;
+    [SerializeField] private SpriteRenderer m_Selection = null;
+    [SerializeField] private SpriteRenderer m_NullSelection = null;
 
     [Header("Sprites")]
     [SerializeField] private Sprite[] sprites = new Sprite[13];
@@ -39,6 +35,11 @@ public class RadialMenu : MonoBehaviour
     private bool isPlanning = false;
     private bool isGripping = false;
 
+    private Color m_ShowColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
+    private Color m_HideColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+    private Color m_BlockColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+
+
     private readonly float degreeIncrement = 60.0f;
 
     private void Awake()
@@ -52,12 +53,26 @@ public class RadialMenu : MonoBehaviour
 
     private void Update()
     {
-        Vector2 direction = Vector2.zero + m_TouchPosition;
-        float rotation = GetDegree(direction);
-
         SetCursorPosition();
-        SetSelectionRotation(rotation);
-        SetSeletedEvent(rotation);
+
+        Vector2 direction = Vector2.zero + m_TouchPosition;
+        
+        if (direction.magnitude < 0.35f)
+        {
+            m_Selection.color = m_HideColor;
+            m_NullSelection.color = m_ShowColor;
+
+            m_HighlightedSection = null;
+        }
+        else
+        {
+            m_Selection.color = m_ShowColor;
+            m_NullSelection.color = m_BlockColor;
+
+            float rotation = GetDegree(direction);
+            SetSelectionRotation(rotation);
+            SetSeletedEvent(rotation);
+        }
 
         if (m_MenuMode != m_ManipulationMode.mode)
             SetSectionIcons();
@@ -253,15 +268,18 @@ public class RadialMenu : MonoBehaviour
 
     public void ActivateHighlightedSection()
     {
-        m_HighlightedSection.onPress.Invoke();
+        if(m_HighlightedSection != null)
+        {
+            m_HighlightedSection.onPress.Invoke();
 
-        if (isPlanning != m_PlanningRobot.isPlanning)
-            SetPlanRobIcon();
+            if (isPlanning != m_PlanningRobot.isPlanning)
+                SetPlanRobIcon();
 
-        if (isGripping != m_GripperControl.isGripping)
-            SetGripIcon();
+            if (isGripping != m_GripperControl.isGripping)
+                SetGripIcon();
 
-        if (m_MenuMode != m_ManipulationMode.mode)
-            SetSectionIcons();
+            if (m_MenuMode != m_ManipulationMode.mode)
+                SetSectionIcons();
+        }
     }
 }

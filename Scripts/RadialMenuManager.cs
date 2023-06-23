@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
+using Valve.VR.InteractionSystem;
 
 public class RadialMenuManager : MonoBehaviour
 {
@@ -23,6 +24,19 @@ public class RadialMenuManager : MonoBehaviour
     {
         m_Touch.onChange -= Touch;
         m_TouchPos.onAxis -= Position;
+    }
+
+    private void Start()
+    {
+        Invoke("SetRightHandAsParent", 0.5f);
+    }
+
+    private void SetRightHandAsParent()
+    {
+        Hand rightHand = Player.instance.rightHand;
+        gameObject.transform.position = rightHand.transform.position;
+        gameObject.transform.rotation = rightHand.transform.rotation;
+        gameObject.transform.SetParent(rightHand.transform);
     }
 
     private void Position(SteamVR_Action_Vector2 fromAction, SteamVR_Input_Sources fromSource, Vector2 axis, Vector2 delta)

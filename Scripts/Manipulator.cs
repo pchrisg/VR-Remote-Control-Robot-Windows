@@ -1,25 +1,33 @@
 using UnityEngine;
-using RosMessageTypes.Robotiq3fGripperArticulated;
-using Valve.VR;
-using Valve.VR.InteractionSystem;
 
 public class Manipulator : MonoBehaviour
 {
     [Header("Material")]
-    [SerializeField] private Material m_EndEffectorMat;
-    [SerializeField] private Material m_CollidingMat;
-    [SerializeField] private Material m_YAxisMat;
+    [SerializeField] private Material m_ManipulatorMat;
 
     private Transform m_Robotiq;
 
-    Renderer[] m_Renderers = null;
+    //Colours
+    private Color m_CurrentColor = new Color();
+    private Color m_DefaultColor = new Color(0.2f, 0.2f, 0.2f, 0.4f);
+    private Color m_CollidingColor = new Color(1.0f, 0.0f, 0.0f, 0.4f);
+    private Color m_Y_AxisColor = new Color(0.0f, 1.0f, 0.0f, 0.4f);
+    private Color m_XZ_PlaneColor = new Color(1.0f, 0.0f, 1.0f, 0.4f);
+    private Color m_FocusObjectColor = new Color(1.0f, 1.0f, 0.0f, 0.4f);
 
     private bool isColliding = false;
 
     private void Awake()
     {
-        m_Renderers = gameObject.transform.Find("palm").GetComponentsInChildren<Renderer>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
+
+        m_CurrentColor = m_DefaultColor;
+        m_ManipulatorMat.color = m_CurrentColor;
+    }
+
+    private void OnDestroy()
+    {
+        m_ManipulatorMat.color = m_DefaultColor;
     }
 
     private void Start()
@@ -27,39 +35,46 @@ public class Manipulator : MonoBehaviour
         Invoke("ResetPosition", 1.2f);
     }
 
+    private void Update()
+    {
+        Color color = m_CurrentColor;
+
+        if (isColliding)
+            color = m_CollidingColor;
+        else
+            color = CheckSnapping();
+
+        if(color != m_CurrentColor)
+        {
+            m_CurrentColor = color;
+            m_ManipulatorMat.color = m_CurrentColor;
+        }
+    }
+
     public void ResetPosition()
     {
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
     }
 
-    public void ResetColour()
+    private Color CheckSnapping()
     {
-        if (!isColliding)
-        {
-            foreach (Renderer renderer in m_Renderers)
-                renderer.material = m_EndEffectorMat;
-        }
-    }
+        float angle = Mathf.Acos(Vector3.Dot(transform.right, Vector3.up)) * Mathf.Rad2Deg;
+        if (float.IsNaN(angle) || angle < 0.1f)
+            return m_Y_AxisColor;
 
-    public void AlignedWithYAxis()
-    {
-        if (!isColliding)
-        {
-            foreach (Renderer renderer in m_Renderers)
-                renderer.material = m_YAxisMat;
-        }
+        if (Mathf.Abs(angle - 90.0f) < 0.1f)
+            return m_XZ_PlaneColor;
+
+        return m_DefaultColor;
     }
 
     public void Collide()
     {
         isColliding = true;
-        foreach (Renderer renderer in m_Renderers)
-            renderer.material = m_CollidingMat;
     }
 
     public void NotColliding()
     {
         isColliding = false;
-        ResetColour();
     }
 }
