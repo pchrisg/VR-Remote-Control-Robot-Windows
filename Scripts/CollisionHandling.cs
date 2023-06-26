@@ -27,9 +27,9 @@ public class CollisionHandling : MonoBehaviour
     private Collider[] m_Finger2Colliders = null;
 
     private bool isCreating = false;
-    private int fingerMTouching = 0;
-    private int finger1Touching = 0;
-    private int finger2Touching = 0;
+    public int fingerMTouching = 0;
+    public int finger1Touching = 0;
+    public int finger2Touching = 0;
 
     private Vector3 m_ReleasePosition = Vector3.zero;
 
@@ -73,11 +73,11 @@ public class CollisionHandling : MonoBehaviour
 
             else
             {
-                if (m_ManipulationMode.mode == Mode.COLOBJCREATOR && !m_isAttachable)
-                    gameObject.GetComponent<Renderer>().material = m_CollidingMat;
-
-                else if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && m_isAttachable)
+                if (m_isAttachable)
                     gameObject.GetComponent<Renderer>().material = m_AttachedMat;
+
+                if (!m_isAttachable)
+                    gameObject.GetComponent<Renderer>().material = m_CollidingMat;
             }
             isCreating = m_CollisionObjects.isCreating;
         }
@@ -126,7 +126,7 @@ public class CollisionHandling : MonoBehaviour
                     finger2Touching++;
             }
 
-            if (fingerMTouching > 0 && finger1Touching > 0 && finger2Touching > 0)
+            if (fingerMTouching > 0 && (finger1Touching > 0 || finger2Touching > 0))
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_AttachedMat;
@@ -182,7 +182,7 @@ public class CollisionHandling : MonoBehaviour
                     finger2Touching--;
             }
 
-            if (fingerMTouching == 0 || finger1Touching == 0 || finger2Touching == 0)
+            if (fingerMTouching == 0 && finger1Touching == 0 && finger2Touching == 0)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;

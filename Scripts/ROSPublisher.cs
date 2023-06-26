@@ -135,7 +135,7 @@ public class ROSPublisher : MonoBehaviour
         EmptyMsg msg = new EmptyMsg();
         m_Ros.Publish(m_EmergencyStopTopic, msg);
         m_Ros.Publish(m_EmergencyStopTopic, msg);
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(4.0f);
 
         locked = false;
         yield return null;

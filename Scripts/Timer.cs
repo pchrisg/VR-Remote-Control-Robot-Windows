@@ -3,11 +3,10 @@ using UnityEngine.UI;
 
 public class Timer : MonoBehaviour
 {
-
+    [SerializeField] private Text m_Timer;
     private string mm, ss;
 
-    public Text timer;
-    public float timeLeft;
+    [HideInInspector]public float m_TimeLeft;
 
     void Start()
     {
@@ -17,14 +16,14 @@ public class Timer : MonoBehaviour
 
     void Update()
     {
-        if (timeLeft > 0.0f)
+        if (m_TimeLeft > 0.0f)
         {
-            timeLeft -= Time.deltaTime;
-            mm = Mathf.Floor((timeLeft / 60.0f) % 60.0f).ToString("0");
-            ss = (timeLeft % 60).ToString("00");
-            timer.text = mm + ":" + ss;
+            m_TimeLeft -= Time.deltaTime;
+            mm = Mathf.Floor((m_TimeLeft / 60.0f) % 60.0f).ToString("0");
+            ss = (m_TimeLeft % 60).ToString("00");
+            m_Timer.text = mm + ":" + ss;
         }
         else
-            timer.text = "0:00";
+            m_Timer.text = "0:00";
     }
 }

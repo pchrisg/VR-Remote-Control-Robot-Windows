@@ -11,9 +11,6 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private SteamVR_Action_Boolean m_Grip = null;
 
-    private Collider[] m_ColManipulator = null;
-    private Collider[] m_ColUR5 = null;
-
     [HideInInspector]public Hand hand = null;
 
     private void Awake()
@@ -21,27 +18,13 @@ public class CollisionObjectCreator : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-
-        m_ColManipulator = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("palm").GetComponentsInChildren<Collider>();
-        m_ColUR5 = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if(m_Grip.GetState(hand.handType))
         {
-            foreach (var collider in m_ColManipulator)
-            {
-                if (other == collider)
-                    return;
-            }
-            foreach (var collider in m_ColUR5)
-            {
-                if (other == collider)
-                    return;
-            }
-
-            if (other.tag == "PlanningScene")
+            if (other.GetComponent<Renderer>() == null)
                 return;
 
             if (m_ManipulationMode.mode == Mode.COLOBJCREATOR || m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
@@ -52,7 +35,8 @@ public class CollisionObjectCreator : MonoBehaviour
                     RemoveCollisionObject(other);
             }
 
-            else if (other.GetComponent<CollisionHandling>().m_isAttachable)
+            else if (other.GetComponent<CollisionHandling>() != null &&
+                     other.GetComponent<CollisionHandling>().m_isAttachable)
                 SetFocusObject(other);
         }
     }
@@ -84,6 +68,12 @@ public class CollisionObjectCreator : MonoBehaviour
 
     private void RemoveCollisionObject(Collider other)
     {
+        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR && other.GetComponent<CollisionHandling>().m_isAttachable)
+            return;
+
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && !other.GetComponent<CollisionHandling>().m_isAttachable)
+            return;
+
         Destroy(other.GetComponent<CollisionHandling>());
 
         if (other.GetComponent<CollisionObject>() != null)

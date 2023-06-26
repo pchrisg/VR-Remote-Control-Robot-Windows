@@ -83,7 +83,7 @@ public class RailCreator : MonoBehaviour
             isInteracting = true;
         }
 
-        else if(m_Rails.GetLastChild() != m_Rails.GetComponent<Transform>())
+        else if(m_Rails.GetLastChild() != m_Rails.transform)
         {
             Vector3 position = m_Manipulator.position;
             Quaternion rotation = m_Manipulator.rotation;

@@ -48,7 +48,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "PlanningScene")
+        if (other.transform.parent.tag != "Moveable")
         {
             m_CollisionTime = Time.time;
             print(gameObject.name + " collided with " + other.transform.parent.gameObject.name);
@@ -65,7 +65,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "PlanningScene")
+        if (other.transform.parent.tag != "Moveable")
         {
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_OriginalMat;
