@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InsideCheck : MonoBehaviour
+public class Experiment1ConditionChecker : MonoBehaviour
 {
     private List<GameObject> m_Barrels = new List<GameObject>();
     
