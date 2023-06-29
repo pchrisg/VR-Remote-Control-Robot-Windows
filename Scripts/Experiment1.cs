@@ -33,10 +33,7 @@ public class Experiment1 : MonoBehaviour
     private void Update()
     {
         if (m_Ex1ConCheck != null && m_Ex1ConCheck.allObjectsInside)
-        {
             m_ExperimentManager.SaveData();
-            gameObject.SetActive(false);
-        }
     }
 
     private void DestroyAllObjects()

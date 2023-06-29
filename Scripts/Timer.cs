@@ -28,7 +28,7 @@ public class Timer : MonoBehaviour
             ss = (m_TimeLeft % 60).ToString("00");
             m_Text.text = mm + ":" + ss;
         }
-        //else
-        //    m_Text.text = "0:00";
+        else
+            m_TimeLeft = 0.0f;
     }
 }

@@ -13,6 +13,7 @@ public class EmergencyStop : MonoBehaviour
     [SerializeField] private AudioClip m_CollisionClip = null;
 
     private ROSPublisher m_ROSPublisher = null;
+    private ExperimentManager m_ExperimentManager = null;
     private AudioSource m_AudioSource = null;
 
     Renderer[] m_Renderers = null;
@@ -23,6 +24,7 @@ public class EmergencyStop : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
         m_AudioSource = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<AudioSource>();
 
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
@@ -51,7 +53,11 @@ public class EmergencyStop : MonoBehaviour
         if (other.transform.parent.tag != "Moveable")
         {
             m_CollisionTime = Time.time;
+            m_ExperimentManager.m_CollisionsCount++;
+            m_ExperimentManager.m_CollisionDescriptions.Add(gameObject.name + ", collided with, " + other.transform.parent.gameObject.name + " \n");
+
             print(gameObject.name + " collided with " + other.transform.parent.gameObject.name);
+
 
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_CollidingMat;

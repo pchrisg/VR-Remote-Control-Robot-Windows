@@ -106,26 +106,26 @@ public class CollisionHandling : MonoBehaviour
             }
         }
 
+        foreach (var collider in m_FingerMColliders)
+        {
+            if (other == collider)
+                fingerMTouching++;
+        }
+
+        foreach (var collider in m_Finger1Colliders)
+        {
+            if (other == collider)
+                finger1Touching++;
+        }
+
+        foreach (var collider in m_Finger2Colliders)
+        {
+            if (other == collider)
+                finger2Touching++;
+        }
+
         if (m_GripperControl.isGripping && m_isAttachable && !m_isAttached)
         {
-            foreach (var collider in m_FingerMColliders)
-            {
-                if(other == collider)
-                    fingerMTouching++;
-            }
-
-            foreach (var collider in m_Finger1Colliders)
-            {
-                if (other == collider)
-                    finger1Touching++;
-            }
-
-            foreach (var collider in m_Finger2Colliders)
-            {
-                if (other == collider)
-                    finger2Touching++;
-            }
-
             if (fingerMTouching > 0 && (finger1Touching > 0 || finger2Touching > 0))
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
@@ -162,27 +162,27 @@ public class CollisionHandling : MonoBehaviour
             }
         }
 
+        foreach (var collider in m_FingerMColliders)
+        {
+            if (other == collider)
+                fingerMTouching--;
+        }
+
+        foreach (var collider in m_Finger1Colliders)
+        {
+            if (other == collider)
+                finger1Touching--;
+        }
+
+        foreach (var collider in m_Finger2Colliders)
+        {
+            if (other == collider)
+                finger2Touching--;
+        }
+
         if (m_isAttached)
         {
-            foreach (var collider in m_FingerMColliders)
-            {
-                if (other == collider)
-                    fingerMTouching--;
-            }
-
-            foreach (var collider in m_Finger1Colliders)
-            {
-                if (other == collider)
-                    finger1Touching--;
-            }
-
-            foreach (var collider in m_Finger2Colliders)
-            {
-                if (other == collider)
-                    finger2Touching--;
-            }
-
-            if (fingerMTouching == 0 && finger1Touching == 0 && finger2Touching == 0)
+            if (fingerMTouching == 0)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;

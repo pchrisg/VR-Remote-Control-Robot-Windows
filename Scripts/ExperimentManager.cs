@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using ManipulationOptions;
@@ -12,14 +13,19 @@ public class ExperimentManager : MonoBehaviour
     [Header("Participant")]
     [SerializeField] private string m_ParticipantName = string.Empty;
 
-    [Header("Experiment Control")]
-    [SerializeField] private bool m_SetupExperiment1 = false;
-    [SerializeField] private bool m_SetupExperiment2 = false;
-    [SerializeField] private bool m_RunExperiment = false;
-    [SerializeField] private bool m_ResetExperiment = false;
-
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
+
+    [Header("Experiment Control")]
+    [SerializeField] private bool m_RunExperiment = false;
+    [SerializeField] private bool m_ResetExperiment = false;
+    [SerializeField] private bool m_SetupExperiment1 = false;
+    [SerializeField] private bool m_SetupExperiment2 = false;
+
+    [Header("Experiment Status")]
+    [SerializeField] private bool m_ExperimentActive = false;
+    [SerializeField] private bool m_Experiment1Active = false;
+    [SerializeField] private bool m_Experiment2Active = false;
 
     // Experiments
     private Experiment1 m_Experiment1 = null;
@@ -31,20 +37,25 @@ public class ExperimentManager : MonoBehaviour
 
     private float m_TotalTime = 300.0f;
 
-    public bool m_ExperimentActive = false;
-    public bool m_Experiment1Active = false;
-    public bool m_Experiment2Active = false;
-
     // File Path
     private string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\";
 
-    // Data to Store
+    /// Data to Store
+    // times
     private float m_TimeInDirMan = 0.0f;
     private float m_TimeInSDOFMan = 0.0f;
     private float m_TimeInRailCre = 0.0f;
     private float m_TimeInRailMan = 0.0f;
     private float m_TimeInColObj = 0.0f;
     private float m_TimeInAttObj = 0.0f;
+    private float m_TimeTaken = 0.0f;
+
+    // collisions updated by EmergencyStop script
+    [HideInInspector] public int m_CollisionsCount = 0;
+    [HideInInspector] public List<string> m_CollisionDescriptions = new List<string>();
+
+    // number of objects placed updated by ConditionChecker scripts
+    [HideInInspector] public int m_PlacedObjectsCount = 0;
 
     private void Awake()
     {
@@ -68,7 +79,14 @@ public class ExperimentManager : MonoBehaviour
 
     private void Update()
     {
-        if(!m_ExperimentActive)
+        // Reset Robot Pose
+        if (m_ResetRobotPose)
+        {
+            m_ResetRobotPose = false;
+            ResetRobotPose();
+        }
+
+        if (!m_ExperimentActive)
         {
             if (m_SetupExperiment1 && m_SetupExperiment2)
             {
@@ -82,7 +100,7 @@ public class ExperimentManager : MonoBehaviour
 
                 if (!m_Experiment1Active)
                 {
-                    //m_Experiment2.Setup(false);
+                    m_Experiment2.Setup(false);
                     m_Experiment2Active = false;
 
                     m_Experiment1.Setup(true);
@@ -99,7 +117,7 @@ public class ExperimentManager : MonoBehaviour
                     m_Experiment1.Setup(false);
                     m_Experiment1Active = false;
 
-                    //m_Experiment2.Setup(true);
+                    m_Experiment2.Setup(true);
                     m_Experiment2Active = true;
                 }
             }
@@ -111,6 +129,8 @@ public class ExperimentManager : MonoBehaviour
 
                 if (m_Experiment1Active)
                     m_Experiment1.ResetExperiment();
+                if (m_Experiment2Active)
+                    m_Experiment2.ResetExperiment();
 
                 ResetRobotPose();
             }
@@ -123,18 +143,14 @@ public class ExperimentManager : MonoBehaviour
         }
         else
         {
+            if(m_Timer.m_TimeLeft <= 0.0f)
+                SaveData();
+
             if (!m_RunExperiment)
             {
                 m_Timer.m_TimeLeft = 0.0f;
                 m_Timer.m_Text.text = "Ready";
                 m_ExperimentActive = false;
-            }
-
-            // Reset Robot Pose
-            if (m_ResetRobotPose)
-            {
-                m_ResetRobotPose = false;
-                ResetRobotPose();
             }
 
             // Data Gathering
@@ -181,6 +197,8 @@ public class ExperimentManager : MonoBehaviour
 
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
+        yield return new WaitForSeconds(0.5f);
+
         GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPosition();
 
         m_Glassbox.SetActive(true);
@@ -193,6 +211,7 @@ public class ExperimentManager : MonoBehaviour
     {
         if (m_ExperimentActive)
         {
+            m_TimeTaken = m_TotalTime - m_Timer.m_TimeLeft;
             m_RunExperiment = false;
             m_ExperimentActive = false;
             StartCoroutine(WriteToFile());
@@ -201,11 +220,20 @@ public class ExperimentManager : MonoBehaviour
 
     IEnumerator WriteToFile()
     {
+        yield return new WaitForSeconds(1.0f);
+
         string experiment = string.Empty;
         if (m_Experiment1Active)
+        {
+            m_Experiment1.Setup(false);
             experiment = "PicknPlace\\";
+        }
+            
         else if (m_Experiment2Active)
+        {
+            m_Experiment2.Setup(false);
             experiment = "Stacking\\";
+        }
 
         string technique = string.Empty;
         if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
@@ -221,14 +249,20 @@ public class ExperimentManager : MonoBehaviour
         // Create file
         var sr = File.CreateText(path);
 
-        string dataCSV = "Direct, SDOF, Rail Creator, Rail, ColObj, AttObj, Total Time \n";
+        string dataCSV = "Number of Objects Placed:, " + m_PlacedObjectsCount.ToString() + " \n\n";
+        dataCSV += "Direct, SDOF, Rail Creator, Rail, ColObj, AttObj, Time Taken \n";
         dataCSV += m_TimeInDirMan.ToString() + ", "
                 + m_TimeInSDOFMan.ToString() + ", "
                 + m_TimeInRailCre.ToString() + ", "
                 + m_TimeInRailMan.ToString() + ", "
                 + m_TimeInColObj.ToString() + ", "
                 + m_TimeInAttObj.ToString() + ", "
-                + (m_TotalTime - m_Timer.m_TimeLeft).ToString() + " \n";
+                + m_TimeTaken.ToString() + " \n\n";
+
+        dataCSV += "Number of collisions:, " + m_CollisionsCount.ToString() + " \n";
+
+        foreach(var collision in m_CollisionDescriptions)
+            dataCSV += collision;
 
         // Write to File
         sr.WriteLine(dataCSV);
