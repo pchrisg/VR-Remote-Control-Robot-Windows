@@ -31,6 +31,50 @@ public class EmergencyStop : MonoBehaviour
         m_OriginalMat = gameObject.transform.Find("Visuals").GetComponentInChildren<Renderer>().material;
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        {
+            m_CollisionTime = Time.time;
+            string collisionDescription = gameObject.name + ", collided with, " + other.transform.parent.gameObject.name + " \n";
+
+            m_ExperimentManager.m_CollisionsCount++;
+            m_ExperimentManager.m_CollisionDescriptions.Add(collisionDescription);
+            print(Time.time.ToString() + "Enter - " + collisionDescription);
+
+            foreach (Renderer renderer in m_Renderers)
+                renderer.material = m_CollidingMat;
+
+            m_AudioSource.clip = m_CollisionClip;
+            m_AudioSource.Play();
+
+            m_ROSPublisher.PublishEmergencyStop();
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        {
+            if (Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime + 0.5f)
+            {
+                m_CollisionTime = Time.time;
+                print(Time.time.ToString() + "Stay - " + gameObject.name + " collided with " + other.transform.parent.gameObject.name);
+
+                m_ROSPublisher.PublishEmergencyStop();
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.transform.parent.tag != "Moveable")
+        {
+            foreach (Renderer renderer in m_Renderers)
+                renderer.material = m_OriginalMat;
+        }
+    }
+
     /*void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag != "Moveable")
@@ -46,39 +90,9 @@ public class EmergencyStop : MonoBehaviour
 
             m_ROSPublisher.PublishEmergencyStop();
         }
-    }*/
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.transform.parent.tag != "Moveable")
-        {
-            m_CollisionTime = Time.time;
-            m_ExperimentManager.m_CollisionsCount++;
-            m_ExperimentManager.m_CollisionDescriptions.Add(gameObject.name + ", collided with, " + other.transform.parent.gameObject.name + " \n");
-
-            print(gameObject.name + " collided with " + other.transform.parent.gameObject.name);
-
-
-            foreach (Renderer renderer in m_Renderers)
-                renderer.material = m_CollidingMat;
-
-            m_AudioSource.clip = m_CollisionClip;
-            m_AudioSource.Play();
-
-            m_ROSPublisher.PublishEmergencyStop();
-        }
     }
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.transform.parent.tag != "Moveable")
-        {
-            foreach (Renderer renderer in m_Renderers)
-                renderer.material = m_OriginalMat;
-        }
-    }
-
-    /*void OnCollisionStay(Collision collision)
+    void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.tag != "Moveable")
         {

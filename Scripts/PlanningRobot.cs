@@ -21,12 +21,14 @@ public class PlanningRobot : MonoBehaviour
     private ArticulationBody[] m_PlanGripJoints = null;
     private ArticulationBody[] m_RobotiqJoints = null;
 
-    private bool followUR5 = false;
     private bool displayPath = false;
+
+    private Color m_ShowColor = new Color(0.8f, 0.8f, 0.8f, 0.4f);
+    private Color m_HideColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
 
     [HideInInspector] public bool isPlanning = false;
 
-    public void Awake()
+    private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
@@ -58,42 +60,58 @@ public class PlanningRobot : MonoBehaviour
                 m_PlanGripJoints[j] = gameObject.transform.Find(connectingLink+linkName).GetComponent<ArticulationBody>();
             }
         }
-
-        followUR5 = true;
     }
 
     private void Update()
     {
-        if (followUR5)
+        if (!displayPath)
             GoToUR5();
     }
 
     private void OnDestroy()
     {
-        if(isPlanning)
-        {
-            m_PlanRobMat.color = new Color(m_PlanRobMat.color.r, m_PlanRobMat.color.g, m_PlanRobMat.color.b, 0.0f);
-        }
+        m_PlanRobMat.color = m_HideColor;
     }
 
     public void Show()
     {
         isPlanning = !isPlanning;
-        followUR5 = !followUR5;
 
-        float a = 100.0f / 255.0f;
         if (!isPlanning)
         {
-            a = 0.0f;
             m_Manipulator.ResetPosition();
             m_Trajectory = null;
             displayPath = false;
+            m_PlanRobMat.color = m_HideColor;
         }
-
-        m_PlanRobMat.color = new Color(m_PlanRobMat.color.r, m_PlanRobMat.color.g, m_PlanRobMat.color.b, a);
     }
 
-    public void GoToUR5()
+    public void DisplayTrajectory(RobotTrajectoryMsg trajectory)
+    {
+        StopAllCoroutines();
+
+        m_Trajectory = trajectory;
+        displayPath = true;
+        m_PlanRobMat.color = m_ShowColor;
+
+        StartCoroutine(DisplayPath());
+    }
+
+    private IEnumerator DisplayPath()
+    {
+        while (displayPath)
+        {
+            yield return StartCoroutine(GoToManipulator());
+
+            yield return new WaitForSeconds(0.5f);
+
+            GoToUR5();
+
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+
+    private void GoToUR5()
     {
         for (var joint = 0; joint < k_UR5NumJoints; joint++)
         {
@@ -110,11 +128,17 @@ public class PlanningRobot : MonoBehaviour
         }
     }
 
-    public void GoToManipulator()
+    private IEnumerator GoToManipulator()
     {
+        if (m_Trajectory == null)
+            yield break;
+
         // For every robot pose in trajectory plan
         foreach (var t in m_Trajectory.joint_trajectory.points)
         {
+            if (displayPath == false)
+                break;
+
             var jointPositions = t.positions;
             var result = jointPositions.Select(r => (float)r * Mathf.Rad2Deg).ToArray();
 
@@ -124,29 +148,7 @@ public class PlanningRobot : MonoBehaviour
                 joint1XDrive.target = result[joint];
                 m_PlanRobJoints[joint].xDrive = joint1XDrive;
             }
-        }
-
-        if(!displayPath)
-            m_Trajectory = null;
-    }
-
-    public void DisplayTrajectory(RobotTrajectoryMsg trajectory)
-    {
-        m_Trajectory = trajectory;
-        displayPath = true;
-        StopAllCoroutines();
-        StartCoroutine(DisplayPath());
-    }
-
-    IEnumerator DisplayPath()
-    {
-        while(displayPath)
-        {
-            GoToManipulator();
-            yield return new WaitForSeconds(0.5f);
-
-            GoToUR5();
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(0.01f);
         }
     }
 
@@ -155,9 +157,8 @@ public class PlanningRobot : MonoBehaviour
         if (m_Trajectory != null)
         {
             displayPath = false;
+            m_PlanRobMat.color = m_HideColor;
             m_ROSPublisher.PublishExecutePlan(m_Trajectory);
-
-            GoToManipulator();
         }
     }
 }

@@ -102,7 +102,7 @@ public class CollisionHandling : MonoBehaviour
                 Renderer renderer = gameObject.GetComponent<Renderer>();
 
                 renderer.material = m_CollidingMat;
-                m_Manipulator.Collide();
+                m_Manipulator.Colliding(true);
             }
         }
 
@@ -128,13 +128,16 @@ public class CollisionHandling : MonoBehaviour
         {
             if (fingerMTouching > 0 && (finger1Touching > 0 || finger2Touching > 0))
             {
+                m_isAttached = true;
+
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_AttachedMat;
+
+                m_Manipulator.Colliding(true);
+
                 m_GripperControl.SetObjGripSize();
 
                 gameObject.GetComponent<CollisionObject>().RemoveCollisionObject();
-
-                m_isAttached = true;
             }
         }
     }
@@ -158,7 +161,7 @@ public class CollisionHandling : MonoBehaviour
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
-                m_Manipulator.NotColliding();
+                m_Manipulator.Colliding(false);
             }
         }
 

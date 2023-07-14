@@ -130,6 +130,8 @@ public class GripperControl : MonoBehaviour
     private void CloseGripper()
     {
         m_TargetGrip = m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip;
+        if (m_TargetGrip <= 0.0f)
+            m_TargetGrip = 1.0f;
 
         if(m_TargetGrip > m_CurrentGrip)
         {

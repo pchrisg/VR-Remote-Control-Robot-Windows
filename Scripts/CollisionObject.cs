@@ -114,7 +114,7 @@ public class CollisionObject : MonoBehaviour
         m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionObject);
     }
 
-    public void AttachCollisionObject()
+    /*public void AttachCollisionObject()
     {
         AttachedCollisionObjectMsg attColObj = new AttachedCollisionObjectMsg();
         attColObj.@object.header.stamp = new TimeMsg((uint)Time.time, 0);
@@ -129,5 +129,5 @@ public class CollisionObject : MonoBehaviour
     public void DetachCollisionObject()
     {
         m_ROSPublisher.PublishDetachCollisionObject(m_ColisionObject);
-    }
+    }*/
 }

@@ -7,8 +7,7 @@ public class Experiment1ConditionChecker : MonoBehaviour
 
     private List<GameObject> m_Barrels = new List<GameObject>();
     
-    [HideInInspector] public int m_NumberOfBarrels = 0;
-    [HideInInspector] public bool allObjectsInside = false;
+    private readonly int m_NumberOfBarrels = 4;
 
     private void Awake()
     {
@@ -26,7 +25,7 @@ public class Experiment1ConditionChecker : MonoBehaviour
             m_ExperimentManager.m_PlacedObjectsCount = m_Barrels.Count;
 
             if (m_Barrels.Count == m_NumberOfBarrels)
-                allObjectsInside = true;
+                m_ExperimentManager.SaveData();
         }
     }
 

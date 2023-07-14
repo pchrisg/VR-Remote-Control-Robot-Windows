@@ -7,6 +7,7 @@ using ManipulationOptions;
 public class ExperimentManager : MonoBehaviour
 {
     [Header("Scene Objects")]
+    [SerializeField] private GameObject m_Table = null;
     [SerializeField] private GameObject m_Glassbox = null;
     [SerializeField] private GameObject m_Objects = null;
 
@@ -35,7 +36,7 @@ public class ExperimentManager : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private Timer m_Timer = null;
 
-    private float m_TotalTime = 300.0f;
+    private readonly float m_TimeLimit = 120.0f;
 
     // File Path
     private string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\";
@@ -66,6 +67,7 @@ public class ExperimentManager : MonoBehaviour
         m_Experiment1 = transform.Find("Experiment1").GetComponent<Experiment1>();
         m_Experiment2 = transform.Find("Experiment2").GetComponent<Experiment2>();
 
+        m_Table.SetActive(false);
         m_Glassbox.SetActive(false);
         m_Objects.SetActive(false);
     }
@@ -74,6 +76,9 @@ public class ExperimentManager : MonoBehaviour
     {
         Invoke("ResetRobotPose", 1.0f);
 
+
+        m_Timer.m_TimeLimit = m_TimeLimit;
+        m_Timer.m_TimePassed = m_TimeLimit;
         m_Timer.m_Text.text = "Ready";
     }
 
@@ -127,30 +132,40 @@ public class ExperimentManager : MonoBehaviour
             {
                 m_ResetExperiment = false;
 
-                if (m_Experiment1Active)
-                    m_Experiment1.ResetExperiment();
-                if (m_Experiment2Active)
-                    m_Experiment2.ResetExperiment();
+                if (m_Experiment1Active || m_Experiment2Active)
+                {
+                    if (m_Experiment1Active)
+                        m_Experiment1.ResetExperiment();
+                    if (m_Experiment2Active)
+                        m_Experiment2.ResetExperiment();
 
-                ResetRobotPose();
+                    ResetRobotPose();
+                }
             }
 
             if (m_RunExperiment)
             {
-                StartExperiment();
-                m_ExperimentActive = true;
+                if (!m_Experiment1Active && !m_Experiment2Active)
+                    m_RunExperiment = false;
+
+                else
+                {
+                    m_ExperimentActive = true;
+                    StartExperiment();
+                }
             }
         }
         else
         {
-            if(m_Timer.m_TimeLeft <= 0.0f)
+            if(m_Timer.m_TimePassed == m_TimeLimit)
                 SaveData();
 
             if (!m_RunExperiment)
             {
-                m_Timer.m_TimeLeft = 0.0f;
-                m_Timer.m_Text.text = "Ready";
                 m_ExperimentActive = false;
+
+                m_Timer.m_TimePassed = m_TimeLimit;
+                m_Timer.m_Text.text = "Ready";
             }
 
             // Data Gathering
@@ -171,7 +186,7 @@ public class ExperimentManager : MonoBehaviour
 
     private void StartExperiment()
     {
-        m_Timer.m_TimeLeft = m_TotalTime;
+        m_Timer.m_TimePassed = 0.0f;
 
         m_TimeInDirMan = 0.0f;
         m_TimeInSDOFMan = 0.0f;
@@ -188,6 +203,7 @@ public class ExperimentManager : MonoBehaviour
 
     IEnumerator ResetPose()
     {
+        m_Table.SetActive(false);
         m_Glassbox.SetActive(false);
         m_Objects.SetActive(false);
 
@@ -201,6 +217,7 @@ public class ExperimentManager : MonoBehaviour
 
         GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPosition();
 
+        m_Table.SetActive(true);
         m_Glassbox.SetActive(true);
         m_Objects.SetActive(true);
 
@@ -211,9 +228,13 @@ public class ExperimentManager : MonoBehaviour
     {
         if (m_ExperimentActive)
         {
-            m_TimeTaken = m_TotalTime - m_Timer.m_TimeLeft;
+            m_TimeTaken = m_Timer.m_TimePassed;
+
             m_RunExperiment = false;
             m_ExperimentActive = false;
+            m_Timer.m_TimePassed = m_TimeLimit;
+            m_Timer.m_Text.text = "End";
+
             StartCoroutine(WriteToFile());
         }
     }
@@ -225,12 +246,14 @@ public class ExperimentManager : MonoBehaviour
         string experiment = string.Empty;
         if (m_Experiment1Active)
         {
+            m_Experiment1Active = false;
             m_Experiment1.Setup(false);
             experiment = "PicknPlace\\";
         }
             
         else if (m_Experiment2Active)
         {
+            m_Experiment2Active = false;
             m_Experiment2.Setup(false);
             experiment = "Stacking\\";
         }
@@ -278,8 +301,5 @@ public class ExperimentManager : MonoBehaviour
 
         //open the file
         //Application.OpenURL(path);
-
-        m_Timer.m_TimeLeft = 0.0f;
-        m_Timer.m_Text.text = "End";
     }
 }

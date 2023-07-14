@@ -5,12 +5,6 @@ using System;
 
 public class ResultSubscriber : MonoBehaviour
 {
-    /*[Header("Materials")]
-    [SerializeField] private Material m_GreyMat = null;
-    [SerializeField] private Material m_LightGreyMat = null;
-    [SerializeField] private Material m_CollidingMat = null;
-    */
-
     [Header("Sounds")]
     [SerializeField] private AudioClip m_CollisionClip = null;
     [SerializeField] private AudioClip m_MotionClip = null;
@@ -28,9 +22,6 @@ public class ResultSubscriber : MonoBehaviour
 
     [HideInInspector] public string m_RobotState = "";
 
-    //private Renderer[] m_UR5Renderers = null;
-    //private Renderer[] m_RobotiqRenderers = null;
-
     private void Awake()
     {
         m_Ros = ROSConnection.GetOrCreateInstance();
@@ -39,8 +30,6 @@ public class ResultSubscriber : MonoBehaviour
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
 
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
-        //m_UR5Renderers = m_UR5.GetComponentsInChildren<Renderer>();
-        //m_RobotiqRenderers = GameObject.FindGameObjectWithTag("Robotiq").GetComponentsInChildren<Renderer>();
     }
 
     private void Start()
@@ -64,9 +53,7 @@ public class ResultSubscriber : MonoBehaviour
             ur5AudioSource.Stop();
             if (message.status.text == NotExecuted && isPlanExecuted)
             {
-                //foreach (Renderer renderer in m_UR5Renderers)
-                //    renderer.material = m_CollidingMat;
-                m_Manipulator.Collide();
+                m_Manipulator.Colliding(true);
 
                 ur5AudioSource.clip = m_CollisionClip;
                 ur5AudioSource.Play();
@@ -83,12 +70,7 @@ public class ResultSubscriber : MonoBehaviour
 
             if (message.status.text != NotExecuted && !isPlanExecuted)
             {
-                //foreach (Renderer renderer in m_UR5Renderers)
-                //    renderer.material = m_LightGreyMat;
-
-                //foreach (Renderer renderer in m_RobotiqRenderers)
-                //    renderer.material = m_GreyMat;
-                m_Manipulator.NotColliding();
+                m_Manipulator.Colliding(false);
 
                 isPlanExecuted = true;
             }

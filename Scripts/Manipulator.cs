@@ -37,7 +37,7 @@ public class Manipulator : MonoBehaviour
 
     private void Update()
     {
-        Color color = m_CurrentColor;
+        Color color = m_DefaultColor;
 
         if (isColliding)
             color = m_CollidingColor;
@@ -68,13 +68,8 @@ public class Manipulator : MonoBehaviour
         return m_DefaultColor;
     }
 
-    public void Collide()
+    public void Colliding(bool value)
     {
-        isColliding = true;
-    }
-
-    public void NotColliding()
-    {
-        isColliding = false;
+        isColliding = value;
     }
 }

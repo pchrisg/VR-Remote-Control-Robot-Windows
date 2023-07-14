@@ -6,7 +6,8 @@ public class Timer : MonoBehaviour
     private string mm = string.Empty, ss = string.Empty;
 
     [HideInInspector] public Text m_Text = null;
-    [HideInInspector] public float m_TimeLeft = 0.0f;
+    [HideInInspector] public float m_TimeLimit = 0.0f;
+    [HideInInspector] public float m_TimePassed = 0.0f;
 
     private void Awake()
     {
@@ -21,14 +22,14 @@ public class Timer : MonoBehaviour
 
     private void Update()
     {
-        if (m_TimeLeft > 0.0f)
+        if (m_TimePassed < m_TimeLimit)
         {
-            m_TimeLeft -= Time.deltaTime;
-            mm = Mathf.Floor((m_TimeLeft / 60.0f) % 60.0f).ToString("0");
-            ss = (m_TimeLeft % 60).ToString("00");
+            m_TimePassed += Time.deltaTime;
+            mm = Mathf.Floor((m_TimePassed / 60.0f) % 60.0f).ToString("0");
+            ss = (m_TimePassed % 60).ToString("00");
             m_Text.text = mm + ":" + ss;
         }
         else
-            m_TimeLeft = 0.0f;
+            m_TimePassed = m_TimeLimit;
     }
 }
