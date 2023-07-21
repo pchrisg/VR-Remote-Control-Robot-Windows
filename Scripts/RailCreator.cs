@@ -2,6 +2,7 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationOptions;
+using System.Collections;
 
 public class RailCreator : MonoBehaviour
 {
@@ -12,23 +13,36 @@ public class RailCreator : MonoBehaviour
     [SerializeField] private Material m_RailMat;
 
     private ManipulationMode m_ManipulationMode = null;
+    private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
     private Rails m_Rails = null;
 
+    private Interactable m_Interactable = null;
     private Transform m_Manipulator = null;
-    private GameObject m_Rail = null;
+    private Transform m_ManipulatorPose = null;
+    private GameObject m_NewRail = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
-    public Hand m_InteractingHand = null;
-    public bool isInteracting = false;
+    private Hand m_InteractingHand = null;
+    private bool isInteracting = false;
 
+    private GameObject m_GhostObject = null;
     private Vector3 m_Pivot = Vector3.zero;
+
+    //Colors
+    private Color m_DefaultColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
+    private Color m_Y_AxisColor = new Color(0.0f, 1.0f, 0.0f, 1.0f);
+    private Color m_XZ_PlaneColor = new Color(1.0f, 0.0f, 1.0f, 1.0f);
+    private Color m_FocusObjectColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
 
     private void Awake()
     {
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").transform;
+        m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose").transform;
+        m_Interactable = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Interactable>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Rails = gameObject.transform.parent.GetComponent<Rails>();
 
@@ -37,10 +51,10 @@ public class RailCreator : MonoBehaviour
 
     private void OnDisable()
     {
-        if(m_Rail != null)
+        if(m_NewRail != null)
         {
-            Destroy(m_Rail);
-            m_Rail = null;
+            Destroy(m_NewRail);
+            m_NewRail = null;
             m_Pivot = Vector3.zero;
         }
         m_Manipulator.GetComponent<Manipulator>().ResetPosition();
@@ -50,16 +64,13 @@ public class RailCreator : MonoBehaviour
     {
         if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            m_InteractingHand = m_Manipulator.GetComponent<DirectManipulation>().m_InteractingHand;
-
             if (!isInteracting)
             {
-                if( m_Trigger.GetStateDown(Player.instance.rightHand.handType) || 
+                if( m_Trigger.GetStateDown(Player.instance.rightHand.handType) ||
                     m_Trigger.GetStateDown(Player.instance.leftHand.handType))
                     TriggerGrabbed();
             }
-
-            if (isInteracting)
+            else
             {
                 if (m_Trigger.GetStateUp(m_InteractingHand.handType))
                     TriggerReleased();
@@ -75,33 +86,42 @@ public class RailCreator : MonoBehaviour
 
     private void TriggerGrabbed()
     {
-        if (m_InteractingHand != null && m_Trigger.GetState(m_InteractingHand.handType))
+        if (m_Trigger.GetState(Player.instance.rightHand.handType) && Player.instance.rightHand.IsStillHovering(m_Interactable))
+            m_InteractingHand = Player.instance.rightHand;
+
+        else if (m_Trigger.GetState(Player.instance.leftHand.handType) && Player.instance.leftHand.IsStillHovering(m_Interactable))
+            m_InteractingHand = Player.instance.leftHand;
+
+        if (m_InteractingHand != null)
         {
-            if (m_Rail == null)
+            m_GhostObject = new GameObject("GhostObject");
+            m_GhostObject.transform.SetPositionAndRotation(m_Manipulator.position, m_Manipulator.rotation);
+            m_GhostObject.transform.SetParent(m_InteractingHand.transform);
+
+            if (m_NewRail == null)
                 MakeRail();
 
             isInteracting = true;
         }
-
         else if(m_Rails.GetLastChild() != m_Rails.transform)
         {
-            Vector3 position = m_Manipulator.position;
-            Quaternion rotation = m_Manipulator.rotation;
-
             Transform lastChild = m_Rails.GetLastChild();
 
-            position = lastChild.position - (lastChild.up.normalized * lastChild.localScale.y);
+            Vector3 position = position = lastChild.position - (lastChild.up.normalized * lastChild.localScale.y);
+            Quaternion rotation = m_Manipulator.rotation;
+            
+            m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
             Destroy(lastChild.gameObject);
             m_Rails.RemoveLastRail();
-
-            m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
+            m_PlanningRobot.DeleteLastTrajectory();
         }
     }
 
     public void Show(bool value)
     {
         gameObject.SetActive(value);
+        m_PlanningRobot.Show();
     }
 
     private void MakeRail()
@@ -111,80 +131,136 @@ public class RailCreator : MonoBehaviour
         if (lastChild.position == gameObject.transform.parent.position)
             m_Pivot = m_Manipulator.position;
         else
-            m_Pivot = lastChild.position + (lastChild.up.normalized * lastChild.localScale.y);
+            m_Pivot = lastChild.position + lastChild.up.normalized * lastChild.localScale.y;
 
-        m_Rail = GameObject.Instantiate(m_RailPrefab);
-        m_Rail.transform.SetParent(gameObject.transform.parent);
+        m_NewRail = GameObject.Instantiate(m_RailPrefab);
+        m_NewRail.transform.SetParent(gameObject.transform.parent);
 
         RotateRail();
     }
 
     private void RotateRail()
     {
-        Vector3 connectingVector = m_Manipulator.position - m_Pivot;
+        Vector3 connectingVector = m_GhostObject.transform.position - m_Pivot;
 
-        m_Rail.transform.SetPositionAndRotation(m_Pivot + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
-        m_Rail.transform.localScale = new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
+        Vector3 position = Snapping(connectingVector);
+        Quaternion rotation = m_Manipulator.transform.rotation;
 
-        Snapping();
+        m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
     }
 
-    private void Snapping()
+    private Vector3 Snapping(Vector3 connectingVector)
     {
-        Vector3 connectingVector = m_Manipulator.position - m_Pivot;
+        Color currentColor = m_DefaultColor;
+        Vector3 projectedConnectingVector = connectingVector;
 
-        m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
-        m_Rail.GetComponent<Renderer>().material.color = new Color(200.0f, 200.0f, 200.0f);
         float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+
+        // if close too XZ plane
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
-            Vector3 projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);
-            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
-            m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 0.0f, 255.0f);
+            projectedConnectingVector = Vector3.ProjectOnPlane(connectingVector, Vector3.up);
+            currentColor = m_XZ_PlaneColor;
         }
-
+        // if close to y axis
         if (angle < ManipulationMode.ANGLETHRESHOLD ||
             Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
-            Vector3 projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
-            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
-            m_Rail.GetComponent<Renderer>().material.color = new Color(0.0f, 255.0f, 0.0f);
+            projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
+            currentColor = m_Y_AxisColor;
         }
-
+        // if close to start
         if (m_Rails.rails.Length > 1 &&
-            (m_Manipulator.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+            (m_GhostObject.transform.position - m_Rails.rails[0].start).magnitude < ManipulationMode.DISTANCETHRESHOLD)
         {
-            Vector3 projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
-            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
-            m_Rail.transform.localScale = new Vector3(0.0025f, projectedConnectingVector.magnitude * 0.5f, 0.0025f);
-            m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 255.0f, 0.0f);
-            m_RailMat.color = new Color(255.0f, 255.0f, 0.0f);
+            projectedConnectingVector = m_Rails.rails[0].start - m_Pivot;
+            currentColor = m_FocusObjectColor;
         }
 
-        if (m_CollisionObjects.m_FocusObject != null && 
-            (m_Manipulator.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+        // if focus object exists
+        if (m_CollisionObjects.m_FocusObject != null)
         {
-            Vector3 projectedConnectingVector = m_CollisionObjects.m_FocusObject.transform.position - m_Pivot;
-            m_Rail.transform.SetPositionAndRotation(m_Pivot + projectedConnectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, projectedConnectingVector));
-            m_Rail.transform.localScale = new Vector3(0.0025f, projectedConnectingVector.magnitude * 0.5f, 0.0025f);
-            m_Rail.GetComponent<Renderer>().material.color = new Color(255.0f, 255.0f, 0.0f);
-            m_RailMat.color = new Color(255.0f, 255.0f, 0.0f);
+            // if close to focus object
+            if ((m_GhostObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position).magnitude < ManipulationMode.DISTANCETHRESHOLD)
+            {
+                projectedConnectingVector = m_CollisionObjects.m_FocusObject.transform.position - m_Pivot;
+                currentColor = m_FocusObjectColor;
+            }
         }
+
+        // if color changed
+        if(currentColor != m_NewRail.GetComponent<Renderer>().material.color)
+        {
+            m_NewRail.GetComponent<Renderer>().material.color = currentColor;
+
+            if (currentColor == m_FocusObjectColor)
+                m_RailMat.color = m_FocusObjectColor;
+            else if (m_RailMat.color == m_FocusObjectColor)
+                m_RailMat.color = m_DefaultColor;
+        }
+
+        m_NewRail.transform.SetPositionAndRotation(GetPosition(projectedConnectingVector), GetRotation(projectedConnectingVector));
+        m_NewRail.transform.localScale = GetScale(projectedConnectingVector);
+
+        return m_Pivot + projectedConnectingVector;
+    }
+
+    private Vector3 GetPosition(Vector3 connectingVector)
+    {
+        return m_Pivot + connectingVector * 0.5f;
+    }
+
+    private Quaternion GetRotation(Vector3 connectingVector)
+    {
+        return Quaternion.FromToRotation(Vector3.up, connectingVector);
+    }
+
+    private Vector3 GetScale(Vector3 connectingVector)
+    {
+        return new Vector3(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
     }
 
     private void TriggerReleased()
     {
-        if (m_Rail != null)
+        if (m_NewRail != null)
         {
-            m_RailMat.color = new Color(200.0f, 200.0f, 200.0f);
-            m_Rails.AddRail(m_Rail);
+            m_RailMat.color = m_DefaultColor;
+            m_NewRail.GetComponent<Renderer>().material = m_RailMat;
 
-            m_Rail.GetComponent<Renderer>().material = m_RailMat;
-            m_Rail = null;
-            m_Pivot = Vector3.zero;
+            m_Rails.AddRail(m_NewRail);
+
+            StartCoroutine(RequestTrajectories());
         }
+    }
 
+    IEnumerator RequestTrajectories()
+    {
+        Vector3 poseOffset = m_ManipulatorPose.position - m_Manipulator.position;
+        
+        Vector3 direction = m_NewRail.transform.up;
+        float stepSize = 0.05f;
+        Vector3 startPosition = m_Pivot;
+        Vector3 endPosition = m_Pivot + direction * stepSize;
+
+        while ((endPosition - m_Pivot).magnitude < (m_Manipulator.position - m_Pivot).magnitude)
+        {
+            m_PlanningRobot.RequestTrajectory(startPosition + poseOffset, endPosition + poseOffset);
+
+            yield return new WaitForSeconds(0.08f);
+
+            startPosition = endPosition;
+            endPosition += direction * stepSize;
+        }
+        m_PlanningRobot.RequestTrajectory(startPosition + poseOffset, m_Manipulator.position + poseOffset);
+
+        GameObject.Destroy(m_GhostObject);
+
+        m_NewRail = null;
         isInteracting = false;
+        m_Pivot = Vector3.zero;
+        m_InteractingHand = null;
+
+        yield return null;
     }
 
     public void Clear()

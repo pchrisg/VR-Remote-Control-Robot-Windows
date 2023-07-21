@@ -7,7 +7,6 @@ using RosMessageTypes.ChrisUr5Moveit;
 using RosMessageTypes.Robotiq3fGripperArticulated;
 using RosMessageTypes.Std;
 using System.Collections;
-using System;
 
 public class ROSPublisher : MonoBehaviour
 {
@@ -27,7 +26,7 @@ public class ROSPublisher : MonoBehaviour
     //[SerializeField] private readonly string m_DetachCollisionObjectTopic = "chris_detach_collision_object";
     [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
-    private Transform m_Manipulator = null;
+    private Transform m_ManipulatorPose = null;
     private PlanningRobot m_PlanningRobot = null;
 
     private ROSConnection m_Ros = null;
@@ -42,7 +41,7 @@ public class ROSPublisher : MonoBehaviour
         else
             m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
 
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose").transform;
+        m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose").transform;
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
         // Get ROS connection static instance
@@ -93,14 +92,20 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.Publish(m_ResetPoseTopic, msg);
     }
 
-    public void PublishTrajectoryRequest()
+    public void PublishTrajectoryRequest(Vector3 startPos, Quaternion startRot, Vector3 destPos, Quaternion destRot)
     {
         var request = new TrajectoryPlannerServiceRequest();
 
+        request.start = new PoseMsg
+        {
+            position = startPos.To<FLU>(),
+            orientation = startRot.To<FLU>()
+        };
+
         request.destination = new PoseMsg
         {
-            position = m_Manipulator.position.To<FLU>(),
-            orientation = m_Manipulator.rotation.To<FLU>()
+            position = destPos.To<FLU>(),
+            orientation = destRot.To<FLU>()
         };
         m_Ros.SendServiceMessage<TrajectoryPlannerServiceResponse>(m_PlanTrajTopic, request, HandleTrajectoryResponse);
     }
@@ -122,8 +127,8 @@ public class ROSPublisher : MonoBehaviour
         {
             var destination = new PoseMsg
             {
-                position = m_Manipulator.position.To<FLU>(),
-                orientation = m_Manipulator.rotation.To<FLU>()
+                position = m_ManipulatorPose.position.To<FLU>(),
+                orientation = m_ManipulatorPose.rotation.To<FLU>()
             };
             m_Ros.Publish(m_MoveArmTopic, destination);
         }

@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 67f29444c599347488bf841700efd497
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_PlanRobMat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
+  - m_CollidingMat: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

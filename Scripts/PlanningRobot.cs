@@ -2,6 +2,8 @@ using System.Collections;
 using UnityEngine;
 using System.Linq;
 using RosMessageTypes.Moveit;
+using System.Collections.Generic;
+using ManipulationOptions;
 
 public class PlanningRobot : MonoBehaviour
 {
@@ -10,8 +12,15 @@ public class PlanningRobot : MonoBehaviour
 
     private ROSPublisher m_ROSPublisher = null;
     private Manipulator m_Manipulator = null;
+    private Transform m_ManipulatorPose = null;
+    private ManipulationMode m_ManipulationMode = null;
+    
+    private Transform m_Robotiq = null;
+    private Transform m_PlanRobotiq = null;
 
-    private RobotTrajectoryMsg m_Trajectory = null;
+    private List<RobotTrajectoryMsg> m_Trajectories = new List<RobotTrajectoryMsg>();
+    private List<Vector3> m_StartPoses = new List<Vector3>();
+    private List<Vector3> m_ManipulatorPoses = new List<Vector3>();
 
     private const int k_UR5NumJoints = 6;
     private ArticulationBody[] m_PlanRobJoints = null;
@@ -32,6 +41,9 @@ public class PlanningRobot : MonoBehaviour
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_ManipulatorPose = m_Manipulator.transform.Find("Pose");
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
         m_PlanRobJoints = new ArticulationBody[k_UR5NumJoints];
         m_UR5Joints = new ArticulationBody[k_UR5NumJoints];
@@ -49,7 +61,8 @@ public class PlanningRobot : MonoBehaviour
         }
 
         GameObject robotiq = GameObject.FindGameObjectWithTag("Robotiq");
-        string connectingLink = linkName + "/flange/Robotiq/palm/";
+        string connectingLink = linkName + "/flange/tool0/palm/";
+        m_PlanRobotiq = gameObject.transform.Find(connectingLink);
         for (var i = 0; i < k_RobotiqNumJoints; i += 4)
         {
             linkName = string.Empty;
@@ -79,10 +92,65 @@ public class PlanningRobot : MonoBehaviour
 
         if (!isPlanning)
         {
+            if (m_Trajectories.Any())
+                m_Trajectories.Clear();
+            if (m_StartPoses.Any())
+                m_StartPoses.Clear();
+
             m_Manipulator.ResetPosition();
-            m_Trajectory = null;
             displayPath = false;
             m_PlanRobMat.color = m_HideColor;
+        }
+    }
+
+    public void RequestTrajectory()
+    {
+        m_ROSPublisher.PublishTrajectoryRequest(m_Robotiq.parent.position, m_Robotiq.parent.rotation, m_ManipulatorPose.position, m_ManipulatorPose.rotation);
+    }
+
+    public void RequestTrajectory(Vector3 startPos, Vector3 destPos)
+    {
+        if (!m_ManipulatorPoses.Any())
+            m_ManipulatorPoses.Add(startPos);
+
+        if (m_ManipulatorPoses.Last() != m_ManipulatorPose.position)
+            m_ManipulatorPoses.Add(m_ManipulatorPose.position);
+            
+
+        m_StartPoses.Add(startPos);
+
+        m_ROSPublisher.PublishTrajectoryRequest(startPos, m_ManipulatorPose.rotation, destPos, m_ManipulatorPose.rotation);
+    }
+
+    public void DeleteLastTrajectory()
+    {
+        StopAllCoroutines();
+        displayPath = false;
+        m_PlanRobMat.color = m_HideColor;
+        m_Manipulator.Colliding(false);
+
+        if (m_ManipulatorPoses.Any())
+            m_ManipulatorPoses.Remove(m_ManipulatorPoses.Last());
+
+        while (m_StartPoses.Last() != m_ManipulatorPoses.Last())
+        {
+            if (m_Trajectories.Any())
+                m_Trajectories.Remove(m_Trajectories.Last());
+            if (m_StartPoses.Any())
+                m_StartPoses.Remove(m_StartPoses.Last());
+        }
+
+        if (m_Trajectories.Any())
+            m_Trajectories.Remove(m_Trajectories.Last());
+        if (m_StartPoses.Any())
+            m_StartPoses.Remove(m_StartPoses.Last());
+
+        if (m_Trajectories.Any())
+        {
+            displayPath = true;
+            m_PlanRobMat.color = m_ShowColor;
+
+            StartCoroutine(DisplayPath());
         }
     }
 
@@ -90,7 +158,11 @@ public class PlanningRobot : MonoBehaviour
     {
         StopAllCoroutines();
 
-        m_Trajectory = trajectory;
+        if(m_ManipulationMode.mode != Mode.RAILCREATOR)
+            m_Trajectories.Clear();
+
+        m_Trajectories.Add(trajectory);
+
         displayPath = true;
         m_PlanRobMat.color = m_ShowColor;
 
@@ -99,6 +171,7 @@ public class PlanningRobot : MonoBehaviour
 
     private IEnumerator DisplayPath()
     {
+        yield return new WaitForSeconds(0.1f);
         while (displayPath)
         {
             yield return StartCoroutine(GoToManipulator());
@@ -106,8 +179,7 @@ public class PlanningRobot : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
 
             GoToUR5();
-
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitUntil(() => m_PlanRobotiq.position == m_Robotiq.position);
         }
     }
 
@@ -130,35 +202,39 @@ public class PlanningRobot : MonoBehaviour
 
     private IEnumerator GoToManipulator()
     {
-        if (m_Trajectory == null)
+        if (!m_Trajectories.Any())
             yield break;
 
-        // For every robot pose in trajectory plan
-        foreach (var t in m_Trajectory.joint_trajectory.points)
+        foreach (var trajectory in m_Trajectories)
         {
-            if (displayPath == false)
-                break;
-
-            var jointPositions = t.positions;
-            var result = jointPositions.Select(r => (float)r * Mathf.Rad2Deg).ToArray();
-
-            for (var joint = 0; joint < k_UR5NumJoints; joint++)
+            foreach (var point in trajectory.joint_trajectory.points)
             {
-                var joint1XDrive = m_PlanRobJoints[joint].xDrive;
-                joint1XDrive.target = result[joint];
-                m_PlanRobJoints[joint].xDrive = joint1XDrive;
+                if (displayPath == false)
+                    break;
+
+                var jointPositions = point.positions;
+                var result = jointPositions.Select(r => (float)r * Mathf.Rad2Deg).ToArray();
+
+                for (var joint = 0; joint < k_UR5NumJoints; joint++)
+                {
+                    var joint1XDrive = m_PlanRobJoints[joint].xDrive;
+                    joint1XDrive.target = result[joint];
+                    m_PlanRobJoints[joint].xDrive = joint1XDrive;
+                }
+                yield return new WaitForSeconds(0.01f);
             }
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.02f);
         }
     }
 
     public void ExecuteTrajectory()
     {
-        if (m_Trajectory != null)
+        if (m_Trajectories.Any())
         {
             displayPath = false;
             m_PlanRobMat.color = m_HideColor;
-            m_ROSPublisher.PublishExecutePlan(m_Trajectory);
+            m_ROSPublisher.PublishExecutePlan(m_Trajectories.First());
+            m_Trajectories.Remove(m_Trajectories.First());
         }
     }
 }

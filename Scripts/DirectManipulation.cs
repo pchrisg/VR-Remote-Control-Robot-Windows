@@ -17,7 +17,7 @@ public class DirectManipulation : MonoBehaviour
     private SteamVR_Action_Boolean m_Trigger = null;
     
     private bool isInteracting = false;
-    public Hand m_InteractingHand = null;
+    private Hand m_InteractingHand = null;
     private Hand m_OtherHand = null;
 
     private Vector3 m_InitPos = Vector3.zero;
@@ -44,7 +44,7 @@ public class DirectManipulation : MonoBehaviour
             m_FocusRot = Quaternion.identity;
         }
 
-        if ((m_ManipulationMode.mode == Mode.DIRECT || m_ManipulationMode.mode == Mode.RAILCREATOR) && !m_GripperControl.isGripping)
+        if (m_ManipulationMode.mode == Mode.DIRECT && !m_GripperControl.isGripping)
         {
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
@@ -119,12 +119,12 @@ public class DirectManipulation : MonoBehaviour
             rotation = LookAtFocusObject(position);
         }
             
-        else if (m_ManipulationMode.mode == Mode.DIRECT && !m_Trigger.GetState(m_OtherHand.handType))
+        else if (!m_Trigger.GetState(m_OtherHand.handType))
             rotation = RotationSnapping();
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
-        if (m_ManipulationMode.mode == Mode.DIRECT && !m_PlanningRobot.isPlanning)
+        if (!m_PlanningRobot.isPlanning)
             m_ROSPublisher.PublishMoveArm();
     }
 
@@ -210,12 +210,9 @@ public class DirectManipulation : MonoBehaviour
         m_InitPos = Vector3.zero;
         isInteracting = false;
 
-        if (m_ManipulationMode.mode == Mode.DIRECT)
-        {
-            if (m_PlanningRobot.isPlanning)
-                m_ROSPublisher.PublishTrajectoryRequest();
-            else
-                m_ROSPublisher.PublishMoveArm();
-        }
+        if (m_PlanningRobot.isPlanning)
+            m_PlanningRobot.RequestTrajectory();
+        else
+            m_ROSPublisher.PublishMoveArm();
     }
 }

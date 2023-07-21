@@ -86,7 +86,7 @@ public class SimpleDirectManipulation : MonoBehaviour
         isInteracting = false;
 
         if (m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishTrajectoryRequest();
+            m_PlanningRobot.RequestTrajectory();
         else
             m_ROSPublisher.PublishMoveArm();
     }

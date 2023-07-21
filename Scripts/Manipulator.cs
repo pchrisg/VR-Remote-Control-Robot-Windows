@@ -7,7 +7,7 @@ public class Manipulator : MonoBehaviour
 
     private Transform m_Robotiq;
 
-    //Colours
+    //Colors
     private Color m_CurrentColor = new Color();
     private Color m_DefaultColor = new Color(0.2f, 0.2f, 0.2f, 0.4f);
     private Color m_CollidingColor = new Color(1.0f, 0.0f, 0.0f, 0.4f);

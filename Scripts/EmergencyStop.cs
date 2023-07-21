@@ -16,8 +16,8 @@ public class EmergencyStop : MonoBehaviour
     private ExperimentManager m_ExperimentManager = null;
     private AudioSource m_AudioSource = null;
 
-    Renderer[] m_Renderers = null;
-    Material m_OriginalMat = null;
+    private Renderer[] m_Renderers = null;
+    private Material m_OriginalMat = null;
 
     float m_CollisionTime = 0.0f;
 
@@ -68,54 +68,11 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.transform.parent.tag != "Moveable")
+        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
         {
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_OriginalMat;
         }
     }
-
-    /*void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag != "Moveable")
-        {
-            m_CollisionTime = Time.time;
-            print(gameObject.name + " collided with " + collision.gameObject.name);
-
-            foreach (Renderer renderer in m_Renderers)
-                renderer.material = m_CollidingMat;
-
-            m_AudioSource.clip = m_CollisionClip;
-            m_AudioSource.Play();
-
-            m_ROSPublisher.PublishEmergencyStop();
-        }
-    }
-
-    void OnCollisionStay(Collision collision)
-    {
-        if (collision.gameObject.tag != "Moveable")
-        {
-            if (Time.time - m_CollisionTime >= 5f)
-            {
-                m_CollisionTime = Time.time;
-                print(gameObject.name + " still in collision with " + collision.gameObject.name);
-
-                m_AudioSource.clip = m_CollisionClip;
-                m_AudioSource.Play();
-
-                m_ROSPublisher.PublishEmergencyStop();
-            }
-        }
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.tag != "Moveable")
-        {
-            foreach (Renderer renderer in m_Renderers)
-                renderer.material = m_OriginalMat;
-        }
-    }*/
 
 }
