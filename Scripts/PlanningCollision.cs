@@ -10,16 +10,19 @@ public class PlanningCollision : MonoBehaviour
     [SerializeField] private Material m_PlanRobMat = null;
     [SerializeField] private Material m_CollidingMat = null;
 
+    private PlanningRobot m_PlanningRobot = null;
+
     private Renderer[] m_Renderers = null;
 
     private void Awake()
     {
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        if (m_PlanningRobot.isPlanning)
         {
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_CollidingMat;
@@ -28,7 +31,7 @@ public class PlanningCollision : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        if (m_PlanningRobot.isPlanning)
         {
             foreach (Renderer renderer in m_Renderers)
                 renderer.material = m_PlanRobMat;

@@ -2,18 +2,15 @@ using UnityEngine;
 
 public class Experiment1 : MonoBehaviour
 {
-    [Header("SceneObjects")]
-    [SerializeField] private GameObject m_Objects = null;
-
     [Header("Prefabs")]
     [SerializeField] private GameObject m_CratePrefab = null;
     [SerializeField] private GameObject m_BarrelPrefab = null;
 
-    private ExperimentManager m_ExperimentManager = null;
+    private GameObject m_Objects = null;
 
     private void Awake()
     {
-        m_ExperimentManager = transform.parent.GetComponent<ExperimentManager>();
+        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
     }
 
     public void Setup(bool value)
@@ -31,7 +28,7 @@ public class Experiment1 : MonoBehaviour
 
     private void DestroyAllObjects()
     {
-        if (m_Objects.transform.childCount > 0)
+        if (m_Objects != null && m_Objects.transform.childCount > 0)
         {
             for(var i = m_Objects.transform.childCount - 1; i >= 0 ; i--)
             {

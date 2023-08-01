@@ -86,9 +86,9 @@ public class PlanningRobot : MonoBehaviour
         m_PlanRobMat.color = m_HideColor;
     }
 
-    public void Show()
+    public void Show(bool value)
     {
-        isPlanning = !isPlanning;
+        isPlanning = value;
 
         if (!isPlanning)
         {

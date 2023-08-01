@@ -6,7 +6,7 @@ using Valve.VR.InteractionSystem;
 
 public class RadialMenuManager : MonoBehaviour
 {
-    private SteamVR_Action_Boolean m_Touch = null;
+    private SteamVR_Action_Boolean m_Trackpad = null;
     private SteamVR_Action_Vector2 m_TouchPos = null;
 
     [Header("Scene Objects")]
@@ -14,15 +14,15 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Awake()
     {
-        m_Touch = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchTrackpad");
+        m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchTrackpad");
         m_TouchPos = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("TouchPosition");
-        m_Touch.onChange += Touch;
+        m_Trackpad.onChange += Touch;
         m_TouchPos.onAxis += Position;
     }
 
     private void OnDestroy()
     {
-        m_Touch.onChange -= Touch;
+        m_Trackpad.onChange -= Touch;
         m_TouchPos.onAxis -= Position;
     }
 

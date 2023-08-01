@@ -3,20 +3,18 @@ using ManipulationOptions;
 
 public class CollisionHandling : MonoBehaviour
 {
-    [Header("Materials")]
-    public Material m_OriginalMat = null;
-    public Material m_CollidingMat = null;
-    public Material m_AttachedMat = null;
-    public Material m_FocusObjectMat = null;
+    [HideInInspector] public Material m_OriginalMat = null;
+    [HideInInspector] public Material m_CollidingMat = null;
+    [HideInInspector] public Material m_AttachedMat = null;
+    [HideInInspector] public Material m_FocusObjectMat = null;
 
-    private ManipulationMode m_ManipulationMode = null;
+    [HideInInspector] public bool m_isAttachable = false;
+    [HideInInspector] public bool m_isAttached = false;
+
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
     private CollisionObjects m_CollisionObjects = null;
 
-    [HideInInspector] public bool m_isAttachable = false;
-    [HideInInspector] public bool m_isAttached = false;
-    
     private Collider[] m_ManipulatorColliders = null;
     private string[] m_FingerLinkNames = {
         "finger_middle_link_0",
@@ -27,15 +25,14 @@ public class CollisionHandling : MonoBehaviour
     private Collider[] m_Finger2Colliders = null;
 
     private bool isCreating = false;
-    public int fingerMTouching = 0;
-    public int finger1Touching = 0;
-    public int finger2Touching = 0;
+    private int fingerMTouching = 0;
+    private int finger1Touching = 0;
+    private int finger2Touching = 0;
 
     private Vector3 m_ReleasePosition = Vector3.zero;
 
     private void Awake()
     {
-        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
@@ -133,9 +130,8 @@ public class CollisionHandling : MonoBehaviour
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_AttachedMat;
 
-                m_Manipulator.Colliding(true);
-
-                m_GripperControl.SetObjGripSize();
+                m_Manipulator.Colliding(false);
+                m_GripperControl.Attach();
 
                 gameObject.GetComponent<CollisionObject>().RemoveCollisionObject();
             }
@@ -190,7 +186,7 @@ public class CollisionHandling : MonoBehaviour
                 Renderer renderer = gameObject.GetComponent<Renderer>();
                 renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
 
-                m_GripperControl.ResetAttObjSize();
+                m_GripperControl.Detach();
 
                 m_ReleasePosition = gameObject.transform.position;
                 m_isAttached = false;

@@ -6,7 +6,6 @@ using Valve.VR.InteractionSystem;
 public class GripperControl : MonoBehaviour
 {
     [Header("Audio Clips")]
-    [SerializeField] private AudioClip m_Collision = null;
     [SerializeField] private AudioClip m_Attach = null;
     [SerializeField] private AudioClip m_Detach = null;
 
@@ -23,7 +22,7 @@ public class GripperControl : MonoBehaviour
     private Hand m_LeftHand = null;
 
     private readonly float m_MaxGrip = 220.0f;
-    private float m_ObjGrip = 220.0f;
+    //private float m_ObjGrip = 220.0f;
     private float m_CurrentGrip = 0.0f;
     private float m_TargetGrip = 0.0f;
 
@@ -65,9 +64,9 @@ public class GripperControl : MonoBehaviour
         }
     }
 
-    public void Show()
+    public void Show(bool value)
     {
-        isGripping = !isGripping;
+        isGripping = value;
 
         TriggerReleased();
     }
@@ -104,43 +103,32 @@ public class GripperControl : MonoBehaviour
         }
     }
 
-    public void SetObjGripSize()
+    public void Attach()
     {
-        if (m_ObjGrip == m_MaxGrip)
-            m_ObjGrip = m_CurrentGrip;
-
         gameObject.GetComponent<AudioSource>().clip = m_Attach;
         gameObject.GetComponent<AudioSource>().Play();
     }
 
-    public void ResetAttObjSize()
+    public void Detach()
     {
-        m_ObjGrip = m_MaxGrip;
-
         gameObject.GetComponent<AudioSource>().clip = m_Detach;
-        gameObject.GetComponent<AudioSource>().Play();
-    }
-
-    public void Collide()
-    {
-        gameObject.GetComponent<AudioSource>().clip = m_Collision;
         gameObject.GetComponent<AudioSource>().Play();
     }
 
     private void CloseGripper()
     {
         m_TargetGrip = m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrip;
-        if (m_TargetGrip <= 0.0f)
+        if (m_TargetGrip < 1.0f)
             m_TargetGrip = 1.0f;
+
+        if (m_TargetGrip == m_CurrentGrip)
+            return;
 
         if(m_TargetGrip > m_CurrentGrip)
         {
             m_CurrentGrip += m_GripSpeed;
             if (m_TargetGrip < m_CurrentGrip)
                 m_CurrentGrip = m_TargetGrip;
-
-            if (m_CurrentGrip > m_ObjGrip)
-                m_CurrentGrip = m_ObjGrip;
         }
         if (m_TargetGrip < m_CurrentGrip)
         {

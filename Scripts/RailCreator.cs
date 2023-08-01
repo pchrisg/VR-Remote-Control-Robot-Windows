@@ -121,7 +121,7 @@ public class RailCreator : MonoBehaviour
     public void Show(bool value)
     {
         gameObject.SetActive(value);
-        m_PlanningRobot.Show();
+        m_PlanningRobot.Show(value);
     }
 
     private void MakeRail()

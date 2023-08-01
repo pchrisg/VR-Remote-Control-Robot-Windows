@@ -95,7 +95,6 @@ public class RadialMenu : MonoBehaviour
             northwest
         };
 
-        //TogglePlanRob();
         SetSectionIcons();
 
         m_SRPlanRob.sprite = null;

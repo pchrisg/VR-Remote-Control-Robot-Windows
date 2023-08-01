@@ -8,192 +8,14 @@
          "haptics" : [],
          "poses" : [],
          "skeleton" : [],
-         "sources" : [
-            {
-               "inputs" : {
-                  "pull" : {
-                     "output" : "/actions/buggy/in/throttle"
-                  }
-               },
-               "mode" : "trigger",
-               "path" : "/user/hand/left/input/trigger"
-            },
-            {
-               "inputs" : {
-                  "pull" : {
-                     "output" : "/actions/buggy/in/throttle"
-                  }
-               },
-               "mode" : "trigger",
-               "path" : "/user/hand/right/input/trigger"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/buggy/in/brake"
-                  },
-                  "position" : {
-                     "output" : "/actions/buggy/in/steering"
-                  }
-               },
-               "mode" : "trackpad",
-               "path" : "/user/hand/left/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/buggy/in/brake"
-                  },
-                  "position" : {
-                     "output" : "/actions/buggy/in/steering"
-                  }
-               },
-               "mode" : "trackpad",
-               "path" : "/user/hand/right/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/buggy/in/reset"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/application_menu"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/buggy/in/reset"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/application_menu"
-            }
-         ]
+         "sources" : []
       },
       "/actions/chris_ur5_3f_gripper" : {
-         "sources" : [
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/grabgrip"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/grip"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/grabgrip"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/grip"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/press menu"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/application_menu"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/press menu"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/application_menu"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/grabtrigger"
-                  },
-                  "pull" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/squeezetrigger"
-                  }
-               },
-               "mode" : "trigger",
-               "path" : "/user/hand/left/input/trigger"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/grabtrigger"
-                  },
-                  "pull" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/squeezetrigger"
-                  }
-               },
-               "mode" : "trigger",
-               "path" : "/user/hand/right/input/trigger"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/presstrackpad"
-                  },
-                  "position" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/touchposition"
-                  },
-                  "touch" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/touchtrackpad"
-                  }
-               },
-               "mode" : "trackpad",
-               "path" : "/user/hand/left/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/presstrackpad"
-                  },
-                  "position" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/touchposition"
-                  },
-                  "touch" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/touchtrackpad"
-                  }
-               },
-               "mode" : "trackpad",
-               "path" : "/user/hand/right/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "east" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/presseast"
-                  },
-                  "west" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/presswest"
-                  }
-               },
-               "mode" : "dpad",
-               "parameters" : {
-                  "sub_mode" : "click"
-               },
-               "path" : "/user/hand/left/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "east" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/presseast"
-                  },
-                  "west" : {
-                     "output" : "/actions/chris_ur5_3f_gripper/in/presswest"
-                  }
-               },
-               "mode" : "dpad",
-               "parameters" : {
-                  "sub_mode" : "click"
-               },
-               "path" : "/user/hand/right/input/trackpad"
-            }
-         ]
+         "chords" : [],
+         "haptics" : [],
+         "poses" : [],
+         "skeleton" : [],
+         "sources" : []
       },
       "/actions/default" : {
          "chords" : [],
@@ -231,7 +53,25 @@
             {
                "inputs" : {
                   "click" : {
-                     "output" : "/actions/default/in/interactui"
+                     "output" : "/actions/default/in/grabgrip"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/grabgrip"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/grabtrigger"
                   }
                },
                "mode" : "button",
@@ -240,26 +80,32 @@
             {
                "inputs" : {
                   "click" : {
-                     "output" : "/actions/default/in/pressmenu"
+                     "output" : "/actions/default/in/grabtrigger"
                   }
                },
                "mode" : "button",
-               "path" : "/user/hand/left/input/application_menu"
+               "path" : "/user/hand/right/input/trigger"
             },
             {
                "inputs" : {
-                  "click" : {
-                     "output" : "/actions/default/in/pressmenu"
+                  "pull" : {
+                     "output" : "/actions/default/in/squeezetrigger"
                   }
                },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/application_menu"
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
             },
             {
                "inputs" : {
-                  "click" : {
-                     "output" : "/actions/default/in/presstrackpad"
-                  },
+                  "pull" : {
+                     "output" : "/actions/default/in/squeezetrigger"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
                   "position" : {
                      "output" : "/actions/default/in/touchposition"
                   },
@@ -269,31 +115,22 @@
                },
                "mode" : "trackpad",
                "parameters" : {
-                  "sub_mode" : "click"
+                  "sub_mode" : "touch"
                },
                "path" : "/user/hand/right/input/trackpad"
             },
             {
                "inputs" : {
-                  "click" : {
-                     "output" : "/actions/default/in/interactui"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/trigger"
-            },
-            {
-               "inputs" : {
                   "east" : {
-                     "output" : "/actions/default/in/forward"
+                     "output" : "/actions/default/in/touchright"
                   },
                   "west" : {
-                     "output" : "/actions/default/in/reverse"
+                     "output" : "/actions/default/in/touchleft"
                   }
                },
                "mode" : "dpad",
                "parameters" : {
-                  "sub_mode" : "click"
+                  "sub_mode" : "touch"
                },
                "path" : "/user/hand/left/input/trackpad"
             }
@@ -304,44 +141,7 @@
          "haptics" : [],
          "poses" : [],
          "skeleton" : [],
-         "sources" : [
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/platformer/in/jump"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/platformer/in/jump"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/right/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "position" : {
-                     "output" : "/actions/platformer/in/move"
-                  }
-               },
-               "mode" : "trackpad",
-               "path" : "/user/hand/left/input/trackpad"
-            },
-            {
-               "inputs" : {
-                  "position" : {
-                     "output" : "/actions/platformer/in/move"
-                  }
-               },
-               "mode" : "trackpad",
-               "path" : "/user/hand/right/input/trackpad"
-            }
-         ]
+         "sources" : []
       },
       "/actions/rosset" : {
          "chords" : [],
@@ -355,7 +155,7 @@
    "controller_type" : "vive_controller",
    "description" : "",
    "interaction_profile" : "",
-   "name" : "Saved [Testing] PhD_Project configuration for Vive Controller",
+   "name" : "PhD_Project configuration for Vive Controller",
    "options" : {},
    "simulated_actions" : []
 }

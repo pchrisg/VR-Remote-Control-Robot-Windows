@@ -45,17 +45,17 @@ public class RailManipulation : MonoBehaviour
 
         m_Interactable = GetComponent<Interactable>();
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
-        m_Forward = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressEast");
-        m_Reverse = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressWest");
+        m_Forward = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchRight");
+        m_Reverse = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchLeft");
 
-        m_Forward.onStateDown += ForwardPressed;
-        m_Reverse.onStateDown += ReversePressed;
+        m_Forward.onChange += RightTouched;
+        m_Reverse.onChange += LeftTouched;
     }
 
     private void OnDestroy()
     {
-        m_Forward.onStateDown -= ForwardPressed;
-        m_Reverse.onStateDown -= ReversePressed;
+        m_Forward.onChange -= RightTouched;
+        m_Reverse.onChange -= LeftTouched;
     }
 
     private void Update()
@@ -135,13 +135,13 @@ public class RailManipulation : MonoBehaviour
         }
     }
 
-    private void ForwardPressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    private void RightTouched(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
         if (m_ManipulationMode.mode == Mode.RAIL)
             isInteracting = true;
     }
 
-    private void ReversePressed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    private void LeftTouched(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
         if (m_ManipulationMode.mode == Mode.RAIL)
             isInteracting = true;

@@ -513,7 +513,7 @@ GameObject:
   - component: {fileID: 54000012734507470}
   m_Layer: 6
   m_Name: HandColliderRight
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -558,7 +558,7 @@ MonoBehaviour:
     middleColliders: []
     ringColliders: []
     pinkyColliders: []
-  collidersInRadius: 1
+  collidersInRadius: 0
 --- !u!54 &54000012734507470
 Rigidbody:
   m_ObjectHideFlags: 0
