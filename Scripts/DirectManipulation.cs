@@ -1,7 +1,7 @@
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
-using ManipulationOptions;
+using ManipulationModes;
 
 [RequireComponent(typeof(Interactable))]
 

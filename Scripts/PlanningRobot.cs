@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Linq;
 using RosMessageTypes.Moveit;
 using System.Collections.Generic;
-using ManipulationOptions;
+using ManipulationModes;
 
 public class PlanningRobot : MonoBehaviour
 {

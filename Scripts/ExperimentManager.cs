@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using ManipulationOptions;
+using ManipulationModes;
 
 public class ExperimentManager : MonoBehaviour
 {
@@ -17,23 +17,24 @@ public class ExperimentManager : MonoBehaviour
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
 
-    [Header("Tutorial Control")]
-    [SerializeField] private bool m_ResetTutorial = false;
+    [Header("Setup")]
     [SerializeField] private bool m_SetupTutorial = false;
-
-    [Header("Tutorial Status")]
-    [SerializeField] private bool m_TutorialActive = false;
-
-    [Header("Experiment Control")]
-    [SerializeField] private bool m_RunExperiment = false;
-    [SerializeField] private bool m_ResetExperiment = false;
     [SerializeField] private bool m_SetupExperiment1 = false;
     [SerializeField] private bool m_SetupExperiment2 = false;
 
-    [Header("Experiment Status")]
-    [SerializeField] private bool m_ExperimentActive = false;
+    [Header("Reset")]
+    [SerializeField] private bool m_ResetTutorial = false;
+    [SerializeField] private bool m_ResetExperiment = false;
+
+    [Header("Start")]
+    [SerializeField] private bool m_StartTutorial = false;
+    [SerializeField] private bool m_StartExperiment = false;
+
+    [Header("Status")]
+    [SerializeField] private bool m_TutorialActive = false;
     [SerializeField] private bool m_Experiment1Active = false;
     [SerializeField] private bool m_Experiment2Active = false;
+    [SerializeField] private bool m_Running = false;
 
     //Tutorial
     private Tutorial m_Tutorial = null;
@@ -46,7 +47,7 @@ public class ExperimentManager : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private Timer m_Timer = null;
 
-    private readonly float m_TimeLimit = 300.0f;
+    private readonly float m_TimeLimit = 600.0f;
 
     // File Path
     private readonly string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\";
@@ -101,8 +102,10 @@ public class ExperimentManager : MonoBehaviour
             ResetRobotPose();
         }
 
-        if (!m_ExperimentActive)
+        // If no tutorial or experiment are running
+        if (!m_Running)
         {
+            // Setup tutorial
             if (m_SetupTutorial)
             {
                 m_SetupTutorial = false;
@@ -123,12 +126,39 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
 
+            // Reset tutorial
+            if (m_ResetTutorial)
+            {
+                m_ResetTutorial = false;
+
+                if (m_TutorialActive)
+                {
+                    m_Tutorial.ResetTutorial();
+                    ResetRobotPose();
+                }
+            }
+
+            // Start the tutorial
+            if (m_StartTutorial)
+            {
+                if (!m_TutorialActive)
+                    m_StartTutorial = false;
+
+                else
+                {
+                    m_Running = true;
+                    m_Tutorial.stage = TutorialStages.Stage.START;
+                }
+            }
+                
+            // Both experiments can't be active at same time
             if (m_SetupExperiment1 && m_SetupExperiment2)
             {
                 m_SetupExperiment1 = false;
                 m_SetupExperiment2 = false;
             }
 
+            // Setup experiment 1
             if (m_SetupExperiment1)
             {
                 m_SetupExperiment1 = false;
@@ -149,6 +179,7 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
 
+            // Setup experiment 2
             if (m_SetupExperiment2)
             {
                 m_SetupExperiment2 = false;
@@ -169,17 +200,6 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
 
-            if (m_ResetTutorial)
-            {
-                m_ResetTutorial = false;
-
-                if (m_TutorialActive)
-                {
-                    m_Tutorial.ResetTutorial();
-                    ResetRobotPose();
-                }
-            }
-
             // Reset the experiment
             if (m_ResetExperiment)
             {
@@ -196,44 +216,56 @@ public class ExperimentManager : MonoBehaviour
                 }
             }
 
-            if (m_RunExperiment)
+            // Start the experiment
+            if (m_StartExperiment)
             {
                 if (!m_Experiment1Active && !m_Experiment2Active)
-                    m_RunExperiment = false;
+                    m_StartExperiment = false;
 
                 else
                 {
-                    m_ExperimentActive = true;
+                    m_Running = true;
                     StartExperiment();
                 }
             }
         }
-        else
+        // if tutorial or experiment are running
+        else if (m_Running)
         {
-            if(m_Timer.m_TimePassed == m_TimeLimit)
-                SaveData();
+            // if tutorial stopped
+            if (m_TutorialActive && !m_StartTutorial)
+                m_Running = false;
 
-            if (!m_RunExperiment)
+            // if experiment
+            if (m_Experiment1Active || m_Experiment2Active)
             {
-                m_ExperimentActive = false;
+                // if time exhausted
+                if (m_Timer.m_TimePassed == m_TimeLimit)
+                    SaveData();
 
-                m_Timer.m_TimePassed = m_TimeLimit;
-                m_Timer.m_Text.text = "Ready";
+                // if experiment stopped
+                if (!m_StartExperiment)
+                {
+                    m_Running = false;
+
+                    m_Timer.m_TimePassed = m_TimeLimit;
+                    m_Timer.m_Text.text = "Ready";
+                }
+
+                // Data Gathering
+                if (m_ManipulationMode.mode == Mode.DIRECT)
+                    m_TimeInDirMan += Time.deltaTime;
+                if (m_ManipulationMode.mode == Mode.SDOF)
+                    m_TimeInSDOFMan += Time.deltaTime;
+                if (m_ManipulationMode.mode == Mode.RAILCREATOR)
+                    m_TimeInRailCre += Time.deltaTime;
+                if (m_ManipulationMode.mode == Mode.RAIL)
+                    m_TimeInRailMan += Time.deltaTime;
+                if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+                    m_TimeInColObj += Time.deltaTime;
+                if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+                    m_TimeInAttObj += Time.deltaTime;
             }
-
-            // Data Gathering
-            if (m_ManipulationMode.mode == Mode.DIRECT)
-                m_TimeInDirMan += Time.deltaTime;
-            if (m_ManipulationMode.mode == Mode.SDOF)
-                m_TimeInSDOFMan += Time.deltaTime;
-            if (m_ManipulationMode.mode == Mode.RAILCREATOR)
-                m_TimeInRailCre += Time.deltaTime;
-            if (m_ManipulationMode.mode == Mode.RAIL)
-                m_TimeInRailMan += Time.deltaTime;
-            if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
-                m_TimeInColObj += Time.deltaTime;
-            if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-                m_TimeInAttObj += Time.deltaTime;
         }
     }
 
@@ -286,12 +318,12 @@ public class ExperimentManager : MonoBehaviour
 
     public void SaveData()
     {
-        if (m_ExperimentActive)
+        if (m_Running)
         {
             m_TimeTaken = m_Timer.m_TimePassed;
 
-            m_RunExperiment = false;
-            m_ExperimentActive = false;
+            m_StartExperiment = false;
+            m_Running = false;
             m_Timer.m_TimePassed = m_TimeLimit;
             m_Timer.m_Text.text = "End";
 

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using ManipulationModes;
 
 public class RadialMenu : MonoBehaviour
 {
@@ -28,7 +29,7 @@ public class RadialMenu : MonoBehaviour
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
 
-    private ManipulationOptions.Mode m_MenuMode = ManipulationOptions.Mode.DIRECT;
+    private Mode m_MenuMode = Mode.DIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
     private List<RadialSection> m_RadialSections = null;
     private RadialSection m_HighlightedSection = null;
@@ -103,74 +104,74 @@ public class RadialMenu : MonoBehaviour
 
     private void SetSectionIcons()
     {
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.SIMPLEDIRECT)
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
         {
-            m_MenuMode = ManipulationOptions.Mode.SIMPLEDIRECT;
+            m_MenuMode = Mode.SIMPLEDIRECT;
             m_SRActiveMode.sprite = null;
 
             SetPlanRobIcon();
             SetGripIcon();
         }
 
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.DIRECT)
         {
             for(int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = sprites[i];
             }
-            m_MenuMode = ManipulationOptions.Mode.DIRECT;
+            m_MenuMode = Mode.DIRECT;
             m_SRActiveMode.sprite = null;
 
             SetPlanRobIcon();
             SetGripIcon();
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.SDOF)
+        if (m_ManipulationMode.mode == Mode.SDOF)
         {
             for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[1].iconRenderer.sprite = sprites[7];
-            m_MenuMode = ManipulationOptions.Mode.SDOF;
+            m_MenuMode = Mode.SDOF;
             m_SRActiveMode.sprite = sprites[1];
 
             SetPlanRobIcon();
             SetGripIcon();
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.ATTOBJCREATOR)
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
         {
             for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[2].iconRenderer.sprite = sprites[8];
-            m_MenuMode = ManipulationOptions.Mode.ATTOBJCREATOR;
+            m_MenuMode = Mode.ATTOBJCREATOR;
             m_SRActiveMode.sprite = sprites[2];
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.COLOBJCREATOR)
+        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
             for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[3].iconRenderer.sprite = sprites[9];
-            m_MenuMode = ManipulationOptions.Mode.COLOBJCREATOR;
+            m_MenuMode = Mode.COLOBJCREATOR;
             m_SRActiveMode.sprite = sprites[3];
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAILCREATOR)
+        if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
             for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[5].iconRenderer.sprite = sprites[11];
-            m_MenuMode = ManipulationOptions.Mode.RAILCREATOR;
+            m_MenuMode = Mode.RAILCREATOR;
             m_SRActiveMode.sprite = sprites[5];
         }
-        if (m_ManipulationMode.mode == ManipulationOptions.Mode.RAIL)
+        if (m_ManipulationMode.mode == Mode.RAIL)
         {
             m_RadialSections[5].iconRenderer.sprite = sprites[12];
-            m_MenuMode = ManipulationOptions.Mode.RAIL;
+            m_MenuMode = Mode.RAIL;
             m_SRActiveMode.sprite = sprites[11];
 
             SetPlanRobIcon();

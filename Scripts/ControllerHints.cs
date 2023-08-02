@@ -16,6 +16,68 @@ public class ControllerHints : MonoBehaviour
     private Coroutine m_RightCoroutine = null;
     private Coroutine m_LeftCoroutine = null;
 
+    public struct ActionStatus
+    {
+        public bool grip;
+        public bool trigger;
+        public bool trackpad;
+        public bool touchRight;
+        public bool touchLeft;
+
+        public ActionStatus(bool value)
+        {
+            grip = value;
+            trigger = value;
+            trackpad = value;
+            touchRight = value;
+            touchLeft = value;
+        }
+    }
+
+    public struct HandStatus
+    {
+        public ActionStatus right;
+        public ActionStatus left;
+
+        public HandStatus(bool value)
+        {
+            right = new ActionStatus(value);
+            left = new ActionStatus(value);
+        }
+
+        public void SetValue(Hand hand, ISteamVR_Action_In action, bool value)
+        {
+            if(hand == Player.instance.rightHand)
+            {
+                if (action.GetShortName() == "GrabGrip")
+                    right.grip = value;
+                if (action.GetShortName() == "GrabTrigger")
+                    right.trigger = value;
+                if (action.GetShortName() == "TouchTrackpad")
+                    right.trackpad = value;
+                if (action.GetShortName() == "TouchRight")
+                    right.touchRight = value;
+                if (action.GetShortName() == "TouchLeft")
+                    right.touchLeft = value;
+            }
+            else
+            {
+                if (action.GetShortName() == "GrabGrip")
+                    left.grip = value;
+                if (action.GetShortName() == "GrabTrigger")
+                    left.trigger = value;
+                if (action.GetShortName() == "TouchTrackpad")
+                    left.trackpad = value;
+                if (action.GetShortName() == "TouchRight")
+                    left.touchRight = value;
+                if (action.GetShortName() == "TouchLeft")
+                    left.touchLeft = value;
+            }
+        }
+    }
+
+    public HandStatus handStatus = new HandStatus(false);
+
     private void Awake()
     {
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
@@ -39,12 +101,14 @@ public class ControllerHints : MonoBehaviour
                     {
                         ControllerButtonHints.ShowTextHint(hand, action, text);
                         active = true;
+                        handStatus.SetValue(hand, action, false);
                     }
                 }
                 else
                 {
                     ControllerButtonHints.HideTextHint(hand, action);
                     active = false;
+                    handStatus.SetValue(hand, action, true);
                 }
             }
             yield return new WaitForSeconds(0.5f);
@@ -87,6 +151,7 @@ public class ControllerHints : MonoBehaviour
                 m_LeftCoroutine = null;
             }
 
+            handStatus.SetValue(hand, action, false);
             ControllerButtonHints.HideTextHint(hand, action);
         }
     }

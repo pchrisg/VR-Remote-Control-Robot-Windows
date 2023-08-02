@@ -1,8 +1,8 @@
 using UnityEngine;
 using Valve.VR;
-using ManipulationOptions;
+using ManipulationModes;
 
-namespace ManipulationOptions
+namespace ManipulationModes
 {
     public enum Mode
     {
@@ -35,6 +35,8 @@ public class ManipulationMode : MonoBehaviour
     private GripperControl m_GripperControl = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
+
+    public bool isInteracting = false;
 
     private void Awake()
     {

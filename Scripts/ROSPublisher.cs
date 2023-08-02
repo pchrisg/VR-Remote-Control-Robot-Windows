@@ -86,6 +86,7 @@ public class ROSPublisher : MonoBehaviour
         outputMessage.rPRA = (byte)(1.0f);
 
         PublishRobotiqSqueeze(outputMessage);
+        PublishRobotiqSqueeze(outputMessage);
 
         EmptyMsg msg = new EmptyMsg();
 

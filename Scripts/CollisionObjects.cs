@@ -1,8 +1,5 @@
 using UnityEngine;
-using Valve.VR;
 using Valve.VR.InteractionSystem;
-using ManipulationOptions;
-using Unity.VisualScripting;
 
 public class CollisionObjects : MonoBehaviour
 {

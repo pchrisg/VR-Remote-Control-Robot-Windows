@@ -1,9 +1,12 @@
+using System.Collections;
 using UnityEngine;
 
 public class Manipulator : MonoBehaviour
 {
     [Header("Material")]
     [SerializeField] private Material m_ManipulatorMat;
+
+    private ManipulationMode m_ManipulationMode = null;
 
     private Transform m_Robotiq;
 
@@ -16,9 +19,11 @@ public class Manipulator : MonoBehaviour
     private Color m_FocusObjectColor = new Color(1.0f, 1.0f, 0.0f, 0.4f);
 
     private bool isColliding = false;
+    private Coroutine m_Flashing = null;
 
     private void Awake()
     {
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
         m_CurrentColor = m_DefaultColor;
@@ -71,5 +76,36 @@ public class Manipulator : MonoBehaviour
     public void Colliding(bool value)
     {
         isColliding = value;
+    }
+
+    public void Flash(bool value)
+    {
+        if (value)
+        {
+            if (m_Flashing == null)
+                m_Flashing = StartCoroutine(Flashing());
+        }
+        else
+        {
+            if (m_Flashing != null)
+                StopCoroutine(m_Flashing);
+            m_ManipulatorMat.color = m_DefaultColor;
+        }
+    }
+
+    private IEnumerator Flashing()
+    {
+        while (true)
+        {
+            if (m_ManipulationMode.isInteracting)
+                m_ManipulatorMat.color = m_DefaultColor;
+            else
+            {
+                m_ManipulatorMat.color = m_FocusObjectColor;
+                yield return new WaitForSeconds(1.0f);
+                m_ManipulatorMat.color = m_DefaultColor;
+            }
+            yield return new WaitForSeconds(1.0f);
+        }
     }
 }
