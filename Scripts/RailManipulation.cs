@@ -62,6 +62,8 @@ public class RailManipulation : MonoBehaviour
     {
         if(m_ManipulationMode.mode == Mode.RAIL && !m_GripperControl.isGripping)
         {
+            m_ManipulationMode.isInteracting = isInteracting;
+
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
 

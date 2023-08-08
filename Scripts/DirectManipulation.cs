@@ -46,6 +46,8 @@ public class DirectManipulation : MonoBehaviour
 
         if (m_ManipulationMode.mode == Mode.DIRECT && !m_GripperControl.isGripping)
         {
+            m_ManipulationMode.isInteracting = isInteracting;
+
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();
 

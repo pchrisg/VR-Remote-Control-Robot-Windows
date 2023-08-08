@@ -3,8 +3,7 @@ using ManipulationModes;
 using Valve.VR.InteractionSystem;
 using TutorialStages;
 using System.Collections;
-using static UnityEngine.GraphicsBuffer;
-using System.Threading;
+using UnityEngine.UI;
 
 namespace TutorialStages
 {
@@ -15,17 +14,29 @@ namespace TutorialStages
         START,
         SIMPLEDIRECT,
         DIRECT,
+        SDOF,
+        RAIL,
+        RAILCREATOR,
+        COLOBJCREATOR,
+        ATTOBJCREATOR,
         PRACTICE
     };
 }
 
 public class Tutorial : MonoBehaviour
 {
+    [Header("Stage")]
+    public Stage stage = Stage.READY;
+
     [Header("Prefabs")]
     [SerializeField] private GameObject m_GhostManipulator = null;
     [SerializeField] private GameObject m_Cube = null;
     [SerializeField] private GameObject m_X = null;
 
+    [Header("Sprites")]
+    [SerializeField] private Sprite[] m_Sprites = new Sprite[7];
+
+    // 
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
     private ManipulationMode m_ManipulationMode = null;
@@ -33,14 +44,18 @@ public class Tutorial : MonoBehaviour
     private GameObject m_Objects = null;
     private GameObject m_Robotiq = null;
 
+    // Hands
     private Hand m_LeftHand = null;
     private Hand m_RightHand = null;
 
+    // Timer
     private Timer m_Timer = null;
     private readonly float m_TimeLimit = 300.0f;
 
     private Coroutine m_ActiveCoroutine = null;
-    public Stage stage = Stage.READY;
+    private Text m_Text = null;
+    private AudioSource m_AudioSource = null;
+    private SpriteRenderer m_SpriteRenderer = null;
 
     private void Awake()
     {
@@ -50,10 +65,16 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
         m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
-        m_Timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<Timer>();
-
+        
         m_LeftHand = Player.instance.leftHand;
         m_RightHand = Player.instance.rightHand;
+
+        m_Timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<Timer>();
+
+        m_Text = gameObject.GetComponentInChildren<Text>();
+        m_AudioSource = gameObject.GetComponentInChildren<AudioSource>();
+        m_SpriteRenderer = gameObject.GetComponentInChildren<SpriteRenderer>();
+        m_SpriteRenderer.sprite = null;
     }
 
     private void Start()
@@ -90,10 +111,16 @@ public class Tutorial : MonoBehaviour
                 m_ManipulationMode.ToggleDirect();
         }
 
-        if (stage == Stage.SIMPLEDIRECT)
+        if (stage == Stage.SIMPLEDIRECT || stage == Stage.DIRECT)
         {
             if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(SimpleDirect());
+                m_ActiveCoroutine = StartCoroutine(Direct());
+        }
+
+        if (stage == Stage.SDOF)
+        {
+            if (m_ActiveCoroutine == null)
+                m_ActiveCoroutine = StartCoroutine(SDOF());
         }
 
         if (stage == Stage.PRACTICE)
@@ -109,32 +136,58 @@ public class Tutorial : MonoBehaviour
         }
     }
 
-    private IEnumerator SimpleDirect()
+    private IEnumerator Direct()
     {
         GameObject target = Instantiate(m_GhostManipulator);
         target.transform.SetParent(m_Objects.transform);
         target.transform.SetPositionAndRotation(new Vector3(0.3f, 0.4f, -0.4f), Quaternion.Euler(new Vector3(0.0f, -115.0f, 90.0f)));
 
+        m_Text.text = "Move the Robot\n\n" +
+                      "Reach out and grab the manipulator with your right hand";
+        m_AudioSource.Play();
+
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_Manipulator.Flash(true);
 
+        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+
+        m_Text.text = "Move the Robot\n\n" +
+                      "While grabbing the manipulator, move your hand";
+        m_AudioSource.Play();
+
+        if (stage == Stage.DIRECT)
+        {
+            m_Text.text += "\n\nScaled Movement\n\n" +
+                           "While moving the manipulator, grab the left trigger";
+            m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        }
+
         yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
 
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false); // Remove line when uncommenting
-        m_Manipulator.Flash(false); // Remove line when uncommenting
-        GameObject.Destroy(target); // Remove line when uncommenting
-
-        /*m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
 
         target.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.2f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 90.0f)));
 
+        m_Text.text = "Move the Robot\n\n" +
+                      "The manipulator can be grabbed with either hand";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+
+        if (stage == Stage.DIRECT)
+        {
+            m_Text.text += "\n\nScaled Movement\n\n" +
+                           "Grab the other trigger while moving the manipulator";
+            m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        }
+
         yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
 
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-        m_ControllerHints.ShowTrackpadHint(true);
         m_Manipulator.Flash(false);
-
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
         GameObject.Destroy(target);
 
         GameObject cube = Instantiate(m_Cube);
@@ -145,16 +198,43 @@ public class Tutorial : MonoBehaviour
         x.transform.SetParent(m_Objects.transform);
         x.transform.SetPositionAndRotation(new Vector3(0.4f, 0.0001f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 0.0f, 0.0f)));
 
-        yield return new WaitUntil( () => m_GripperControl.isGripping);
+        m_SpriteRenderer.sprite = m_Sprites[0];
+        m_Text.text = "Select Gripper Control\n\n" +
+                      "Touch the trackpad and select the gripper control";
+        m_AudioSource.Play();
 
         m_ControllerHints.ShowTrackpadHint(true);
+
+        yield return new WaitUntil( () => m_GripperControl.isGripping);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Gripper Control\n\n" +
+                      "Grab the right trigger to activate gripper control";
+        m_AudioSource.Play();
+
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger);
+
+        m_Text.text += "\n\nControl the gripper by slowly squeezing the left trigger\n\n" +
+                       "(You can also activate gripper control by grabbing the left trigger and control it with the right trigger)\n\n" +
+                       "Now grab the cube with the gripper";
+        m_AudioSource.Play();
+
         m_ControllerHints.ShowSqueezeHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger && m_ControllerHints.handStatus.left.trigger);
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.trigger);
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
+
+        yield return new WaitUntil(() => cube.GetComponent<ExperimentObject>().isMoving == true);
+
+        m_Text.text = "Deselect Gripper Control\n\n" +
+                      "Touch the trackpad and deselect the gripper control";
+        m_AudioSource.Play();
 
         m_ControllerHints.ShowTrackpadHint(true);
 
@@ -162,22 +242,41 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTrackpadHint(false);
 
+        m_Text.text = "Move the Cube\n\n" +
+                      "Move the cube over the target X";
+        m_AudioSource.Play();
+
         yield return new WaitUntil(() => CheckVec2Distance(cube, x));
+
+        m_SpriteRenderer.sprite = m_Sprites[0];
+        m_Text.text = "Select Gripper Control\n\n" +
+                      "Touch the trackpad and select the gripper control";
+        m_AudioSource.Play();
 
         m_ControllerHints.ShowTrackpadHint(true);
 
         yield return new WaitUntil(() => m_GripperControl.isGripping);
 
         m_ControllerHints.ShowTrackpadHint(false);
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Gripper Control\n\n" +
+                      "Release the cube by activating gripper control\n\n" +
+                      "(only grab one trigger)";
+        m_AudioSource.Play();
+
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
-        m_ControllerHints.ShowSqueezeHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
 
         yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger || m_ControllerHints.handStatus.left.trigger);
 
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-        m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
+
+        m_Text.text = "Deselect Gripper Control";
+        m_AudioSource.Play();
 
         m_ControllerHints.ShowTrackpadHint(true);
 
@@ -186,10 +285,19 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTrackpadHint(false);
 
         GameObject.Destroy(cube);
-        GameObject.Destroy(x);*/
+        GameObject.Destroy(x);
 
-        stage = Stage.PRACTICE;
+        if (stage == Stage.SIMPLEDIRECT)
+            stage = Stage.PRACTICE;
+        else if (stage == Stage.DIRECT)
+            stage = Stage.SDOF;
+
         m_ActiveCoroutine = null;
+    }
+
+    private IEnumerator SDOF()
+    {
+        yield return null;
     }
 
     private IEnumerator Practice()

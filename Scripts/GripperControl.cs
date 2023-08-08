@@ -10,6 +10,7 @@ public class GripperControl : MonoBehaviour
     [SerializeField] private AudioClip m_Detach = null;
 
     private ROSPublisher m_ROSPublisher = null;
+    private AudioSource m_ManipulatorAudioSource = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
     private SteamVR_Action_Single m_Squeeze = null;
@@ -33,6 +34,7 @@ public class GripperControl : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_ManipulatorAudioSource = gameObject.GetComponent<AudioSource>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Squeeze = SteamVR_Input.GetAction<SteamVR_Action_Single>("SqueezeTrigger");
@@ -105,14 +107,14 @@ public class GripperControl : MonoBehaviour
 
     public void Attach()
     {
-        gameObject.GetComponent<AudioSource>().clip = m_Attach;
-        gameObject.GetComponent<AudioSource>().Play();
+        m_ManipulatorAudioSource.clip = m_Attach;
+        m_ManipulatorAudioSource.Play();
     }
 
     public void Detach()
     {
-        gameObject.GetComponent<AudioSource>().clip = m_Detach;
-        gameObject.GetComponent<AudioSource>().Play();
+        m_ManipulatorAudioSource.clip = m_Detach;
+        m_ManipulatorAudioSource.Play();
     }
 
     private void CloseGripper()

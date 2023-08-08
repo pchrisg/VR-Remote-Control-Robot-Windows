@@ -64,6 +64,7 @@ public class RailCreator : MonoBehaviour
     {
         if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
+            m_ManipulationMode.isInteracting = isInteracting;
             if (!isInteracting)
             {
                 if( m_Trigger.GetStateDown(Player.instance.rightHand.handType) ||

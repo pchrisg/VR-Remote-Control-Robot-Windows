@@ -7,14 +7,11 @@ public class RadialMenu : MonoBehaviour
     [Header("Scene Objects")]
     [SerializeField] private Transform m_SelectionTransform = null;
     [SerializeField] private Transform m_CursorTransform = null;
-    [SerializeField] private SpriteRenderer m_SRPlanRob = null;
-    [SerializeField] private SpriteRenderer m_SRActiveMode = null;
-    [SerializeField] private SpriteRenderer m_SRGripper = null;
-    [SerializeField] private SpriteRenderer m_Selection = null;
-    [SerializeField] private SpriteRenderer m_NullSelection = null;
-
-    [Header("Sprites")]
-    [SerializeField] private Sprite[] sprites = new Sprite[13];
+    [SerializeField] private SpriteRenderer m_PlanRobSR = null;
+    [SerializeField] private SpriteRenderer m_ActiveSR = null;
+    [SerializeField] private SpriteRenderer m_GripperSR = null;
+    [SerializeField] private SpriteRenderer m_SelectionSR = null;
+    [SerializeField] private SpriteRenderer m_NullSelectionSR = null;
 
     [Header("Events")]
     [SerializeField] private RadialSection north = null;
@@ -23,15 +20,18 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private RadialSection south = null;
     [SerializeField] private RadialSection southwest = null;
     [SerializeField] private RadialSection northwest = null;
+    private List<RadialSection> m_RadialSections = null;
+
+    [Header("Sprites")]
+    [SerializeField] private Sprite[] m_Sprites = new Sprite[13];
 
     private ManipulationMode m_ManipulationMode = null;
     private PlanningRobot m_PlanningRobot = null;
-    private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
 
     private Mode m_MenuMode = Mode.DIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
-    private List<RadialSection> m_RadialSections = null;
+    
     private RadialSection m_HighlightedSection = null;
     private bool isPlanning = false;
     private bool isGripping = false;
@@ -47,7 +47,6 @@ public class RadialMenu : MonoBehaviour
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         CreateAndSetupSections();
     }
@@ -60,15 +59,15 @@ public class RadialMenu : MonoBehaviour
         
         if (direction.magnitude < 0.35f)
         {
-            m_Selection.color = m_HideColor;
-            m_NullSelection.color = m_ShowColor;
+            m_SelectionSR.color = m_HideColor;
+            m_NullSelectionSR.color = m_ShowColor;
 
             m_HighlightedSection = null;
         }
         else
         {
-            m_Selection.color = m_ShowColor;
-            m_NullSelection.color = m_BlockColor;
+            m_SelectionSR.color = m_ShowColor;
+            m_NullSelectionSR.color = m_BlockColor;
 
             float rotation = GetDegree(direction);
             SetSelectionRotation(rotation);
@@ -98,8 +97,8 @@ public class RadialMenu : MonoBehaviour
 
         SetSectionIcons();
 
-        m_SRPlanRob.sprite = null;
-        m_SRActiveMode.sprite = null;
+        m_PlanRobSR.sprite = null;
+        m_ActiveSR.sprite = null;
     }
 
     private void SetSectionIcons()
@@ -107,7 +106,7 @@ public class RadialMenu : MonoBehaviour
         if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
         {
             m_MenuMode = Mode.SIMPLEDIRECT;
-            m_SRActiveMode.sprite = null;
+            m_ActiveSR.sprite = null;
 
             SetPlanRobIcon();
             SetGripIcon();
@@ -117,10 +116,10 @@ public class RadialMenu : MonoBehaviour
         {
             for(int i = 0; i < 6; i++)
             {
-                m_RadialSections[i].iconRenderer.sprite = sprites[i];
+                m_RadialSections[i].iconRenderer.sprite = m_Sprites[i];
             }
             m_MenuMode = Mode.DIRECT;
-            m_SRActiveMode.sprite = null;
+            m_ActiveSR.sprite = null;
 
             SetPlanRobIcon();
             SetGripIcon();
@@ -131,9 +130,9 @@ public class RadialMenu : MonoBehaviour
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[1].iconRenderer.sprite = sprites[7];
+            m_RadialSections[1].iconRenderer.sprite = m_Sprites[7];
             m_MenuMode = Mode.SDOF;
-            m_SRActiveMode.sprite = sprites[1];
+            m_ActiveSR.sprite = m_Sprites[1];
 
             SetPlanRobIcon();
             SetGripIcon();
@@ -144,9 +143,9 @@ public class RadialMenu : MonoBehaviour
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[2].iconRenderer.sprite = sprites[8];
+            m_RadialSections[2].iconRenderer.sprite = m_Sprites[8];
             m_MenuMode = Mode.ATTOBJCREATOR;
-            m_SRActiveMode.sprite = sprites[2];
+            m_ActiveSR.sprite = m_Sprites[2];
         }
         if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
@@ -154,9 +153,9 @@ public class RadialMenu : MonoBehaviour
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[3].iconRenderer.sprite = sprites[9];
+            m_RadialSections[3].iconRenderer.sprite = m_Sprites[9];
             m_MenuMode = Mode.COLOBJCREATOR;
-            m_SRActiveMode.sprite = sprites[3];
+            m_ActiveSR.sprite = m_Sprites[3];
         }
         if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
@@ -164,15 +163,15 @@ public class RadialMenu : MonoBehaviour
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
-            m_RadialSections[5].iconRenderer.sprite = sprites[11];
+            m_RadialSections[5].iconRenderer.sprite = m_Sprites[11];
             m_MenuMode = Mode.RAILCREATOR;
-            m_SRActiveMode.sprite = sprites[5];
+            m_ActiveSR.sprite = m_Sprites[5];
         }
         if (m_ManipulationMode.mode == Mode.RAIL)
         {
-            m_RadialSections[5].iconRenderer.sprite = sprites[12];
+            m_RadialSections[5].iconRenderer.sprite = m_Sprites[12];
             m_MenuMode = Mode.RAIL;
-            m_SRActiveMode.sprite = sprites[11];
+            m_ActiveSR.sprite = m_Sprites[11];
 
             SetPlanRobIcon();
             SetGripIcon();
@@ -185,15 +184,15 @@ public class RadialMenu : MonoBehaviour
 
         if (!isPlanning)
         {
-            m_RadialSections[0].iconRenderer.sprite = sprites[0];
-            m_SRPlanRob.sprite = null;
+            m_RadialSections[0].iconRenderer.sprite = m_Sprites[0];
+            m_PlanRobSR.sprite = null;
 
-            m_RadialSections[4].iconRenderer.sprite = sprites[4];
+            m_RadialSections[4].iconRenderer.sprite = m_Sprites[4];
         }
         else
         {
-            m_RadialSections[0].iconRenderer.sprite = sprites[6];
-            m_SRPlanRob.sprite = sprites[0];
+            m_RadialSections[0].iconRenderer.sprite = m_Sprites[6];
+            m_PlanRobSR.sprite = m_Sprites[0];
 
             m_RadialSections[4].iconRenderer.sprite = null;
         }
@@ -205,15 +204,15 @@ public class RadialMenu : MonoBehaviour
 
         if (!isGripping)
         {
-            m_RadialSections[4].iconRenderer.sprite = sprites[4];
-            m_SRGripper.sprite = null;
+            m_RadialSections[4].iconRenderer.sprite = m_Sprites[4];
+            m_GripperSR.sprite = null;
 
-            m_RadialSections[0].iconRenderer.sprite = sprites[0];
+            m_RadialSections[0].iconRenderer.sprite = m_Sprites[0];
         }
         else
         {
-            m_RadialSections[4].iconRenderer.sprite = sprites[10];
-            m_SRGripper.sprite = sprites[4];
+            m_RadialSections[4].iconRenderer.sprite = m_Sprites[10];
+            m_GripperSR.sprite = m_Sprites[4];
 
             m_RadialSections[0].iconRenderer.sprite = null;
         }
