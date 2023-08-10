@@ -23,7 +23,7 @@ public class ManipulationMode : MonoBehaviour
     public Mode mode = Mode.DIRECT;
 
     [HideInInspector] public const float ANGLETHRESHOLD = 5.0f;     //5deg
-    [HideInInspector] public const float DISTANCETHRESHOLD = 0.05f; //5cm
+    [HideInInspector] public const float DISTANCETHRESHOLD = 0.02f; //2cm
     [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
 
     [Header("Scene Objects")]

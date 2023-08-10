@@ -8702,7 +8702,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 467784483}
   m_LocalRotation: {x: 0.32650563, y: 0.212631, z: -0.6272114, w: 0.67437977}
-  m_LocalPosition: {x: -0.05199999, y: -0.0157, z: -0.11630082}
+  m_LocalPosition: {x: 0, y: 0, z: -0.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9550,7 +9550,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &492438395
 Transform:
   m_ObjectHideFlags: 0
@@ -32927,7 +32927,7 @@ MonoBehaviour:
   m_Objects: {fileID: 1711905459}
   m_ParticipantName: Test
   m_ResetRobotPose: 0
-  m_SetupTutorial: 1
+  m_SetupTutorial: 0
   m_SetupExperiment1: 0
   m_SetupExperiment2: 0
   m_ResetTutorial: 0
@@ -34033,7 +34033,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1000014082016249}
   m_LocalRotation: {x: 0.32650566, y: -0.21263102, z: 0.6272114, w: 0.67437977}
-  m_LocalPosition: {x: 0.051999986, y: -0.0157, z: -0.11630082}
+  m_LocalPosition: {x: 0, y: 0, z: -0.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -37527,7 +37527,7 @@ GameObject:
   - component: {fileID: 7795903744888888875}
   - component: {fileID: 7796339970850917949}
   m_Layer: 5
-  m_Name: Clock
+  m_Name: Timer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -37741,7 +37741,7 @@ GameObject:
   - component: {fileID: 7796570043703711987}
   - component: {fileID: 7978426981792955584}
   m_Layer: 5
-  m_Name: Timer
+  m_Name: Text
   m_TagString: Timer
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -38507,6 +38507,34 @@ PrefabInstance:
     - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
       propertyPath: m_RootOrder
       value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3077060264200104962, guid: d76fe596089921f4f9491389c50d9221, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 8363615109571917880, guid: d76fe596089921f4f9491389c50d9221, type: 3}
       propertyPath: m_Name

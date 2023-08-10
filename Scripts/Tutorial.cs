@@ -4,6 +4,8 @@ using Valve.VR.InteractionSystem;
 using TutorialStages;
 using System.Collections;
 using UnityEngine.UI;
+using static UnityEngine.GraphicsBuffer;
+using System.Linq;
 
 namespace TutorialStages
 {
@@ -36,11 +38,14 @@ public class Tutorial : MonoBehaviour
     [Header("Sprites")]
     [SerializeField] private Sprite[] m_Sprites = new Sprite[7];
 
-    // 
+    // Scripts
     private Manipulator m_Manipulator = null;
+    private SDOFManipulation m_SDOFManipulation = null;
     private GripperControl m_GripperControl = null;
     private ManipulationMode m_ManipulationMode = null;
     private ControllerHints m_ControllerHints = null;
+
+    // Game Objects
     private GameObject m_Objects = null;
     private GameObject m_Robotiq = null;
 
@@ -60,6 +65,7 @@ public class Tutorial : MonoBehaviour
     private void Awake()
     {
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_SDOFManipulation = m_Manipulator.transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
@@ -123,6 +129,18 @@ public class Tutorial : MonoBehaviour
                 m_ActiveCoroutine = StartCoroutine(SDOF());
         }
 
+        if (stage == Stage.RAIL)
+        {
+            if (m_ActiveCoroutine == null)
+                m_ActiveCoroutine = StartCoroutine(Rail());
+        }
+
+        if (stage == Stage.RAILCREATOR)
+        {
+            if (m_ActiveCoroutine == null)
+                m_ActiveCoroutine = StartCoroutine(RailCreator());
+        }
+
         if (stage == Stage.PRACTICE)
         {
             if (m_ActiveCoroutine == null)
@@ -161,6 +179,9 @@ public class Tutorial : MonoBehaviour
                            "While moving the manipulator, grab the left trigger";
             m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
         }
+
+        m_Text.text += "\n\nPlacement\n\n" +
+                           "Place the manipulator on the target";
 
         yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
 
@@ -275,7 +296,8 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
 
-        m_Text.text = "Deselect Gripper Control";
+        m_Text.text = "Deselect Gripper Control\n\n" +
+                      "Touch the trackpad and deselect the gripper control";
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTrackpadHint(true);
@@ -297,7 +319,338 @@ public class Tutorial : MonoBehaviour
 
     private IEnumerator SDOF()
     {
-        yield return null;
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        m_SpriteRenderer.sprite = m_Sprites[1];
+        m_Text.text = "Select SDOF Manipulation\n\n" +
+                      "Touch the trackpad and select Separated Defree of Freedom Manipulation";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.SDOF);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Separated Degrees of Freedom\n\n" +
+                      "Reach out and grab one of the Handles";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_SDOFManipulation.Flash(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+
+        m_Text.text = "Separated Degrees of Freedom Translation\n\n" +
+                      "While grabbing the Handle, move your hand towards or away from the manipulator" +
+                      "\n\nScaled Movement\n\n" +
+                      "While moving the Handle, grab the other trigger";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.trigger && m_ControllerHints.handStatus.right.trigger);
+
+        m_Text.text = "Separated Degrees of Freedom\n\n" +
+                      "Release the triggers";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        m_Text.text = "Separated Degrees of Freedom Rotation\n\n" +
+                      "Grab a handle and move your hand towards a handle of a different colour" +
+                      "\n\nScaled Movement\n\n" +
+                      "While moving the Handle, grab the other trigger";
+        m_AudioSource.Play();
+        
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.trigger && m_ControllerHints.handStatus.right.trigger);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_SDOFManipulation.Flash(false);
+
+        GameObject cube = Instantiate(m_Cube);
+        cube.transform.SetParent(m_Objects.transform);
+        cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 0.0f)));
+
+        GameObject x = Instantiate(m_X);
+        x.transform.SetParent(m_Objects.transform);
+        x.transform.SetPositionAndRotation(new Vector3(0.4f, 0.0001f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 0.0f, 0.0f)));
+
+        m_Text.text = "Place the cube on the X\n\n" +
+                      "Separated Degrees of Freedom Translation\n" +
+                      "While grabbing the Handle, move your hand towards or away from the manipulator\n\n" +
+                      "Separated Degrees of Freedom Rotation\n" +
+                      "While grabbing the Handle, move your hand towards a handle of a different colour\n\n" +
+                      "Scaled Movement\n" +
+                      "While moving the Handle, grab the other trigger";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
+
+        m_Text.text = "Deselect Gripper Control\n\n" +
+                      "Touch the trackpad and deselect the gripper control";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        yield return new WaitUntil(() => !m_GripperControl.isGripping);
+
+        m_Text.text = "Deselect SDOF Manipulation\n\n" +
+                      "Touch the trackpad and deselect SDOF manipulation";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        GameObject.Destroy(cube);
+        GameObject.Destroy(x);
+
+        stage = Stage.RAILCREATOR;
+
+        m_ActiveCoroutine = null;
+    }
+
+    private IEnumerator RailCreator()
+    {
+        m_Text.text = "Resetting Robot Position\n\n" +
+                      "Please wait while we reset the robot's position";
+
+        GameObject ros = GameObject.FindGameObjectWithTag("ROS");
+        ros.GetComponent<ROSPublisher>().PublishResetPose();
+
+        yield return new WaitForSeconds(2.0f);
+        yield return new WaitUntil(() => ros.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
+
+        m_Manipulator.ResetPosition();
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        m_SpriteRenderer.sprite = m_Sprites[2];
+        m_Text.text = "Select Rail Creator\n\n" +
+                      "Touch the trackpad and select the rail creator";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.RAILCREATOR);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        GameObject target = Instantiate(m_GhostManipulator);
+        target.transform.SetParent(m_Objects.transform);
+        target.transform.SetPositionAndRotation(new Vector3(0.3f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f, -90.0f, 90.0f)));
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Rail Creator\n\n" +
+                      "Place the manipulator on the target manipulator";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_Manipulator.Flash(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+
+        m_Text.text += "\n\nThe Rail\n\n" +
+                      "Notice a rail is created from the robot's gripper to the manipulator";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Manipulator.gameObject, target) && !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_Manipulator.Flash(false);
+
+        m_Text.text = "The Planning Robot\n\n" +
+                      "The planning robot shows the path that the robot will take while moving along that rail";
+        m_AudioSource.Play();
+
+        yield return new WaitForSeconds(5.0f);
+
+        target.transform.position = new Vector3(0.3f, 0.9f, -0.4f);
+
+        m_Text.text = "Move the Manipulator\n\n" +
+                      "Place the manipulator on the target manipulator again";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_Manipulator.Flash(true);
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Manipulator.gameObject, target) && !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_Manipulator.Flash(false);
+
+        m_Text.text = "The Planning Robot\n\n" +
+                      "The manipulator will turn red and play a sound if the robot is incapable of moving to a location\n\n" +
+                      "The planning robot will follow the rail up to the point that the robot can reach";
+        m_AudioSource.Play();
+
+        yield return new WaitForSeconds(2.0f);
+
+        m_Text.text += "\n\nGrab the right trigger to continue";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger);
+
+        m_Text.text = "Deleting a Rail\n\n" +
+                      "To delete a rail, just grab the trigger while the hand is not hovering the manipulator\n\n" +
+                      "Delete all of the rails";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+
+        Rails rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
+        yield return new WaitUntil(() => rails.rails.Count() == 0);
+
+        GameObject cube = Instantiate(m_Cube);
+        cube.transform.SetParent(m_Objects.transform);
+        cube.transform.position = new Vector3(-0.4f, 0.05f, -0.4f);
+
+        GameObject x = Instantiate(m_X);
+        x.transform.SetParent(m_Objects.transform);
+        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
+
+        target.transform.position = new Vector3(-0.4f, 0.39f, -0.4f);
+
+        m_Text.text = "Plan a Robot Path\n\n" +
+                      "Follow the target manipulators to create a path for placing the cube";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Manipulator.gameObject, target) && !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        target.transform.position = new Vector3(-0.4f, 0.2f, -0.4f);
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Manipulator.gameObject, target) && !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        target.transform.position = new Vector3(0.4f, 0.25f, -0.4f);
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Manipulator.gameObject, target) && !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        GameObject.Destroy(target);
+        GameObject.Destroy(cube);
+        GameObject.Destroy(x);
+
+        stage = Stage.RAIL;
+
+        m_ActiveCoroutine = null;
+    }
+
+    private IEnumerator Rail()
+    {
+        m_SpriteRenderer.sprite = m_Sprites[3];
+        m_Text.text = "Select Rail Manipulation\n\n" +
+                      "Touch the trackpad and select rail manipulation";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.RAIL);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Rail Manipulation\n\n" +
+                      "Grab the manipulator and move it along the rail";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_Manipulator.Flash(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+
+        m_Text.text += "\n\nScaled Movement\n\n" +
+                      "Grab the trigger of the other hand to activate scaled movement";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.trigger && m_ControllerHints.handStatus.right.trigger);
+
+        m_Text.text = "Rail Manipulation\n\n" +
+                      "Now release the manipulator";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_Manipulator.Flash(false);
+
+        m_Text.text = "Rail Manipulation\n\n" +
+                      "On your left controller, rest your thumb on the trackpad in the right direction";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTouchRightHint(true);
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.touchRight);
+
+        m_ControllerHints.ShowTouchRightHint(false);
+
+        m_Text.text = "Rail Manipulation\n\n" +
+                      "Now rest your thumb on the trackpad in the left direction";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTouchLeftHint(true);
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.touchLeft);
+
+        m_ControllerHints.ShowTouchLeftHint(false);
+
+        m_Text.text = "Rail Manipulation\n\n" +
+                      "To move forwards along the rail, touch right\n" +
+                      "To move backwards along the rail, touch left\n\n" +
+                      "Scaled Movement\n\n" +
+                      "Grab the right trigger to scale the movement";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger);
+        yield return new WaitUntil(() => !m_ControllerHints.handStatus.right.trigger);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+
+        GameObject cube = Instantiate(m_Cube);
+        cube.transform.SetParent(m_Objects.transform);
+        cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 0.0f)));
+
+        GameObject x = Instantiate(m_X);
+        x.transform.SetParent(m_Objects.transform);
+        x.transform.SetPositionAndRotation(new Vector3(0.4f, 0.0001f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 0.0f, 0.0f)));
+
+        m_Text.text = "Place the cube on the X\n\n" +
+                      "Rail Manipulation\n" +
+                      "Grab and move the manipulator OR\n" +
+                      "Use the left directional pad to move the robot\n\n" +
+                      "Scaled Movement\n" +
+                      "Grab the trigger of the other hand to activate scaled movement";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
+
+        m_Text.text = "Deselect Gripper Control\n\n" +
+                      "Touch the trackpad and deselect the gripper control";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        yield return new WaitUntil(() => !m_GripperControl.isGripping);
+
+        m_Text.text = "Deselect Rail Manipulation\n\n" +
+                      "Touch the trackpad and deselect Rail manipulation";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        GameObject.Destroy(cube);
+        GameObject.Destroy(x);
+
+        stage = Stage.WAIT;
+
+        m_ActiveCoroutine = null;
     }
 
     private IEnumerator Practice()
@@ -334,7 +687,7 @@ public class Tutorial : MonoBehaviour
 
     private bool CheckVec3Distance(GameObject first, GameObject second)
     {
-        if (Vector3.Distance(first.transform.position, second.transform.position) < ManipulationMode.DISTANCETHRESHOLD)
+        if (Vector3.Distance(first.transform.position, second.transform.position) < ExperimentManager.ERRORTHRESHOLD)
             return true;
         else
             return false;
@@ -342,7 +695,7 @@ public class Tutorial : MonoBehaviour
 
     private bool CheckVec2Distance(GameObject first, GameObject second)
     {
-        if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+        if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < ExperimentManager.ERRORTHRESHOLD)
             return true;
         else
             return false;

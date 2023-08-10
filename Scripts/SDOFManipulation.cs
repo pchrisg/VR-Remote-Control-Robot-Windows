@@ -48,7 +48,7 @@ public class SDOFManipulation : MonoBehaviour
 
             if (isInteracting)
             {
-                if (m_Trigger.GetStateUp(m_InteractingHand.handType) || m_Trigger.GetStateUp(m_OtherHand.handType))
+                if (m_Trigger.GetStateUp(m_InteractingHand.handType))
                     TriggerReleased();
 
                 else
@@ -56,7 +56,7 @@ public class SDOFManipulation : MonoBehaviour
                     if (m_Trigger.GetStateDown(m_OtherHand.handType))
                     {
                         m_InitPos = m_Interactable.transform.position;
-                        m_InitDir = m_Interactable.transform.parent.up;
+                        m_InitDir = m_InitPos - m_Manipulator.transform.position;
                     }
 
                     if (m_Trigger.GetState(m_InteractingHand.handType))
@@ -73,12 +73,12 @@ public class SDOFManipulation : MonoBehaviour
             m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
             isInteracting = true;
             m_InitPos = m_Interactable.transform.position;
-            m_InitDir = m_Interactable.transform.parent.up;
+            m_InitDir = m_InitPos - m_Manipulator.transform.position;
 
-            if (m_InteractingHand != Player.instance.rightHand)
-                m_OtherHand = Player.instance.rightHand;
-            else
+            if (m_InteractingHand == Player.instance.rightHand)
                 m_OtherHand = Player.instance.leftHand;
+            else
+                m_OtherHand = Player.instance.rightHand;
         }
     }
 
@@ -89,18 +89,19 @@ public class SDOFManipulation : MonoBehaviour
             Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitHandPos;
             if (connectingVector.magnitude >= ManipulationMode.DISTANCETHRESHOLD)
             {
-                Transform handleAxis = m_Interactable.transform.parent;
-
-                float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, handleAxis.up.normalized)) * 180 / Mathf.PI;
-                if ((Mathf.Abs(angle - 90.0f) < angle) && (Mathf.Abs(angle - 90.0f) < Mathf.Abs(180.0f - angle)))
+                float axisUpDotCV = Vector3.Dot(m_InitDir.normalized, connectingVector.normalized);
+                if (Mathf.Abs(axisUpDotCV) < 0.5)   // if angle > 45deg
                 {
-                    angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, handleAxis.right.normalized)) * 180 / Mathf.PI;
-                    if ((Mathf.Abs(angle - 90.0f) < angle) && (Mathf.Abs(angle - 90.0f) < Mathf.Abs(180.0f - angle)))
+                    isRotating = true;
+
+                    Transform handleAxis = m_Interactable.transform.parent;
+                    float axisRightDotCV = Vector3.Dot(connectingVector.normalized, handleAxis.right.normalized);
+                    float axisForwardDotCV = Vector3.Dot(connectingVector.normalized, handleAxis.forward.normalized);
+
+                    if (Mathf.Abs(axisRightDotCV) < Mathf.Abs(axisForwardDotCV))    // if angle to right closer to 90deg
                         m_PlaneNormal = handleAxis.right;
                     else
                         m_PlaneNormal = handleAxis.forward;
-
-                    isRotating = true;
                 }
                 else
                     isTranslating = true;
@@ -120,66 +121,76 @@ public class SDOFManipulation : MonoBehaviour
     void Translate()
     {
         Transform handleAxis = m_Interactable.transform.parent;
-        Transform widget = handleAxis.parent;
 
-        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_Interactable.transform.position;
+        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
         Vector3 projectedConnectingVector = Vector3.Project(connectingVector, handleAxis.up);
 
         if (m_Trigger.GetState(m_OtherHand.handType))
-        {
-            Vector3 scaledVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
-            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, handleAxis.up) * ManipulationMode.SCALINGFACTOR;
+            projectedConnectingVector *= ManipulationMode.SCALINGFACTOR;
 
-            projectedConnectingVector = scaledPos - m_Interactable.transform.position;
-        }
+        Vector3 movement = m_InitPos + projectedConnectingVector - m_Interactable.transform.position;
 
-        Vector3 position = m_Manipulator.transform.position + projectedConnectingVector;
+        Vector3 position = m_Manipulator.transform.position + movement;
 
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, m_Manipulator.transform.rotation);
     }
 
     void Rotate()
     {
-        Transform handleAxis = m_Interactable.transform.parent;
-        Transform widget = handleAxis.parent;
+        /*Vector3 fromVector = m_Interactable.transform.parent.up;
+        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_Manipulator.transform.position;
 
-        Vector3 connectingVector;
-        if (handleAxis.GetChild(0) == m_Interactable.transform)
-            connectingVector = m_InteractingHand.objectAttachmentPoint.position - widget.transform.position;
-        else
-            connectingVector = widget.transform.position - m_InteractingHand.objectAttachmentPoint.position;
+        if (Vector3.Dot(fromVector.normalized, connectingVector.normalized) < 0)    // if angle greater than 90deg
+            fromVector *= -1;
 
-        Vector3 direction = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
+        Vector3 toVector = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
 
-        direction = Snapping(direction);
-        float angle = Vector3.SignedAngle(handleAxis.up, direction, m_PlaneNormal);
+        //toVector = Snapping(toVector);
+        float angle = Vector3.SignedAngle(fromVector, toVector, m_PlaneNormal);
 
         if (m_Trigger.GetState(m_OtherHand.handType))
         {
-            angle = Vector3.SignedAngle(m_InitDir, direction, m_PlaneNormal) * ManipulationMode.SCALINGFACTOR;
-            m_InitDir = direction;
+            angle = Vector3.SignedAngle(m_InitDir, toVector, m_PlaneNormal) * ManipulationMode.SCALINGFACTOR;
+            m_InitDir = toVector;
         }
 
         Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_Manipulator.transform.rotation;
+        m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);*/
+
+        Vector3 currentVector = m_Interactable.transform.position - m_Manipulator.transform.position;
+        float currentAngle = Vector3.SignedAngle(m_InitDir, currentVector, m_PlaneNormal);
+
+        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_Manipulator.transform.position;
+        Vector3 targetVector = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
+        float targetAngle = Vector3.SignedAngle(m_InitDir, targetVector, m_PlaneNormal);
+
+        if (m_Trigger.GetState(m_OtherHand.handType))
+            targetAngle *= ManipulationMode.SCALINGFACTOR;
+        else
+            targetAngle = Snapping(targetVector);
+
+        float movement = targetAngle - currentAngle;
+
+        Quaternion rotation = Quaternion.AngleAxis(movement, m_PlaneNormal) * m_Manipulator.transform.rotation;
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
     }
 
-    private Vector3 Snapping(Vector3 direction)
+    private float Snapping(Vector3 targetVector)
     {
-        float angleToX = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.right.normalized)) * Mathf.Rad2Deg;
-        float angleToY = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        float angleToZ = Mathf.Acos(Vector3.Dot(direction.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
+        float angleToX = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.right.normalized)) * Mathf.Rad2Deg;
+        float angleToY = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        float angleToZ = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
 
         if (Mathf.Abs(90.0f - angleToX) < ManipulationMode.ANGLETHRESHOLD)
-            direction = Vector3.ProjectOnPlane(direction, Vector3.right);
+            targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.right);
 
         if (Mathf.Abs(90.0f - angleToY) < ManipulationMode.ANGLETHRESHOLD)
-            direction = Vector3.ProjectOnPlane(direction, Vector3.up);
+            targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.up);
 
         if (Mathf.Abs(90.0f - angleToZ) < ManipulationMode.ANGLETHRESHOLD)
-            direction = Vector3.ProjectOnPlane(direction, Vector3.forward);
+            targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.forward);
 
-        return direction;
+        return Vector3.SignedAngle(m_InitDir, targetVector, m_PlaneNormal);
     }
 
     private void TriggerReleased()
@@ -194,5 +205,13 @@ public class SDOFManipulation : MonoBehaviour
             m_PlanningRobot.RequestTrajectory();
         else
             m_ROSPublisher.PublishMoveArm();
+    }
+
+    public void Flash(bool value)
+    {
+        foreach(SDOFHandle handle in gameObject.GetComponentsInChildren<SDOFHandle>())
+        {
+            handle.Flash(value);
+        }
     }
 }

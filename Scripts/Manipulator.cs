@@ -46,7 +46,7 @@ public class Manipulator : MonoBehaviour
 
         if (isColliding)
             color = m_CollidingColor;
-        else
+        else if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
             color = CheckSnapping();
 
         if(color != m_CurrentColor)

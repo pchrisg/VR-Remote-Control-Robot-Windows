@@ -120,7 +120,7 @@ public class DirectManipulation : MonoBehaviour
             position = PositionSnapping(position);
             rotation = LookAtFocusObject(position);
         }
-            
+
         else if (!m_Trigger.GetState(m_OtherHand.handType))
             rotation = RotationSnapping();
 

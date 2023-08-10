@@ -36,6 +36,8 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private bool m_Experiment2Active = false;
     [SerializeField] private bool m_Running = false;
 
+    [HideInInspector] public const float ERRORTHRESHOLD = 0.05f; //5cm
+
     //Tutorial
     private Tutorial m_Tutorial = null;
 
