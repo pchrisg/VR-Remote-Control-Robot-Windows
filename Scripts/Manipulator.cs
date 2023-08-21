@@ -7,6 +7,7 @@ public class Manipulator : MonoBehaviour
     [SerializeField] private Material m_ManipulatorMat;
 
     private ManipulationMode m_ManipulationMode = null;
+    private CollisionObjects m_CollisionObjects = null;
 
     private Transform m_Robotiq;
 
@@ -18,12 +19,13 @@ public class Manipulator : MonoBehaviour
     private Color m_XZ_PlaneColor = new Color(1.0f, 0.0f, 1.0f, 0.4f);
     private Color m_FocusObjectColor = new Color(1.0f, 1.0f, 0.0f, 0.4f);
 
-    private bool isColliding = false;
+    public bool isColliding = false;
     private Coroutine m_Flashing = null;
 
     private void Awake()
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
         m_CurrentColor = m_DefaultColor;
@@ -47,7 +49,7 @@ public class Manipulator : MonoBehaviour
         if (isColliding)
             color = m_CollidingColor;
         else if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
-            color = CheckSnapping();
+            color = CheckSnapping(color);
 
         if(color != m_CurrentColor)
         {
@@ -61,16 +63,25 @@ public class Manipulator : MonoBehaviour
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
     }
 
-    private Color CheckSnapping()
+    private Color CheckSnapping(Color color)
     {
-        float angle = Mathf.Acos(Vector3.Dot(transform.right, Vector3.up)) * Mathf.Rad2Deg;
+        float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
         if (float.IsNaN(angle) || angle < 0.1f)
-            return m_Y_AxisColor;
+            color = m_Y_AxisColor;
 
-        if (Mathf.Abs(angle - 90.0f) < 0.1f)
-            return m_XZ_PlaneColor;
+        if (Mathf.Abs(90.0f - angle) < 0.1f)
+            color = m_XZ_PlaneColor;
 
-        return m_DefaultColor;
+        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+        {
+            Vector3 connectingVector = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
+            angle = Mathf.Acos(Vector3.Dot(gameObject.transform.right.normalized, connectingVector.normalized)) * Mathf.Rad2Deg;
+
+            if (float.IsNaN(angle) || angle < 0.1f)
+                color =  m_FocusObjectColor;
+        }
+
+        return color;
     }
 
     public void Colliding(bool value)

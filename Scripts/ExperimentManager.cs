@@ -122,7 +122,6 @@ public class ExperimentManager : MonoBehaviour
                     m_Experiment1.Setup(false);
                     m_Experiment1Active = false;
 
-                    m_Glassbox.SetActive(false);
                     m_Tutorial.Setup(true);
                     m_TutorialActive = true;
                 }
@@ -167,9 +166,6 @@ public class ExperimentManager : MonoBehaviour
 
                 if (!m_Experiment1Active)
                 {
-                    if (m_TutorialActive)
-                        m_Glassbox.SetActive(true);
-
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
 
@@ -188,9 +184,6 @@ public class ExperimentManager : MonoBehaviour
 
                 if (!m_Experiment2Active)
                 {
-                    if (m_TutorialActive)
-                        m_Glassbox.SetActive(true);
-
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
 
@@ -310,9 +303,7 @@ public class ExperimentManager : MonoBehaviour
         GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPosition();
 
         m_Table.SetActive(true);
-        if(!m_TutorialActive)
-            m_Glassbox.SetActive(true);
-
+        m_Glassbox.SetActive(true);
         m_Objects.SetActive(true);
 
         yield return null;

@@ -56,7 +56,7 @@ public class EmergencyStop : MonoBehaviour
     {
         if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
         {
-            if (Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime + 0.5f)
+            if (Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime * 2.0f)
             {
                 m_CollisionTime = Time.time;
                 print(Time.time.ToString() + "Stay - " + gameObject.name + " collided with " + other.transform.parent.gameObject.name);

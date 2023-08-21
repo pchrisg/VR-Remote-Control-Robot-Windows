@@ -10,6 +10,7 @@ public class SDOFManipulation : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
+    private CollisionObjects m_CollisionObjects = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -33,6 +34,7 @@ public class SDOFManipulation : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
     }
@@ -72,8 +74,8 @@ public class SDOFManipulation : MonoBehaviour
         {
             m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
             isInteracting = true;
-            m_InitPos = m_Interactable.transform.position;
-            m_InitDir = m_InitPos - m_Manipulator.transform.position;
+            m_InitPos = m_Manipulator.transform.position;
+            m_InitDir = m_Interactable.transform.position - m_InitPos;
 
             if (m_InteractingHand == Player.instance.rightHand)
                 m_OtherHand = Player.instance.leftHand;
@@ -118,45 +120,56 @@ public class SDOFManipulation : MonoBehaviour
             m_ROSPublisher.PublishMoveArm();
     }
 
-    void Translate()
+    private void Translate()
     {
-        Transform handleAxis = m_Interactable.transform.parent;
-
         Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
-        Vector3 projectedConnectingVector = Vector3.Project(connectingVector, handleAxis.up);
+        Vector3 projectedConnectingVector = Vector3.Project(connectingVector, m_InitDir);
 
         if (m_Trigger.GetState(m_OtherHand.handType))
             projectedConnectingVector *= ManipulationMode.SCALINGFACTOR;
 
-        Vector3 movement = m_InitPos + projectedConnectingVector - m_Interactable.transform.position;
-
+        Vector3 movement = m_InitPos + projectedConnectingVector - m_InitDir - m_Manipulator.transform.position;
         Vector3 position = m_Manipulator.transform.position + movement;
+
+        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+            position = PositionSnapping(position);
 
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, m_Manipulator.transform.rotation);
     }
 
-    void Rotate()
+    private Vector3 PositionSnapping(Vector3 position)
     {
-        /*Vector3 fromVector = m_Interactable.transform.parent.up;
-        Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_Manipulator.transform.position;
+        Transform focusObjectPose = m_CollisionObjects.m_FocusObject.transform;
 
-        if (Vector3.Dot(fromVector.normalized, connectingVector.normalized) < 0)    // if angle greater than 90deg
-            fromVector *= -1;
+        Plane focObjXYPlane = new Plane(focusObjectPose.forward, focusObjectPose.position);
+        Plane focObjXZPlane = new Plane(focusObjectPose.up, focusObjectPose.position);
+        Plane focObjYZPlane = new Plane(focusObjectPose.right, focusObjectPose.position);
+        Ray direction = new Ray(m_InitPos, m_InitDir);
+        float intersection = 0.0f;
 
-        Vector3 toVector = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
+        Vector3 connectingVector = position - focusObjectPose.position;
 
-        //toVector = Snapping(toVector);
-        float angle = Vector3.SignedAngle(fromVector, toVector, m_PlaneNormal);
+        float angleToFocObjX = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObjectPose.right.normalized)) * Mathf.Rad2Deg;
+        float angleToFocObjY = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObjectPose.up.normalized)) * Mathf.Rad2Deg;
+        float angleToFocObjZ = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObjectPose.forward.normalized)) * Mathf.Rad2Deg;
 
-        if (m_Trigger.GetState(m_OtherHand.handType))
-        {
-            angle = Vector3.SignedAngle(m_InitDir, toVector, m_PlaneNormal) * ManipulationMode.SCALINGFACTOR;
-            m_InitDir = toVector;
-        }
+        if (Mathf.Abs(90.0f - angleToFocObjX) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjX) > 0.1f)
+            focObjYZPlane.Raycast(direction, out intersection);
 
-        Quaternion rotation = Quaternion.AngleAxis(angle, m_PlaneNormal) * m_Manipulator.transform.rotation;
-        m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);*/
+        if (Mathf.Abs(90.0f - angleToFocObjY) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjY) > 0.1f)
+            focObjXZPlane.Raycast(direction, out intersection);
 
+        if (Mathf.Abs(90.0f - angleToFocObjZ) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjZ) > 0.1f)
+            focObjXYPlane.Raycast(direction, out intersection);
+
+        if (intersection != 0.0f)
+            position = direction.GetPoint(intersection);
+        
+        return position;
+    }
+
+    private void Rotate()
+    {
         Vector3 currentVector = m_Interactable.transform.position - m_Manipulator.transform.position;
         float currentAngle = Vector3.SignedAngle(m_InitDir, currentVector, m_PlaneNormal);
 
@@ -167,7 +180,7 @@ public class SDOFManipulation : MonoBehaviour
         if (m_Trigger.GetState(m_OtherHand.handType))
             targetAngle *= ManipulationMode.SCALINGFACTOR;
         else
-            targetAngle = Snapping(targetVector);
+            targetAngle = RotationSnapping(targetVector);
 
         float movement = targetAngle - currentAngle;
 
@@ -175,20 +188,70 @@ public class SDOFManipulation : MonoBehaviour
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
     }
 
-    private float Snapping(Vector3 targetVector)
+    private float RotationSnapping(Vector3 targetVector)
     {
-        float angleToX = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.right.normalized)) * Mathf.Rad2Deg;
-        float angleToY = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        float angleToZ = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
+        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+        {
+            Transform focusObjectPose = m_CollisionObjects.m_FocusObject.transform;
 
-        if (Mathf.Abs(90.0f - angleToX) < ManipulationMode.ANGLETHRESHOLD)
-            targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.right);
+            float angleToFocObjX = Mathf.Acos(Vector3.Dot(targetVector.normalized, focusObjectPose.right.normalized)) * Mathf.Rad2Deg;
+            float angleToFocObjY = Mathf.Acos(Vector3.Dot(targetVector.normalized, focusObjectPose.up.normalized)) * Mathf.Rad2Deg;
+            float angleToFocObjZ = Mathf.Acos(Vector3.Dot(targetVector.normalized, focusObjectPose.forward.normalized)) * Mathf.Rad2Deg;
 
-        if (Mathf.Abs(90.0f - angleToY) < ManipulationMode.ANGLETHRESHOLD)
-            targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.up);
+            if (Mathf.Abs(90.0f - angleToFocObjX) < ManipulationMode.ANGLETHRESHOLD)
+                targetVector = Vector3.ProjectOnPlane(targetVector, focusObjectPose.right.normalized);
 
-        if (Mathf.Abs(90.0f - angleToZ) < ManipulationMode.ANGLETHRESHOLD)
-            targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.forward);
+            if (Mathf.Abs(90.0f - angleToFocObjY) < ManipulationMode.ANGLETHRESHOLD)
+                targetVector = Vector3.ProjectOnPlane(targetVector, focusObjectPose.up.normalized);
+
+            if (Mathf.Abs(90.0f - angleToFocObjZ) < ManipulationMode.ANGLETHRESHOLD)
+                targetVector = Vector3.ProjectOnPlane(targetVector, focusObjectPose.forward.normalized);
+
+            Vector3 connectingVector = m_Manipulator.transform.position - focusObjectPose.position;
+            
+            float angle = Mathf.Acos(Vector3.Dot(m_Manipulator.transform.right.normalized, connectingVector.normalized)) * Mathf.Rad2Deg;
+            if (angle < 90.0f)
+            {
+                Vector3 currentVector = m_Interactable.transform.position - m_Manipulator.transform.position;
+                float dotProd = Vector3.Dot(m_Manipulator.transform.right.normalized, currentVector.normalized);
+                if (Mathf.Abs(dotProd) < 0.5f)
+                {
+                    float angleToConVec = Mathf.Acos(Vector3.Dot(targetVector.normalized, connectingVector.normalized)) * Mathf.Rad2Deg;
+
+                    if (Mathf.Abs(90.0f - angleToConVec) < ManipulationMode.ANGLETHRESHOLD)
+                        targetVector = Vector3.ProjectOnPlane(targetVector, connectingVector);
+                }
+                else
+                {
+                    Vector3 norm1 = Vector3.ProjectOnPlane(Vector3.forward, connectingVector);
+                    Vector3 norm2 = Vector3.Cross(connectingVector.normalized, norm1.normalized);
+
+                    float angleToNorm1 = Mathf.Acos(Vector3.Dot(targetVector.normalized, norm1.normalized)) * Mathf.Rad2Deg;
+                    float angleToNorm2 = Mathf.Acos(Vector3.Dot(targetVector.normalized, norm2.normalized)) * Mathf.Rad2Deg;
+
+                    if (Mathf.Abs(90.0f - angleToNorm1) < ManipulationMode.ANGLETHRESHOLD)
+                        targetVector = Vector3.ProjectOnPlane(targetVector, norm1);
+
+                    if (Mathf.Abs(90.0f - angleToNorm2) < ManipulationMode.ANGLETHRESHOLD)
+                        targetVector = Vector3.ProjectOnPlane(targetVector, norm2);
+                }
+            }
+        }
+        else
+        {
+            float angleToX = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.right.normalized)) * Mathf.Rad2Deg;
+            float angleToY = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+            float angleToZ = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
+
+            if (Mathf.Abs(90.0f - angleToX) < ManipulationMode.ANGLETHRESHOLD)
+                targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.right);
+
+            if (Mathf.Abs(90.0f - angleToY) < ManipulationMode.ANGLETHRESHOLD)
+                targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.up);
+
+            if (Mathf.Abs(90.0f - angleToZ) < ManipulationMode.ANGLETHRESHOLD)
+                targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.forward);
+        }
 
         return Vector3.SignedAngle(m_InitDir, targetVector, m_PlaneNormal);
     }

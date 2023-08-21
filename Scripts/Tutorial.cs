@@ -4,7 +4,6 @@ using Valve.VR.InteractionSystem;
 using TutorialStages;
 using System.Collections;
 using UnityEngine.UI;
-using static UnityEngine.GraphicsBuffer;
 using System.Linq;
 
 namespace TutorialStages
@@ -34,6 +33,7 @@ public class Tutorial : MonoBehaviour
     [SerializeField] private GameObject m_GhostManipulator = null;
     [SerializeField] private GameObject m_Cube = null;
     [SerializeField] private GameObject m_X = null;
+    [SerializeField] private GameObject m_Obstacle = null;
 
     [Header("Sprites")]
     [SerializeField] private Sprite[] m_Sprites = new Sprite[7];
@@ -44,6 +44,7 @@ public class Tutorial : MonoBehaviour
     private GripperControl m_GripperControl = null;
     private ManipulationMode m_ManipulationMode = null;
     private ControllerHints m_ControllerHints = null;
+    private CollisionObjects m_CollisionObjects = null;
 
     // Game Objects
     private GameObject m_Objects = null;
@@ -69,6 +70,8 @@ public class Tutorial : MonoBehaviour
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+
         m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
         
@@ -112,7 +115,7 @@ public class Tutorial : MonoBehaviour
             if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
                 stage = Stage.SIMPLEDIRECT;
             else if (m_ManipulationMode.mode == Mode.DIRECT)
-                stage = Stage.DIRECT;
+                stage = Stage.COLOBJCREATOR;
             else
                 m_ManipulationMode.ToggleDirect();
         }
@@ -139,6 +142,18 @@ public class Tutorial : MonoBehaviour
         {
             if (m_ActiveCoroutine == null)
                 m_ActiveCoroutine = StartCoroutine(RailCreator());
+        }
+
+        if (stage == Stage.COLOBJCREATOR)
+        {
+            if (m_ActiveCoroutine == null)
+                m_ActiveCoroutine = StartCoroutine(CollisionObject());
+        }
+
+        if (stage == Stage.ATTOBJCREATOR)
+        {
+            if (m_ActiveCoroutine == null)
+                m_ActiveCoroutine = StartCoroutine(AttachableObject());
         }
 
         if (stage == Stage.PRACTICE)
@@ -217,7 +232,7 @@ public class Tutorial : MonoBehaviour
 
         GameObject x = Instantiate(m_X);
         x.transform.SetParent(m_Objects.transform);
-        x.transform.SetPositionAndRotation(new Vector3(0.4f, 0.0001f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 0.0f, 0.0f)));
+        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
 
         m_SpriteRenderer.sprite = m_Sprites[0];
         m_Text.text = "Select Gripper Control\n\n" +
@@ -373,7 +388,7 @@ public class Tutorial : MonoBehaviour
 
         GameObject x = Instantiate(m_X);
         x.transform.SetParent(m_Objects.transform);
-        x.transform.SetPositionAndRotation(new Vector3(0.4f, 0.0001f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 0.0f, 0.0f)));
+        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
 
         m_Text.text = "Place the cube on the X\n\n" +
                       "Separated Degrees of Freedom Translation\n" +
@@ -435,7 +450,7 @@ public class Tutorial : MonoBehaviour
 
         GameObject target = Instantiate(m_GhostManipulator);
         target.transform.SetParent(m_Objects.transform);
-        target.transform.SetPositionAndRotation(new Vector3(0.3f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f, -90.0f, 90.0f)));
+        target.transform.position = new Vector3(0.3f, 0.39f, -0.4f);
 
         m_SpriteRenderer.sprite = null;
         m_Text.text = "Rail Creator\n\n" +
@@ -613,11 +628,11 @@ public class Tutorial : MonoBehaviour
 
         GameObject cube = Instantiate(m_Cube);
         cube.transform.SetParent(m_Objects.transform);
-        cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 0.0f)));
+        cube.transform.position = new Vector3(-0.4f, 0.05f, -0.4f);
 
         GameObject x = Instantiate(m_X);
         x.transform.SetParent(m_Objects.transform);
-        x.transform.SetPositionAndRotation(new Vector3(0.4f, 0.0001f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 0.0f, 0.0f)));
+        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
 
         m_Text.text = "Place the cube on the X\n\n" +
                       "Rail Manipulation\n" +
@@ -648,7 +663,168 @@ public class Tutorial : MonoBehaviour
         GameObject.Destroy(cube);
         GameObject.Destroy(x);
 
-        stage = Stage.WAIT;
+        stage = Stage.COLOBJCREATOR;
+
+        m_ActiveCoroutine = null;
+    }
+
+    private IEnumerator CollisionObject()
+    {
+        /*GameObject target = Instantiate(m_GhostManipulator);
+        target.transform.SetParent(m_Objects.transform);
+        target.transform.position = new Vector3(0.0f, 0.39f, -0.8f);
+
+        m_Text.text = "Collision Objects\n\n" +
+                      "Move the manipulator to the target";
+        m_AudioSource.Play();
+
+        GameObject ros = GameObject.FindGameObjectWithTag("ROS");
+        yield return new WaitUntil(() => ros.GetComponent<ROSPublisher>().locked);
+
+        Destroy(target);
+
+        m_Text.text = "Collision Objects\n\n" +
+                      "GAHH! You just smashed the glass of a very expensive glovebox \\(><)/\n\n" +
+                      "Please contemplate what you've done while we reset the robot's position and fix the glass";
+        m_AudioSource.Play();
+        m_AudioSource.Play();
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => !ros.GetComponent<ROSPublisher>().locked);
+
+        ros.GetComponent<ROSPublisher>().PublishResetPose();
+
+        yield return new WaitForSeconds(2.0f);
+        yield return new WaitUntil(() => ros.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
+
+        m_Manipulator.ResetPosition();
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        m_SpriteRenderer.sprite = m_Sprites[4];
+        m_Text.text = "Collision Objects\n\n" +
+                      "Right, let's try to not break anything else.\n" +
+                      "Select the Collision Objects tool";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.COLOBJCREATOR);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Collision Objects\n\n" +
+                      "Grab the grip button to create a pointing gesture";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
+
+        m_ControllerHints.ShowGripHint(m_LeftHand, false);
+        m_ControllerHints.ShowGripHint(m_RightHand, false);
+
+        m_Text.text += "\n\nSelect the glass that you don't want the robot to crash into";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_CollisionObjects.m_CollisionObjects.Any());
+
+        m_Text.text = "Collision Objects\n\n" +
+                      "You can select as many collision objects as you want to avoid\n\n" +
+                      "Try selecting another";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_CollisionObjects.m_CollisionObjects.Count > 1);
+        yield return new WaitForSeconds(0.5f);
+
+        m_Text.text = "Collision Objects\n\n" +
+                      "Deselect the Collision Objects tool";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        target = Instantiate(m_GhostManipulator);
+        target.transform.SetParent(m_Objects.transform);
+        target.transform.position = new Vector3(0.0f, 0.39f, -0.8f);
+
+        m_Text.text = "Collision Objects\n\n" +
+                      "Now try to move the manipulator to the target again";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitForSeconds(3.0f);
+
+        m_Text.text = "Collision Objects\n\n" +
+                      "So you still can't reach that target huh?\n" +
+                      "Well at least you didn't smash the glass again \\(^^)/\n\n" +
+                      "I'll set an achievable target for you";
+        m_AudioSource.Play();
+
+        target.transform.position = new Vector3(-0.4f, 0.39f, -0.4f);
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target));
+
+        Destroy(target);
+
+        m_Text.text = "Place the cube on the X\n\n" +
+                      "AND DON'T HIT THE OBSTACLE";
+        m_AudioSource.Play();*/
+
+        bool collided = true;
+        while (collided)
+        {
+            GameObject cube = Instantiate(m_Cube);
+            cube.transform.SetParent(m_Objects.transform);
+            cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 0.0f)));
+
+            GameObject x = Instantiate(m_X);
+            x.transform.SetParent(m_Objects.transform);
+            x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
+
+            GameObject obstacle = Instantiate(m_Obstacle);
+            obstacle.transform.SetParent(m_Objects.transform);
+            obstacle.transform.SetPositionAndRotation(new Vector3(0.0f, 0.45f, -0.325f), Quaternion.Euler(new Vector3(0.0f,90.0f,0.0f)));
+
+            yield return new WaitUntil(() => obstacle == null || (CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false));
+
+            if (obstacle != null)
+                collided = false;
+            else
+            {
+                m_Text.text = "Place the cube on the X\n\n" +
+                              "Try using the collision objects tool\n\n" +
+                              "The robot won't collide but the cube still can, be careful!";
+                m_AudioSource.Play();
+
+                yield return new WaitUntil(() => !m_ManipulationMode.isInteracting);
+            }
+
+            Destroy(cube);
+            Destroy(x);
+            Destroy(obstacle);
+
+            
+        }
+
+        m_Text.text = "Well done! You're getting the hang of this!\n\n" +
+                      "Deselect the Gripper and any other tools";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => !m_GripperControl.isGripping && m_ManipulationMode.mode == Mode.DIRECT);
+
+        stage = Stage.ATTOBJCREATOR;
+
+        m_ActiveCoroutine = null;
+    }
+
+    private IEnumerator AttachableObject()
+    {
+        yield return null;
+
+        stage = Stage.PRACTICE;
 
         m_ActiveCoroutine = null;
     }

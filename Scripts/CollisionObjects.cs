@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
@@ -17,6 +18,14 @@ public class CollisionObjects : MonoBehaviour
 
     public bool isCreating = false;
 
+    public struct ColObj
+    {
+        public Transform parent;
+        public GameObject colObj;
+    }
+
+    public List<ColObj> m_CollisionObjects = new List<ColObj>();
+
     private void Start()
     {
         Invoke("SetFingerColliderScript", 0.5f);   //Adds CollisionObjectCreator to fingers
@@ -32,16 +41,6 @@ public class CollisionObjects : MonoBehaviour
         leftIndex.AddComponent<CollisionObjectCreator>();
         leftIndex.GetComponent<CollisionObjectCreator>().hand = Player.instance.leftHand;
     }
-
-    /*private void MakeGloveBox()
-    {
-        MakeBox(new Vector3(0.0f, -0.025f, -0.4f), new Vector3(1.3f, 0.05f, 1.3f)); // base
-        //MakeBox(new Vector3(-0.64f, 0.5f, -0.4f), new Vector3(0.02f, 1.0f, 1.3f)); // left
-        //MakeBox(new Vector3(0.64f, 0.5f, -0.4f), new Vector3(0.02f, 1.0f, 1.3f)); // right
-        //MakeBox(new Vector3(0.0f, 0.5f, -1.04f), new Vector3(1.3f, 1.0f, 0.02f)); // front
-        //MakeBox(new Vector3(0.0f, 0.5f, 0.24f), new Vector3(1.3f, 1.0f, 0.02f)); // back
-        //MakeBox(new Vector3(0.0f, 1.01f, -0.4f), new Vector3(1.3f, 0.02f, 1.3f)); // top
-    }*/
 
     /*private void MakeBox(Vector3 position, Vector3 scale)
     {
@@ -61,6 +60,45 @@ public class CollisionObjects : MonoBehaviour
         box.AddComponent<CollisionBox>();
         box.GetComponent<CollisionBox>().AddCollisionBox(GetFreeID().ToString());
     }*/
+
+    public void AddCollisionObject(GameObject colobj)
+    {
+        ColObj obj = new ColObj
+        {
+            parent = colobj.transform.parent,
+            colObj = colobj
+        };
+
+        m_CollisionObjects.Add(obj);
+        colobj.transform.SetParent(gameObject.transform);
+    }
+
+    public void RemoveCollisionObject(GameObject colObj)
+    {
+        foreach (var obj in m_CollisionObjects)
+        {
+            if(obj.colObj == colObj)
+            {
+                colObj.transform.SetParent(obj.parent);
+
+                m_CollisionObjects.Remove(obj);
+                break;
+            }
+        }
+    }
+
+    public void RemoveAllCollisionObjects()
+    {
+        foreach (var obj in m_CollisionObjects)
+        {
+            obj.colObj.transform.SetParent(obj.parent);
+
+            Destroy(obj.colObj.GetComponent<CollisionHandling>());
+
+            if (obj.colObj.GetComponent<CollisionObject>() != null)
+                Destroy(obj.colObj.GetComponent<CollisionObject>());
+        }
+    }
 
     public int GetFreeID()
     {

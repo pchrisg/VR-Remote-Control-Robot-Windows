@@ -5,15 +5,18 @@ using RosMessageTypes.Shape;
 using RosMessageTypes.Geometry;
 using Unity.Robotics.ROSTCPConnector.ROSGeometry;
 using RosMessageTypes.BuiltinInterfaces;
+using Unity.VisualScripting;
 
 public class CollisionObject : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
     private CollisionObjectMsg m_ColisionObject = null;
+    private CollisionObjects m_CollisionObjects = null;
 
     void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
     }
 
     public void OnDestroy()
@@ -42,6 +45,7 @@ public class CollisionObject : MonoBehaviour
 
         m_ColisionObject.primitive_poses[0] = pose;
 
+        m_CollisionObjects.AddCollisionObject(gameObject);
         m_ROSPublisher.PublishAddCollisionObject(m_ColisionObject);
     }
 
@@ -73,6 +77,7 @@ public class CollisionObject : MonoBehaviour
         Array.Resize(ref m_ColisionObject.primitives, 1);
         m_ColisionObject.primitives[0] = primitive;
 
+        m_CollisionObjects.AddCollisionObject(gameObject);
         m_ROSPublisher.PublishAddCollisionObject(m_ColisionObject);
     }
 
@@ -111,6 +116,7 @@ public class CollisionObject : MonoBehaviour
 
     public void RemoveCollisionObject()
     {
+        m_CollisionObjects.RemoveCollisionObject(gameObject);
         m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionObject);
     }
 
