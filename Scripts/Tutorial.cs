@@ -517,7 +517,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
         Rails rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
-        yield return new WaitUntil(() => rails.rails.Count() == 0);
+        yield return new WaitUntil(() => !rails.m_Rails.Any());
 
         GameObject cube = Instantiate(m_Cube);
         cube.transform.SetParent(m_Objects.transform);
@@ -670,7 +670,7 @@ public class Tutorial : MonoBehaviour
 
     private IEnumerator CollisionObject()
     {
-        /*GameObject target = Instantiate(m_GhostManipulator);
+        GameObject target = Instantiate(m_GhostManipulator);
         target.transform.SetParent(m_Objects.transform);
         target.transform.position = new Vector3(0.0f, 0.39f, -0.8f);
 
@@ -771,7 +771,7 @@ public class Tutorial : MonoBehaviour
 
         m_Text.text = "Place the cube on the X\n\n" +
                       "AND DON'T HIT THE OBSTACLE";
-        m_AudioSource.Play();*/
+        m_AudioSource.Play();
 
         bool collided = true;
         while (collided)
@@ -805,8 +805,6 @@ public class Tutorial : MonoBehaviour
             Destroy(cube);
             Destroy(x);
             Destroy(obstacle);
-
-            
         }
 
         m_Text.text = "Well done! You're getting the hang of this!\n\n" +

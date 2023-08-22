@@ -29,7 +29,7 @@ public class Manipulator : MonoBehaviour
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
         m_CurrentColor = m_DefaultColor;
-        m_ManipulatorMat.color = m_CurrentColor;
+        m_ManipulatorMat.color = m_DefaultColor;
     }
 
     private void OnDestroy()
@@ -65,8 +65,8 @@ public class Manipulator : MonoBehaviour
 
     private Color CheckSnapping(Color color)
     {
-        float angle = Mathf.Acos(Vector3.Dot(gameObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        if (float.IsNaN(angle) || angle < 0.1f)
+        float angle = Vector3.Angle(gameObject.transform.right.normalized, Vector3.up.normalized);
+        if (angle < 0.1f)
             color = m_Y_AxisColor;
 
         if (Mathf.Abs(90.0f - angle) < 0.1f)
@@ -75,9 +75,9 @@ public class Manipulator : MonoBehaviour
         if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
         {
             Vector3 connectingVector = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
-            angle = Mathf.Acos(Vector3.Dot(gameObject.transform.right.normalized, connectingVector.normalized)) * Mathf.Rad2Deg;
+            angle = Vector3.Angle(gameObject.transform.right.normalized, connectingVector.normalized);
 
-            if (float.IsNaN(angle) || angle < 0.1f)
+            if (angle < 0.1f)
                 color =  m_FocusObjectColor;
         }
 

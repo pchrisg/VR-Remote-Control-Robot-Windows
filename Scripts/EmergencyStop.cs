@@ -74,5 +74,4 @@ public class EmergencyStop : MonoBehaviour
                 renderer.material = m_OriginalMat;
         }
     }
-
 }

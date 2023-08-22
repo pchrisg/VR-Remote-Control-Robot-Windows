@@ -38,12 +38,6 @@ public class DirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if(m_FocusRot != Quaternion.identity && m_FocusRot != gameObject.transform.rotation)
-        {
-            m_ROSPublisher.PublishMoveArm();
-            m_FocusRot = Quaternion.identity;
-        }
-
         if (m_ManipulationMode.mode == Mode.DIRECT && !m_GripperControl.isGripping)
         {
             m_ManipulationMode.isInteracting = isInteracting;
@@ -117,7 +111,7 @@ public class DirectManipulation : MonoBehaviour
         else if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
         {
             position = PositionSnapping(position);
-            rotation = LookAtFocusObject(position);
+            rotation = m_CollisionObjects.LookAtFocusObject(position, gameObject.transform);
         }
 
         else if (!m_Trigger.GetState(m_OtherHand.handType))
@@ -133,8 +127,8 @@ public class DirectManipulation : MonoBehaviour
     {
         Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
         Vector3 connectingVector = position - focusObject.position;
-        float angle = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObject.up.normalized)) * Mathf.Rad2Deg;
 
+        float angle = Vector3.Angle(connectingVector, focusObject.up);
         if (angle < ManipulationMode.ANGLETHRESHOLD * 2)
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
 
@@ -146,7 +140,7 @@ public class DirectManipulation : MonoBehaviour
 
     private Quaternion RotationSnapping()
     {
-        float angle = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
+        float angle = Vector3.Angle(m_GhostObject.transform.right, Vector3.up);
 
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
@@ -160,60 +154,14 @@ public class DirectManipulation : MonoBehaviour
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
             // snap to xz plane
-            Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up.normalized);
-            float ang = Mathf.Acos(Vector3.Dot(m_GhostObject.transform.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-            Vector3 up = ang <= 90 ? Vector3.up : -Vector3.up;
+            Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up);
+            angle = Vector3.Angle(m_GhostObject.transform.up, Vector3.up);
+            Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
 
             return Quaternion.LookRotation(forward, up);
         }
 
         return m_GhostObject.transform.rotation;
-    }
-
-    public void FocusObjectSelected()
-    {
-        m_FocusRot = gameObject.transform.rotation;
-        Quaternion rotation = LookAtFocusObject(gameObject.transform.position);
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(gameObject.transform.position, rotation);
-    }
-
-    private Quaternion LookAtFocusObject(Vector3 position)
-    {
-        Transform initPose;
-        if (m_GhostObject == null)
-            initPose = gameObject.transform;
-        else
-            initPose = m_GhostObject.transform;
-
-        Vector3 right = position - m_CollisionObjects.m_FocusObject.transform.position;
-        Vector3 up = Vector3.zero;
-        Vector3 forward = Vector3.zero;
-
-        float angle = Mathf.Acos(Vector3.Dot(right.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-        if (float.IsNaN(angle) || angle < 0.1f)
-        {
-            /*
-            forward = Vector3.Cross(right.normalized, initPose.transform.up.normalized);
-            up = Vector3.Cross(forward.normalized, right.normalized);
-            */
-
-            Vector3 normal = Vector3.Cross(initPose.right.normalized, right.normalized);
-            angle = Vector3.SignedAngle(initPose.right, right, normal);
-
-            up = Quaternion.AngleAxis(angle, normal) * initPose.up;
-            forward = Vector3.Cross(right.normalized, up.normalized);
-        }
-        else
-        {
-            angle = Mathf.Acos(Vector3.Dot(initPose.up.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-
-            up = angle <= 90 ? Vector3.up : -Vector3.up;
-            forward = Vector3.Cross(right.normalized, up.normalized);
-
-            up = Vector3.Cross(forward.normalized, right.normalized);
-        }
-
-        return Quaternion.LookRotation(forward, up);
     }
 
     private void TriggerReleased()

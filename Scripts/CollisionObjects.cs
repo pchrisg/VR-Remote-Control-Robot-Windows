@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
@@ -10,6 +12,11 @@ public class CollisionObjects : MonoBehaviour
     public Material m_FocusObjectMat = null;
 
     [HideInInspector] public GameObject m_FocusObject = null;
+
+    private ROSPublisher m_ROSPublisher = null;
+    private ManipulationMode m_ManipulationMode = null;
+    private Manipulator m_Manipulator = null;
+
     private static readonly string[] m_FingerNames = {
         "HandColliderRight(Clone)/fingers/finger_index_2_r",
         "HandColliderLeft(Clone)/fingers/finger_index_2_r" };
@@ -26,9 +33,24 @@ public class CollisionObjects : MonoBehaviour
 
     public List<ColObj> m_CollisionObjects = new List<ColObj>();
 
+    private void Awake()
+    {
+        m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+    }
+
     private void Start()
     {
         Invoke("SetFingerColliderScript", 0.5f);   //Adds CollisionObjectCreator to fingers
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var colObj in m_CollisionObjects)
+        {
+            Destroy(colObj.colObj);
+        }
     }
 
     private void SetFingerColliderScript()
@@ -104,5 +126,66 @@ public class CollisionObjects : MonoBehaviour
     {
         m_Id++;
         return m_Id - 1;
+    }
+
+    public void SetFocusObject(GameObject focusObject)
+    {
+        m_FocusObject = focusObject;
+
+        if (m_FocusObject != null && m_ManipulationMode.mode != ManipulationModes.Mode.SDOF)
+        {
+            Quaternion rotation = LookAtFocusObject(m_Manipulator.transform.position, m_Manipulator.transform);
+            m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
+
+            if (m_ManipulationMode.mode != ManipulationModes.Mode.RAILCREATOR)
+                StartCoroutine(PublishMoveArm());
+        }
+    }
+
+    private IEnumerator PublishMoveArm()
+    {
+        yield return new WaitForNextFrameUnit();
+
+        m_ROSPublisher.PublishMoveArm();
+    }
+
+    public Quaternion LookAtFocusObject(Vector3 position, Transform initPose)
+    {
+        if (m_FocusObject == null)
+            return Quaternion.identity;
+
+        Vector3 right = position - m_FocusObject.transform.position;
+        Vector3 up = Vector3.zero;
+        Vector3 forward = Vector3.zero;
+
+        float angle = Vector3.Angle(right, Vector3.up);
+        if (angle < 0.1f)
+        {
+            float angleToRight = Vector3.Angle(initPose.up, m_FocusObject.transform.right);
+            float angleToForward = Vector3.Angle(initPose.up, m_FocusObject.transform.forward);
+
+            if (180 - angleToRight < angleToRight)
+                angleToRight = 180 - angleToRight;
+            if (180 - angleToForward < angleToForward)
+                angleToForward = 180 - angleToForward;
+
+            if (angleToRight < angleToForward)
+                up = Vector3.Project(initPose.up, m_FocusObject.transform.right);
+            else
+                up = Vector3.Project(initPose.up, m_FocusObject.transform.forward);
+
+            forward = Vector3.Cross(right.normalized, up.normalized);
+        }
+        else
+        {
+            up = Vector3.Cross(initPose.forward, right);
+            angle = Vector3.Angle(up, Vector3.up);
+            up = angle <= 90 ? Vector3.up : -Vector3.up;
+
+            forward = Vector3.Cross(right.normalized, up.normalized);
+            up = Vector3.Cross(forward.normalized, right.normalized);
+        }
+
+        return Quaternion.LookRotation(forward, up);
     }
 }

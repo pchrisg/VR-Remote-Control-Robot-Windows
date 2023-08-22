@@ -111,14 +111,18 @@ public class RadialMenu : MonoBehaviour
             SetPlanRobIcon();
             SetGripIcon();
         }
-
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        else
         {
-            for(int i = 0; i < 6; i++)
+            for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = m_Sprites[i];
             }
+        }
+
+        if (m_ManipulationMode.mode == Mode.DIRECT)
+        {
             m_MenuMode = Mode.DIRECT;
+
             m_ActiveSR.sprite = null;
 
             SetPlanRobIcon();
@@ -126,12 +130,11 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == Mode.SDOF)
         {
-            for (int i = 0; i < 6; i++)
-            {
-                m_RadialSections[i].iconRenderer.sprite = null;
-            }
-            m_RadialSections[1].iconRenderer.sprite = m_Sprites[7];
             m_MenuMode = Mode.SDOF;
+
+            m_RadialSections[1].iconRenderer.sprite = m_Sprites[7];
+            m_RadialSections[5].iconRenderer.sprite = null;
+            
             m_ActiveSR.sprite = m_Sprites[1];
 
             SetPlanRobIcon();
@@ -139,36 +142,42 @@ public class RadialMenu : MonoBehaviour
         }
         if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
         {
+            m_MenuMode = Mode.ATTOBJCREATOR;
+
             for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[2].iconRenderer.sprite = m_Sprites[8];
-            m_MenuMode = Mode.ATTOBJCREATOR;
+            
             m_ActiveSR.sprite = m_Sprites[2];
         }
         if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
+            m_MenuMode = Mode.COLOBJCREATOR;
+
             for (int i = 0; i < 6; i++)
             {
                 m_RadialSections[i].iconRenderer.sprite = null;
             }
             m_RadialSections[3].iconRenderer.sprite = m_Sprites[9];
-            m_MenuMode = Mode.COLOBJCREATOR;
+            
             m_ActiveSR.sprite = m_Sprites[3];
         }
         if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
-            for (int i = 0; i < 6; i++)
-            {
-                m_RadialSections[i].iconRenderer.sprite = null;
-            }
+            m_MenuMode = Mode.RAILCREATOR;
+
+            m_RadialSections[0].iconRenderer.sprite = null;
+            m_RadialSections[1].iconRenderer.sprite = null;
+            m_RadialSections[4].iconRenderer.sprite = null;
             m_RadialSections[5].iconRenderer.sprite = m_Sprites[11];
             m_MenuMode = Mode.RAILCREATOR;
             m_ActiveSR.sprite = m_Sprites[5];
         }
         if (m_ManipulationMode.mode == Mode.RAIL)
         {
+            m_RadialSections[1].iconRenderer.sprite = null;
             m_RadialSections[5].iconRenderer.sprite = m_Sprites[12];
             m_MenuMode = Mode.RAIL;
             m_ActiveSR.sprite = m_Sprites[11];

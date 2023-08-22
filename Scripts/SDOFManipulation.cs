@@ -149,9 +149,9 @@ public class SDOFManipulation : MonoBehaviour
 
         Vector3 connectingVector = position - focusObjectPose.position;
 
-        float angleToFocObjX = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObjectPose.right.normalized)) * Mathf.Rad2Deg;
-        float angleToFocObjY = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObjectPose.up.normalized)) * Mathf.Rad2Deg;
-        float angleToFocObjZ = Mathf.Acos(Vector3.Dot(connectingVector.normalized, focusObjectPose.forward.normalized)) * Mathf.Rad2Deg;
+        float angleToFocObjX = Vector3.Angle(connectingVector, focusObjectPose.right);
+        float angleToFocObjY = Vector3.Angle(connectingVector, focusObjectPose.up);
+        float angleToFocObjZ = Vector3.Angle(connectingVector, focusObjectPose.forward);
 
         if (Mathf.Abs(90.0f - angleToFocObjX) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjX) > 0.1f)
             focObjYZPlane.Raycast(direction, out intersection);
@@ -194,9 +194,9 @@ public class SDOFManipulation : MonoBehaviour
         {
             Transform focusObjectPose = m_CollisionObjects.m_FocusObject.transform;
 
-            float angleToFocObjX = Mathf.Acos(Vector3.Dot(targetVector.normalized, focusObjectPose.right.normalized)) * Mathf.Rad2Deg;
-            float angleToFocObjY = Mathf.Acos(Vector3.Dot(targetVector.normalized, focusObjectPose.up.normalized)) * Mathf.Rad2Deg;
-            float angleToFocObjZ = Mathf.Acos(Vector3.Dot(targetVector.normalized, focusObjectPose.forward.normalized)) * Mathf.Rad2Deg;
+            float angleToFocObjX = Vector3.Angle(targetVector, focusObjectPose.right);
+            float angleToFocObjY = Vector3.Angle(targetVector, focusObjectPose.up);
+            float angleToFocObjZ = Vector3.Angle(targetVector, focusObjectPose.forward);
 
             if (Mathf.Abs(90.0f - angleToFocObjX) < ManipulationMode.ANGLETHRESHOLD)
                 targetVector = Vector3.ProjectOnPlane(targetVector, focusObjectPose.right.normalized);
@@ -209,14 +209,14 @@ public class SDOFManipulation : MonoBehaviour
 
             Vector3 connectingVector = m_Manipulator.transform.position - focusObjectPose.position;
             
-            float angle = Mathf.Acos(Vector3.Dot(m_Manipulator.transform.right.normalized, connectingVector.normalized)) * Mathf.Rad2Deg;
+            float angle = Vector3.Angle(m_Manipulator.transform.right, connectingVector);
             if (angle < 90.0f)
             {
                 Vector3 currentVector = m_Interactable.transform.position - m_Manipulator.transform.position;
                 float dotProd = Vector3.Dot(m_Manipulator.transform.right.normalized, currentVector.normalized);
                 if (Mathf.Abs(dotProd) < 0.5f)
                 {
-                    float angleToConVec = Mathf.Acos(Vector3.Dot(targetVector.normalized, connectingVector.normalized)) * Mathf.Rad2Deg;
+                    float angleToConVec = Vector3.Angle(targetVector, connectingVector);
 
                     if (Mathf.Abs(90.0f - angleToConVec) < ManipulationMode.ANGLETHRESHOLD)
                         targetVector = Vector3.ProjectOnPlane(targetVector, connectingVector);
@@ -226,8 +226,8 @@ public class SDOFManipulation : MonoBehaviour
                     Vector3 norm1 = Vector3.ProjectOnPlane(Vector3.forward, connectingVector);
                     Vector3 norm2 = Vector3.Cross(connectingVector.normalized, norm1.normalized);
 
-                    float angleToNorm1 = Mathf.Acos(Vector3.Dot(targetVector.normalized, norm1.normalized)) * Mathf.Rad2Deg;
-                    float angleToNorm2 = Mathf.Acos(Vector3.Dot(targetVector.normalized, norm2.normalized)) * Mathf.Rad2Deg;
+                    float angleToNorm1 = Vector3.Angle(targetVector, norm1);
+                    float angleToNorm2 = Vector3.Angle(targetVector, norm2);
 
                     if (Mathf.Abs(90.0f - angleToNorm1) < ManipulationMode.ANGLETHRESHOLD)
                         targetVector = Vector3.ProjectOnPlane(targetVector, norm1);
@@ -239,9 +239,9 @@ public class SDOFManipulation : MonoBehaviour
         }
         else
         {
-            float angleToX = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.right.normalized)) * Mathf.Rad2Deg;
-            float angleToY = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.up.normalized)) * Mathf.Rad2Deg;
-            float angleToZ = Mathf.Acos(Vector3.Dot(targetVector.normalized, Vector3.forward.normalized)) * Mathf.Rad2Deg;
+            float angleToX = Vector3.Angle(targetVector, Vector3.right);
+            float angleToY = Vector3.Angle(targetVector, Vector3.up);
+            float angleToZ = Vector3.Angle(targetVector, Vector3.forward);
 
             if (Mathf.Abs(90.0f - angleToX) < ManipulationMode.ANGLETHRESHOLD)
                 targetVector = Vector3.ProjectOnPlane(targetVector, Vector3.right);

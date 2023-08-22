@@ -84,16 +84,13 @@ public class CollisionObjectCreator : MonoBehaviour
     {
         if (m_CollisionObjects.m_FocusObject == null)
         {
-            m_CollisionObjects.m_FocusObject = other.gameObject;
-
+            m_CollisionObjects.SetFocusObject(other.gameObject);
             other.GetComponent<CollisionHandling>().SetFocusObject(true);
-            GameObject.FindGameObjectWithTag("Manipulator").GetComponent<DirectManipulation>().FocusObjectSelected();
         }
 
         else if (m_CollisionObjects.m_FocusObject == other.gameObject)
         {
-            m_CollisionObjects.m_FocusObject = null;
-
+            m_CollisionObjects.SetFocusObject(null);
             other.GetComponent<CollisionHandling>().SetFocusObject(false);
         }
     }

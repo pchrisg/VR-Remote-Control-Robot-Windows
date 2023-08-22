@@ -21,6 +21,7 @@ public class ManipulationMode : MonoBehaviour
     [Header("Technique")]
     public bool m_SwitchTechnique = false;
     public Mode mode = Mode.DIRECT;
+    private Mode m_PrevMode = Mode.DIRECT;
 
     [HideInInspector] public const float ANGLETHRESHOLD = 5.0f;     //5deg
     [HideInInspector] public const float DISTANCETHRESHOLD = 0.02f; //2cm
@@ -71,7 +72,7 @@ public class ManipulationMode : MonoBehaviour
 
     private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_PlanningRobot.isPlanning)
+        if (m_PlanningRobot.isPlanning && mode != Mode.RAILCREATOR)
             m_PlanningRobot.ExecuteTrajectory();
     }
 
@@ -133,7 +134,10 @@ public class ManipulationMode : MonoBehaviour
 
     public void ToggleAttachableObjectCreator()
     {
-        if (mode == Mode.DIRECT)
+        if (mode == Mode.DIRECT ||
+            mode == Mode.SDOF ||
+            mode == Mode.RAILCREATOR ||
+            mode == Mode.RAIL)
         {
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show(false);
@@ -142,19 +146,24 @@ public class ManipulationMode : MonoBehaviour
                 m_GripperControl.Show(false);
 
             m_CollisionObjects.isCreating = true;
+
+            m_PrevMode = mode;
             mode = Mode.ATTOBJCREATOR;
         }
 
         else if (mode == Mode.ATTOBJCREATOR)
         {
             m_CollisionObjects.isCreating = false;
-            mode = Mode.DIRECT;
+            mode = m_PrevMode;
         }
     }
 
     public void ToggleCollisionObjectCreator()
     {
-        if (mode == Mode.DIRECT)
+        if (mode == Mode.DIRECT ||
+            mode == Mode.SDOF ||
+            mode == Mode.RAILCREATOR ||
+            mode == Mode.RAIL)
         {
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show(false);
@@ -163,13 +172,15 @@ public class ManipulationMode : MonoBehaviour
                 m_GripperControl.Show(false);
 
             m_CollisionObjects.isCreating = true;
+
+            m_PrevMode = mode;
             mode = Mode.COLOBJCREATOR;
         }
 
         else if (mode == Mode.COLOBJCREATOR)
         {
             m_CollisionObjects.isCreating = false;
-            mode = Mode.DIRECT;
+            mode = m_PrevMode;
         }
     }
 

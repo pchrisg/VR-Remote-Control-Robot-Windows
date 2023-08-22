@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 
@@ -6,15 +8,11 @@ public class Rails : MonoBehaviour
 {
     public struct Rail
     {
+        public GameObject rail;
         public Vector3 start;
         public Vector3 end;
     };
-    public Rail []rails;
-
-    private void Awake()
-    {
-        Array.Resize(ref rails, 0);
-    }
+    public List<Rail> m_Rails = new List<Rail>();
 
     private void OnDisable()
     {
@@ -32,33 +30,33 @@ public class Rails : MonoBehaviour
         RemoveAllRails();
     }
 
-    public Transform GetLastChild()
-    {
-        int count = gameObject.transform.childCount;
-        if (count == 1)
-            return gameObject.transform;
-        else
-            return gameObject.transform.GetChild(count - 1);
-    }
-
     public void AddRail(GameObject rail)
     {
-        Array.Resize(ref rails, rails.Length + 1);
-
         Vector3 offset = rail.transform.up.normalized * rail.transform.localScale.y;
-        rails[^1].start = rail.transform.position - offset;
-        rails[^1].end = rail.transform.position + offset;
+
+        Rail newRail = new Rail
+        {
+            rail = rail, 
+            start = rail.transform.position - offset, 
+            end = rail.transform.position + offset
+        };
+
+        m_Rails.Add(newRail);
     }
 
     public void RemoveLastRail()
     {
-        if(rails.Length > 0)
-            Array.Resize(ref rails, rails.Length - 1);
+        if(m_Rails.Any())
+        {
+            Destroy(m_Rails.Last().rail);
+
+            m_Rails.Remove(m_Rails.Last());
+        }
     }
 
     public void RemoveAllRails()
     {
-        while (rails.Length > 0)
+        while (m_Rails.Any())
             RemoveLastRail();
     }
 }
