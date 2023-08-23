@@ -100,22 +100,25 @@ public class DirectManipulation : MonoBehaviour
     private void MoveManipulator()
     {
         Vector3 position = m_GhostObject.transform.position;
-        Quaternion rotation = gameObject.transform.rotation;
+        Quaternion rotation = m_GhostObject.transform.rotation;
 
         if (m_Trigger.GetState(m_OtherHand.handType))
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
             position = m_InitPos + connectingVector * ManipulationMode.SCALINGFACTOR;
-        }            
-
-        else if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
-        {
-            position = PositionSnapping(position);
-            rotation = m_CollisionObjects.LookAtFocusObject(position, gameObject.transform);
+            rotation = gameObject.transform.rotation;
         }
+        else
+        {
+            if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+            {
+                position = PositionSnapping();
+                rotation = m_CollisionObjects.LookAtFocusObject(position, m_GhostObject.transform);
+            }
 
-        else if (!m_Trigger.GetState(m_OtherHand.handType))
-            rotation = RotationSnapping();
+            if(rotation == m_GhostObject.transform.rotation)
+                rotation = RotationSnapping();
+        }
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
@@ -123,19 +126,24 @@ public class DirectManipulation : MonoBehaviour
             m_ROSPublisher.PublishMoveArm();
     }
 
-    private Vector3 PositionSnapping(Vector3 position)
+    private Vector3 PositionSnapping()
     {
         Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
-        Vector3 connectingVector = position - focusObject.position;
+        Vector3 connectingVector = m_GhostObject.transform.position - focusObject.position;
 
         float angle = Vector3.Angle(connectingVector, focusObject.up);
-        if (angle < ManipulationMode.ANGLETHRESHOLD * 2)
+        if (angle < ManipulationMode.ANGLETHRESHOLD)
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
 
-        if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
-            return focusObject.position + Vector3.ProjectOnPlane(connectingVector, focusObject.up);
+        angle = Vector3.Angle(connectingVector, focusObject.right);
+        if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+            return focusObject.position + Vector3.Project(connectingVector, focusObject.right);
 
-        return position;
+        angle = Vector3.Angle(connectingVector, focusObject.forward);
+        if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+            return focusObject.position + Vector3.Project(connectingVector, focusObject.forward);
+
+        return m_GhostObject.transform.position;
     }
 
     private Quaternion RotationSnapping()
@@ -166,7 +174,7 @@ public class DirectManipulation : MonoBehaviour
 
     private void TriggerReleased()
     {
-        GameObject.Destroy(m_GhostObject);
+        Destroy(m_GhostObject);
         m_OtherHand = null;
         m_InitPos = Vector3.zero;
         isInteracting = false;

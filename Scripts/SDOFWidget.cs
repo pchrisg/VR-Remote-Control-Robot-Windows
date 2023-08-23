@@ -12,8 +12,5 @@ public class SDOFWidget : MonoBehaviour
     public void Show(bool value)
     {
         gameObject.SetActive(value);
-
-        if (!value)
-            m_Manipulator.ResetPosition();
     }
 }

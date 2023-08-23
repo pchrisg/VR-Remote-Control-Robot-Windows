@@ -99,7 +99,7 @@ public class CollisionObjects : MonoBehaviour
     {
         foreach (var obj in m_CollisionObjects)
         {
-            if(obj.colObj == colObj)
+            if (obj.colObj == colObj)
             {
                 colObj.transform.SetParent(obj.parent);
 
@@ -149,43 +149,87 @@ public class CollisionObjects : MonoBehaviour
         m_ROSPublisher.PublishMoveArm();
     }
 
-    public Quaternion LookAtFocusObject(Vector3 position, Transform initPose)
+    public Quaternion LookAtFocusObject(Vector3 position, Transform initPose, Vector3 connectingVector = new Vector3())
     {
         if (m_FocusObject == null)
-            return Quaternion.identity;
+            return initPose.rotation;
+
+        float angleToRight = Vector3.Angle(initPose.up, m_FocusObject.transform.right);
+        float angleToForward = Vector3.Angle(initPose.up, m_FocusObject.transform.forward);
+
+        if (180.0f - angleToRight < angleToRight)
+            angleToRight = 180.0f - angleToRight;
+        if (180.0f - angleToForward < angleToForward)
+            angleToForward = 180.0f - angleToForward;
 
         Vector3 right = position - m_FocusObject.transform.position;
         Vector3 up = Vector3.zero;
         Vector3 forward = Vector3.zero;
-
-        float angle = Vector3.Angle(right, Vector3.up);
+        float angle = Vector3.Angle(right, m_FocusObject.transform.up);
         if (angle < 0.1f)
         {
-            float angleToRight = Vector3.Angle(initPose.up, m_FocusObject.transform.right);
-            float angleToForward = Vector3.Angle(initPose.up, m_FocusObject.transform.forward);
-
-            if (180 - angleToRight < angleToRight)
-                angleToRight = 180 - angleToRight;
-            if (180 - angleToForward < angleToForward)
-                angleToForward = 180 - angleToForward;
-
             if (angleToRight < angleToForward)
                 up = Vector3.Project(initPose.up, m_FocusObject.transform.right);
             else
                 up = Vector3.Project(initPose.up, m_FocusObject.transform.forward);
 
             forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return Quaternion.LookRotation(forward, up);
         }
-        else
+
+        angle = Vector3.Angle(right, m_FocusObject.transform.right);
+        if (angle < 0.1f || 180.0f - angle < 0.1f)
         {
-            up = Vector3.Cross(initPose.forward, right);
-            angle = Vector3.Angle(up, Vector3.up);
-            up = angle <= 90 ? Vector3.up : -Vector3.up;
-
+            up = Vector3.Project(initPose.up, m_FocusObject.transform.up);
             forward = Vector3.Cross(right.normalized, up.normalized);
-            up = Vector3.Cross(forward.normalized, right.normalized);
+
+            return Quaternion.LookRotation(forward, up);
         }
 
-        return Quaternion.LookRotation(forward, up);
+        angle = Vector3.Angle(right, m_FocusObject.transform.forward);
+        if (angle < 0.1f || 180.0f - angle < 0.1f)
+        {
+            up = Vector3.Project(initPose.up, m_FocusObject.transform.up);
+            forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return Quaternion.LookRotation(forward, up);
+        }
+
+        if (m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT)
+        {
+            angle = Vector3.Angle(initPose.right, right);
+            if (angle < ManipulationMode.ANGLETHRESHOLD)
+            {
+                up = Vector3.Cross(initPose.forward, right);
+                angle = Vector3.Angle(up, Vector3.up);
+                up = angle <= 90 ? Vector3.up : -Vector3.up;
+
+                forward = Vector3.Cross(right.normalized, up.normalized);
+                up = Vector3.Cross(forward.normalized, right.normalized);
+
+                return Quaternion.LookRotation(forward, up);
+            }
+        }
+
+        else if (connectingVector != Vector3.zero)
+        {
+            right = position - m_FocusObject.transform.position;
+
+            angle = Vector3.Angle(connectingVector, right);
+            if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+            {
+                up = Vector3.Cross(initPose.forward, right);
+                angle = Vector3.Angle(up, Vector3.up);
+                up = angle <= 90 ? Vector3.up : -Vector3.up;
+
+                forward = Vector3.Cross(right.normalized, up.normalized);
+                up = Vector3.Cross(forward.normalized, right.normalized);
+
+                return Quaternion.LookRotation(forward, up);
+            }
+        }
+
+        return initPose.rotation;
     }
 }

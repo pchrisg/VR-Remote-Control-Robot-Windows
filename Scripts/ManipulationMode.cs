@@ -31,6 +31,7 @@ public class ManipulationMode : MonoBehaviour
     [SerializeField] private SDOFWidget m_SDOFWidget = null;
     [SerializeField] private RailCreator m_RailCreator = null;
 
+    private Manipulator m_Manipulator = null;
     private PlanningRobot m_PlanningRobot = null;
     private CollisionObjects m_CollisionObjects = null;
     private GripperControl m_GripperControl = null;
@@ -41,6 +42,7 @@ public class ManipulationMode : MonoBehaviour
 
     private void Awake()
     {
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
@@ -93,11 +95,11 @@ public class ManipulationMode : MonoBehaviour
         else if (mode == Mode.RAILCREATOR)
         {
             m_RailCreator.Show(false);
-            m_RailCreator.Clear();
+            m_RailCreator.RemoveAllRails();
         }
 
         else if (mode == Mode.RAIL)
-            m_RailCreator.Clear();
+            m_RailCreator.RemoveAllRails();
 
         mode = Mode.DIRECT;
     }
@@ -111,7 +113,10 @@ public class ManipulationMode : MonoBehaviour
            mode == Mode.RAIL))
         {
             if(m_PlanningRobot.isPlanning)
+            {
+                m_Manipulator.ResetPositionAndRotation();
                 m_PlanningRobot.Show(false);
+            }
             else
                 m_PlanningRobot.Show(true);
         }
@@ -121,12 +126,14 @@ public class ManipulationMode : MonoBehaviour
     {
         if(mode == Mode.DIRECT)
         {
+            m_Manipulator.ResetPositionAndRotation();
             m_SDOFWidget.Show(true);
             mode = Mode.SDOF;
         }
 
         else if (mode == Mode.SDOF)
         {
+            m_Manipulator.ResetPositionAndRotation();
             m_SDOFWidget.Show(false);
             mode = Mode.DIRECT;
         }
@@ -209,19 +216,22 @@ public class ManipulationMode : MonoBehaviour
             if (m_GripperControl.isGripping)
                 m_GripperControl.Show(false);
 
+            m_Manipulator.ResetPositionAndRotation();
             m_RailCreator.Show(true);
             mode = Mode.RAILCREATOR;
         }
 
         else if (mode == Mode.RAILCREATOR)
         {
+            m_Manipulator.ResetPosition();
             m_RailCreator.Show(false);
             mode = Mode.RAIL;
         }
 
         else if (mode == Mode.RAIL)
         {
-            m_RailCreator.Clear();
+            m_Manipulator.ResetPositionAndRotation();
+            m_RailCreator.RemoveAllRails();
             mode = Mode.DIRECT;
         }
     }

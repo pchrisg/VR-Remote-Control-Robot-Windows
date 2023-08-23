@@ -155,7 +155,7 @@ public class RailManipulation : MonoBehaviour
         }
 
         if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
-            rotation = m_CollisionObjects.LookAtFocusObject(position, gameObject.transform);
+            rotation = m_CollisionObjects.LookAtFocusObject(position, gameObject.transform, m_Rails.m_Rails[m_ActiveRail].rail.transform.up);
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
@@ -165,66 +165,31 @@ public class RailManipulation : MonoBehaviour
 
     private Vector3 FollowRail()
     {
+        Vector3 position = m_InitPos;
+
         Vector3 rail = m_Rails.m_Rails[m_ActiveRail].end - m_Rails.m_Rails[m_ActiveRail].start;
         Vector3 connectingVectorToStart = m_InteractingHand.objectAttachmentPoint.position - m_Rails.m_Rails[m_ActiveRail].start;
         Vector3 connectingVectorToEnd = m_InteractingHand.objectAttachmentPoint.position - m_Rails.m_Rails[m_ActiveRail].end;
-        bool startVectorBigger = connectingVectorToStart.magnitude > connectingVectorToEnd.magnitude ? true : false;
 
-        Vector3 connectingVector = startVectorBigger ? connectingVectorToStart : connectingVectorToEnd;
-        Vector3 projectedConnectingVector = Vector3.Project(connectingVector, rail);
-
-        if (m_Trigger.GetState(m_OtherHand.handType))
+        if (connectingVectorToStart.magnitude > connectingVectorToEnd.magnitude)
         {
-            Vector3 scaledVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
-            Vector3 scaledPos = m_InitPos + Vector3.Project(scaledVector, rail) * ManipulationMode.SCALINGFACTOR;
+            Vector3 projectedConnectingVector = Vector3.Project(connectingVectorToStart, rail);
+            Vector3 movement = m_Rails.m_Rails[m_ActiveRail].start + projectedConnectingVector - m_InitPos;
 
+            if (m_Trigger.GetState(m_OtherHand.handType))
+                movement *= ManipulationMode.SCALINGFACTOR;
 
-            projectedConnectingVector = startVectorBigger ?
-                scaledPos - m_Rails.m_Rails[m_ActiveRail].start :
-                scaledPos - m_Rails.m_Rails[m_ActiveRail].end;
+            position = GetNextRail(rail, m_InitPos + movement);
         }
-
-        Vector3 position = Vector3.zero;
-        if (projectedConnectingVector.magnitude < rail.magnitude)
-            position = startVectorBigger ?
-                m_Rails.m_Rails[m_ActiveRail].start + projectedConnectingVector :
-                m_Rails.m_Rails[m_ActiveRail].end + projectedConnectingVector;
         else
         {
-            if(startVectorBigger)
-            {
-                m_InitPos = m_Rails.m_Rails[m_ActiveRail].end;
-                position = m_Rails.m_Rails[m_ActiveRail].end;
+            Vector3 projectedConnectingVector = Vector3.Project(connectingVectorToEnd, rail);
+            Vector3 movement = m_Rails.m_Rails[m_ActiveRail].end + projectedConnectingVector - m_InitPos;
 
-                if(pause > m_TimeInterval)
-                {
-                    if (m_ActiveRail < m_Rails.m_Rails.Count)
-                        m_ActiveRail++;
+            if (m_Trigger.GetState(m_OtherHand.handType))
+                movement *= ManipulationMode.SCALINGFACTOR;
 
-                    else if (m_Rails.m_Rails.First().start == m_Rails.m_Rails.Last().end)
-                        m_ActiveRail = 0;
-
-                    pause = 0;
-                }
-                pause += UnityEngine.Time.deltaTime;
-            }
-            else
-            {
-                m_InitPos = m_Rails.m_Rails[m_ActiveRail].start;
-                position = m_Rails.m_Rails[m_ActiveRail].start;
-
-                if (pause > m_TimeInterval)
-                {
-                    if (m_ActiveRail > 0)
-                        m_ActiveRail--;
-
-                    else if (m_Rails.m_Rails.First().start == m_Rails.m_Rails.Last().end)
-                        m_ActiveRail = m_Rails.m_Rails.Count - 1;
-
-                    pause = 0;
-                }
-                pause += UnityEngine.Time.deltaTime;
-            }
+            position = GetPreviousRail(rail, m_InitPos + movement);
         }
 
         return position;
@@ -238,10 +203,28 @@ public class RailManipulation : MonoBehaviour
         if (m_Trigger.GetState(m_OtherHand.handType))
             movement *= ManipulationMode.SCALINGFACTOR;
 
-        Vector3 position = gameObject.transform.position + movement;
+        Vector3 position = GetNextRail(rail, gameObject.transform.position + movement);
 
+        return position;
+    }
+
+    private Vector3 Reverse()
+    {
+        Vector3 rail = m_Rails.m_Rails[m_ActiveRail].start - m_Rails.m_Rails[m_ActiveRail].end;
+
+        Vector3 movement = rail.normalized * UnityEngine.Time.deltaTime * m_Speed;
+        if (m_Trigger.GetState(m_OtherHand.handType))
+            movement *= ManipulationMode.SCALINGFACTOR;
+
+        Vector3 position = GetPreviousRail(rail, gameObject.transform.position + movement);
+
+        return position;
+    }
+
+    private Vector3 GetNextRail(Vector3 rail, Vector3 position)
+    {
         Vector3 connectingVector = position - m_Rails.m_Rails[m_ActiveRail].start;
-        if(connectingVector.magnitude > rail.magnitude)
+        if (connectingVector.magnitude > rail.magnitude)
         {
             position = m_Rails.m_Rails[m_ActiveRail].end;
 
@@ -264,16 +247,8 @@ public class RailManipulation : MonoBehaviour
         return position;
     }
 
-    private Vector3 Reverse()
+    private Vector3 GetPreviousRail(Vector3 rail, Vector3 position)
     {
-        Vector3 rail = m_Rails.m_Rails[m_ActiveRail].start - m_Rails.m_Rails[m_ActiveRail].end;
-
-        Vector3 movement = rail.normalized * UnityEngine.Time.deltaTime * m_Speed;
-        if (m_Trigger.GetState(m_OtherHand.handType))
-            movement *= ManipulationMode.SCALINGFACTOR;
-
-        Vector3 position = gameObject.transform.position + movement;
-
         Vector3 connectingVector = position - m_Rails.m_Rails[m_ActiveRail].end;
         if (connectingVector.magnitude > rail.magnitude)
         {
@@ -297,7 +272,7 @@ public class RailManipulation : MonoBehaviour
 
         return position;
     }
-
+    
     private void Released()
     {
         if (m_ManipulationMode.mode == Mode.RAIL && isInteracting)

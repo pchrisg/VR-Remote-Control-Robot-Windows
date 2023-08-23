@@ -30,7 +30,7 @@ public class PlanningRobot : MonoBehaviour
     private ArticulationBody[] m_PlanGripJoints = null;
     private ArticulationBody[] m_RobotiqJoints = null;
 
-    private bool displayPath = false;
+    private bool m_DisplayPath = false;
 
     private Color m_ShowColor = new Color(0.8f, 0.8f, 0.8f, 0.4f);
     private Color m_HideColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -77,7 +77,7 @@ public class PlanningRobot : MonoBehaviour
 
     private void Update()
     {
-        if (!displayPath)
+        if (!m_DisplayPath)
             GoToUR5();
     }
 
@@ -97,8 +97,7 @@ public class PlanningRobot : MonoBehaviour
             if (m_StartPoses.Any())
                 m_StartPoses.Clear();
 
-            m_Manipulator.ResetPosition();
-            displayPath = false;
+            m_DisplayPath = false;
             m_PlanRobMat.color = m_HideColor;
         }
     }
@@ -106,16 +105,19 @@ public class PlanningRobot : MonoBehaviour
     public void RequestTrajectory()
     {
         m_ROSPublisher.PublishTrajectoryRequest(m_Robotiq.parent.position, m_Robotiq.parent.rotation, m_ManipulatorPose.position, m_ManipulatorPose.rotation);
+
+        m_DisplayPath = true;
     }
 
-    public void RequestTrajectory(Vector3 startPos, Vector3 destPos)
+    public void RequestTrajectory(Vector3 startPos, Vector3 destPos, bool displayPath)
     {
+        m_DisplayPath = displayPath;
+
         if (!m_ManipulatorPoses.Any())
             m_ManipulatorPoses.Add(startPos);
 
         if (m_ManipulatorPoses.Last() != m_ManipulatorPose.position)
             m_ManipulatorPoses.Add(m_ManipulatorPose.position);
-            
 
         m_StartPoses.Add(startPos);
 
@@ -125,7 +127,7 @@ public class PlanningRobot : MonoBehaviour
     public void DeleteLastTrajectory()
     {
         StopAllCoroutines();
-        displayPath = false;
+        m_DisplayPath = false;
         m_PlanRobMat.color = m_HideColor;
         m_Manipulator.Colliding(false);
 
@@ -147,7 +149,7 @@ public class PlanningRobot : MonoBehaviour
 
         if (m_Trajectories.Any())
         {
-            displayPath = true;
+            m_DisplayPath = true;
             m_PlanRobMat.color = m_ShowColor;
 
             StartCoroutine(DisplayPath());
@@ -162,8 +164,6 @@ public class PlanningRobot : MonoBehaviour
             m_Trajectories.Clear();
 
         m_Trajectories.Add(trajectory);
-
-        displayPath = true;
         m_PlanRobMat.color = m_ShowColor;
 
         StartCoroutine(DisplayPath());
@@ -172,7 +172,7 @@ public class PlanningRobot : MonoBehaviour
     private IEnumerator DisplayPath()
     {
         yield return new WaitForSeconds(0.1f);
-        while (displayPath)
+        while (m_DisplayPath)
         {
             yield return StartCoroutine(GoToManipulator());
 
@@ -209,7 +209,7 @@ public class PlanningRobot : MonoBehaviour
         {
             foreach (var point in trajectory.joint_trajectory.points)
             {
-                if (displayPath == false)
+                if (m_DisplayPath == false)
                     break;
 
                 var jointPositions = point.positions;
@@ -231,7 +231,7 @@ public class PlanningRobot : MonoBehaviour
     {
         if (m_Trajectories.Any())
         {
-            displayPath = false;
+            m_DisplayPath = false;
             m_PlanRobMat.color = m_HideColor;
             m_ROSPublisher.PublishExecutePlan(m_Trajectories.First());
             m_Trajectories.Remove(m_Trajectories.First());

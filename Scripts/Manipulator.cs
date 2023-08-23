@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Manipulator : MonoBehaviour
@@ -6,6 +7,7 @@ public class Manipulator : MonoBehaviour
     [Header("Material")]
     [SerializeField] private Material m_ManipulatorMat;
 
+    private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private CollisionObjects m_CollisionObjects = null;
 
@@ -22,8 +24,11 @@ public class Manipulator : MonoBehaviour
     public bool isColliding = false;
     private Coroutine m_Flashing = null;
 
+    Coroutine activeCouroutine = null;
+
     private void Awake()
     {
+        m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
@@ -39,7 +44,7 @@ public class Manipulator : MonoBehaviour
 
     private void Start()
     {
-        Invoke("ResetPosition", 1.2f);
+        Invoke("ResetPositionAndRotation", 1.2f);
     }
 
     private void Update()
@@ -58,8 +63,33 @@ public class Manipulator : MonoBehaviour
         }
     }
 
+    public void ResetPositionAndRotation()
+    {
+        if (activeCouroutine != null)
+            StopCoroutine(activeCouroutine);
+
+        activeCouroutine = StartCoroutine(ResetPose());
+    }
+
     public void ResetPosition()
     {
+        if (activeCouroutine != null)
+            StopCoroutine(activeCouroutine);
+
+        activeCouroutine = StartCoroutine(ResetPos());
+    }
+
+    private IEnumerator ResetPos()
+    {
+        yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
+
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, gameObject.transform.rotation);
+    }
+
+    private IEnumerator ResetPose()
+    {
+        yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
+
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
     }
 

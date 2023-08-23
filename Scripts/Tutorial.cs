@@ -5,6 +5,7 @@ using TutorialStages;
 using System.Collections;
 using UnityEngine.UI;
 using System.Linq;
+using System.Threading;
 
 namespace TutorialStages
 {
@@ -436,7 +437,7 @@ public class Tutorial : MonoBehaviour
         yield return new WaitForSeconds(2.0f);
         yield return new WaitUntil(() => ros.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
-        m_Manipulator.ResetPosition();
+        m_Manipulator.ResetPositionAndRotation();
         m_ControllerHints.ShowTrackpadHint(true);
 
         m_SpriteRenderer.sprite = m_Sprites[2];
@@ -697,7 +698,7 @@ public class Tutorial : MonoBehaviour
         yield return new WaitForSeconds(2.0f);
         yield return new WaitUntil(() => ros.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
-        m_Manipulator.ResetPosition();
+        m_Manipulator.ResetPositionAndRotation();
         m_ControllerHints.ShowTrackpadHint(true);
 
         m_SpriteRenderer.sprite = m_Sprites[4];
@@ -786,7 +787,7 @@ public class Tutorial : MonoBehaviour
 
             GameObject obstacle = Instantiate(m_Obstacle);
             obstacle.transform.SetParent(m_Objects.transform);
-            obstacle.transform.SetPositionAndRotation(new Vector3(0.0f, 0.45f, -0.325f), Quaternion.Euler(new Vector3(0.0f,90.0f,0.0f)));
+            obstacle.transform.SetPositionAndRotation(new Vector3(0.0f, 0.45f, -0.35f), Quaternion.Euler(new Vector3(0.0f,90.0f,0.0f)));
 
             yield return new WaitUntil(() => obstacle == null || (CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false));
 
@@ -820,7 +821,55 @@ public class Tutorial : MonoBehaviour
 
     private IEnumerator AttachableObject()
     {
-        yield return null;
+        m_SpriteRenderer.sprite = m_Sprites[5];
+        m_Text.text = "Attachable Objects\n\n" +
+                      "Select the Attachable Object tool";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTrackpadHint(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.ATTOBJCREATOR);
+
+        m_ControllerHints.ShowTrackpadHint(false);
+
+        GameObject cube = Instantiate(m_Cube);
+        cube.transform.SetParent(m_Objects.transform);
+        cube.transform.SetPositionAndRotation(new Vector3(0.0f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 60.0f, 0.0f)));
+
+        m_SpriteRenderer.sprite = null;
+        m_Text.text = "Attachable Objects\n\n" +
+                      "Now select the cube like you did the glass";
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
+
+        int count = m_CollisionObjects.m_CollisionObjects.Count;
+        yield return new WaitUntil(() => m_CollisionObjects.m_CollisionObjects.Count > count);
+
+        m_ControllerHints.ShowGripHint(m_RightHand, false);
+        m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+        m_Text.text = "Attachable Objects\n\n" +
+                      "Just like collision objects, the robot will avoid trajectories that collide with attachable objects\n\n" +
+                      "Now deselect the Attachable Object tool";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "Now the fun starts\n" +
+                      "Select the attachable object to make it the object of focus in the scene";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_CollisionObjects.m_FocusObject != null);
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "Move the manipulator around ";
+        m_AudioSource.Play();
+
+
+
 
         stage = Stage.PRACTICE;
 
@@ -829,6 +878,11 @@ public class Tutorial : MonoBehaviour
 
     private IEnumerator Practice()
     {
+        m_Text.text = "Practice\n\n" +
+                      "Place the cube on the X as many times as you can\n\n" +
+                      "Take this time to practice what you just learnt";
+        m_AudioSource.Play();
+
         m_Timer.m_TimePassed = 0.0f;
 
         GameObject cube = Instantiate(m_Cube);

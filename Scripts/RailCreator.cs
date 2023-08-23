@@ -4,6 +4,7 @@ using Valve.VR.InteractionSystem;
 using ManipulationModes;
 using System.Collections;
 using System.Linq;
+using UnityEngine.UIElements;
 
 public class RailCreator : MonoBehaviour
 {
@@ -30,6 +31,7 @@ public class RailCreator : MonoBehaviour
 
     private GameObject m_GhostObject = null;
     private Vector3 m_Pivot = Vector3.zero;
+    private bool locked = false;
 
     //Colors
     private Color m_DefaultColor = new Color(0.2f, 0.2f, 0.2f, 1.0f);
@@ -58,7 +60,6 @@ public class RailCreator : MonoBehaviour
             m_NewRail = null;
             m_Pivot = Vector3.zero;
         }
-        m_Manipulator.GetComponent<Manipulator>().ResetPosition();
     }
 
     private void Update()
@@ -66,7 +67,7 @@ public class RailCreator : MonoBehaviour
         if (m_ManipulationMode.mode == Mode.RAILCREATOR)
         {
             m_ManipulationMode.isInteracting = isInteracting;
-            if (!isInteracting)
+            if (!isInteracting && !locked)
             {
                 if( m_Trigger.GetStateDown(Player.instance.rightHand.handType) ||
                     m_Trigger.GetStateDown(Player.instance.leftHand.handType))
@@ -115,10 +116,16 @@ public class RailCreator : MonoBehaviour
         if (m_Rails.m_Rails.Any())
         {
             Vector3 position = m_Rails.m_Rails.Last().start;
-            Quaternion rotation = m_Robotiq.rotation;
+            Quaternion rotation = m_Manipulator.rotation;
 
-            if (m_CollisionObjects.m_FocusObject != null)
-                rotation = m_CollisionObjects.LookAtFocusObject(position, m_Manipulator);
+            if (m_Rails.m_Rails.Count == 1)
+                rotation = m_Robotiq.rotation;
+
+            else if(m_CollisionObjects.m_FocusObject != null)
+            {
+                Vector3 connectingVector = m_Rails.m_Rails[^2].start - position;
+                rotation = m_CollisionObjects.LookAtFocusObject(position, m_Manipulator, connectingVector);
+            }
 
             m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
 
@@ -155,7 +162,7 @@ public class RailCreator : MonoBehaviour
         Quaternion rotation = m_Manipulator.rotation;
 
         if (m_CollisionObjects.m_FocusObject != null)
-            rotation = m_CollisionObjects.LookAtFocusObject(position, m_Manipulator);
+            rotation = m_CollisionObjects.LookAtFocusObject(position, m_Manipulator, connectingVector);
 
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
     }
@@ -176,7 +183,7 @@ public class RailCreator : MonoBehaviour
 
             float angle = Vector3.Angle(connectingVector, pivotToFocObj);
             // if close to vector connecting pivot to focus object
-            if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+            if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
             {
                 projectedConnectingVector = Vector3.Project(connectingVector, pivotToFocObj);
                 loop = true;
@@ -193,12 +200,12 @@ public class RailCreator : MonoBehaviour
 
                 angle = Vector3.Angle(focObjToGhostObj, focObjPose.right);
                 // if inline with focus object X axis
-                if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
                     projectedConnectingVector = focObjPose.position + Vector3.Project(focObjToGhostObj, focObjPose.right) - m_Pivot;
 
                 angle = Vector3.Angle(focObjToGhostObj, focObjPose.forward);
                 // if inline with focus object Z axis
-                if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
                     projectedConnectingVector = focObjPose.position + Vector3.Project(focObjToGhostObj, focObjPose.forward) - m_Pivot;
 
                 //if not already snapping
@@ -206,17 +213,17 @@ public class RailCreator : MonoBehaviour
                 {
                     angle = Vector3.Angle(connectingVector, focObjPose.up);
                     // if close to focus object Y axis
-                    if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                    if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
                         projectedConnectingVector = Vector3.Project(connectingVector, focObjPose.up);
 
                     angle = Vector3.Angle(connectingVector, focObjPose.right);
                     // if close to focus object X axis
-                    if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                    if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
                         projectedConnectingVector = Vector3.Project(connectingVector, focObjPose.right);
 
                     angle = Vector3.Angle(connectingVector, focObjPose.forward);
                     // if close to focus object Z axis
-                    if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                    if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
                         projectedConnectingVector = Vector3.Project(connectingVector, focObjPose.forward);
                 }
             }
@@ -237,7 +244,7 @@ public class RailCreator : MonoBehaviour
             {
                 float angle = Vector3.Angle(connectingVector, Vector3.up);
                 // if close to world Y axis
-                if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
                 {
                     projectedConnectingVector = Vector3.Project(connectingVector, Vector3.up);
                     currentColor = m_Y_AxisColor;
@@ -290,54 +297,48 @@ public class RailCreator : MonoBehaviour
         {
             m_RailMat.color = m_DefaultColor;
             m_NewRail.GetComponent<Renderer>().material = m_RailMat;
-
             m_Rails.AddRail(m_NewRail);
 
-            StartCoroutine(RequestTrajectories());
+            Vector3 poseOffset = m_Manipulator.Find("Pose").transform.position - m_Manipulator.position;
+            StartCoroutine(RequestTrajectories(poseOffset, m_NewRail.transform));
+
+            Destroy(m_GhostObject);
+            m_NewRail = null;
+            isInteracting = false;
+            m_Pivot = Vector3.zero;
+            m_InteractingHand = null;
         }
     }
 
-    IEnumerator RequestTrajectories()
+    IEnumerator RequestTrajectories(Vector3 poseOffset, Transform rail)
     {
-        Vector3 poseOffset = m_Manipulator.Find("Pose").transform.position - m_Manipulator.position;
-        
-        Vector3 direction = m_NewRail.transform.up;
-        float stepSize = 0.05f;
-        Vector3 startPosition = m_Pivot;
-        Vector3 endPosition = m_Pivot + direction * stepSize;
+        locked = true;
 
-        while ((endPosition - m_Pivot).magnitude < (m_Manipulator.position - m_Pivot).magnitude)
+        float stepSize = 0.05f;
+        Vector3 step = rail.transform.up * stepSize;
+
+        Vector3 railStart = rail.position - rail.up * rail.localScale.y;
+        Vector3 railEnd = rail.position + rail.up * rail.localScale.y;
+
+        Vector3 trajStartPos = railStart;
+        Vector3 trajEndPos = trajStartPos + step;
+
+        while ((trajEndPos - railStart).magnitude < rail.localScale.y)
         {
-            m_PlanningRobot.RequestTrajectory(startPosition + poseOffset, endPosition + poseOffset);
+            m_PlanningRobot.RequestTrajectory(trajStartPos + poseOffset, trajEndPos + poseOffset, false);
+
+            trajStartPos = trajEndPos;
+            trajEndPos += step;
 
             yield return new WaitForSeconds(0.08f);
-
-            startPosition = endPosition;
-            endPosition += direction * stepSize;
         }
-        m_PlanningRobot.RequestTrajectory(startPosition + poseOffset, m_Manipulator.position + poseOffset);
+        m_PlanningRobot.RequestTrajectory(trajStartPos + poseOffset, railEnd + poseOffset, true);
 
-        GameObject.Destroy(m_GhostObject);
-
-        m_NewRail = null;
-        isInteracting = false;
-        m_Pivot = Vector3.zero;
-        m_InteractingHand = null;
-
-        yield return null;
+        locked = false;
     }
 
-    public void Clear()
+    public void RemoveAllRails()
     {
-        Transform rails = m_Rails.GetComponent<Transform>();
-        if (rails.childCount > 1)
-        {
-            for (int i = rails.childCount - 1; i > 0; i--)
-            {
-                GameObject rail = rails.GetChild(i).gameObject;
-                Destroy(rail);
-            }
-        }
         m_Rails.RemoveAllRails();
     }
 }
