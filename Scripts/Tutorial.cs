@@ -5,14 +5,12 @@ using TutorialStages;
 using System.Collections;
 using UnityEngine.UI;
 using System.Linq;
-using System.Threading;
 
 namespace TutorialStages
 {
     public enum Stage
     {
         WAIT,
-        READY,
         START,
         SIMPLEDIRECT,
         DIRECT,
@@ -28,7 +26,7 @@ namespace TutorialStages
 public class Tutorial : MonoBehaviour
 {
     [Header("Stage")]
-    public Stage stage = Stage.READY;
+    public Stage stage = Stage.WAIT;
 
     [Header("Prefabs")]
     [SerializeField] private GameObject m_GhostManipulator = null;
@@ -60,6 +58,7 @@ public class Tutorial : MonoBehaviour
     private readonly float m_TimeLimit = 300.0f;
 
     private Coroutine m_ActiveCoroutine = null;
+    private Coroutine m_PracObsCoroutine = null;
     private Text m_Text = null;
     private AudioSource m_AudioSource = null;
     private SpriteRenderer m_SpriteRenderer = null;
@@ -96,7 +95,7 @@ public class Tutorial : MonoBehaviour
     private void OnDisable()
     {
         DestroyAllObjects();
-        stage = Stage.READY;
+        stage = Stage.WAIT;
         
         if(m_ActiveCoroutine != null)
             StopCoroutine(m_ActiveCoroutine);
@@ -160,10 +159,15 @@ public class Tutorial : MonoBehaviour
         if (stage == Stage.PRACTICE)
         {
             if (m_ActiveCoroutine == null)
+            {
                 m_ActiveCoroutine = StartCoroutine(Practice());
+                m_PracObsCoroutine = StartCoroutine(PracticeObstacle());
+            }
+                
             else if (m_Timer.m_TimePassed >= m_TimeLimit)
             {
                 StopCoroutine(m_ActiveCoroutine);
+                StopCoroutine(m_PracObsCoroutine);
                 DestroyAllObjects();
                 stage = Stage.WAIT;
             }
@@ -372,7 +376,8 @@ public class Tutorial : MonoBehaviour
         yield return new WaitUntil(() => !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
 
         m_Text.text = "Separated Degrees of Freedom Rotation\n\n" +
-                      "Grab a handle and move your hand towards a handle of a different colour" +
+                      "Grab a handle and move your hand towards a handle of a different colour\n\n" +
+                      "When rotating, the axes snap to the world coordinate system" +
                       "\n\nScaled Movement\n\n" +
                       "While moving the Handle, grab the other trigger";
         m_AudioSource.Play();
@@ -774,16 +779,16 @@ public class Tutorial : MonoBehaviour
                       "AND DON'T HIT THE OBSTACLE";
         m_AudioSource.Play();
 
+        GameObject x = Instantiate(m_X);
+        x.transform.SetParent(m_Objects.transform);
+        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
+
         bool collided = true;
         while (collided)
         {
             GameObject cube = Instantiate(m_Cube);
             cube.transform.SetParent(m_Objects.transform);
             cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 0.0f)));
-
-            GameObject x = Instantiate(m_X);
-            x.transform.SetParent(m_Objects.transform);
-            x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
 
             GameObject obstacle = Instantiate(m_Obstacle);
             obstacle.transform.SetParent(m_Objects.transform);
@@ -804,9 +809,10 @@ public class Tutorial : MonoBehaviour
             }
 
             Destroy(cube);
-            Destroy(x);
             Destroy(obstacle);
         }
+
+        Destroy(x);
 
         m_Text.text = "Well done! You're getting the hang of this!\n\n" +
                       "Deselect the Gripper and any other tools";
@@ -834,11 +840,12 @@ public class Tutorial : MonoBehaviour
 
         GameObject cube = Instantiate(m_Cube);
         cube.transform.SetParent(m_Objects.transform);
-        cube.transform.SetPositionAndRotation(new Vector3(0.0f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 60.0f, 0.0f)));
+        cube.transform.SetPositionAndRotation(new Vector3(0.0f, 0.05f, -0.5f), Quaternion.Euler(new Vector3(0.0f, 60.0f, 0.0f)));
 
         m_SpriteRenderer.sprite = null;
         m_Text.text = "Attachable Objects\n\n" +
-                      "Now select the cube like you did the glass";
+                      "Now select the cube like you did the glass\n\n" +
+                      "When selected it will turn green";
         m_AudioSource.Play();
 
         m_ControllerHints.ShowGripHint(m_RightHand, true);
@@ -851,7 +858,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
 
         m_Text.text = "Attachable Objects\n\n" +
-                      "Just like collision objects, the robot will avoid trajectories that collide with attachable objects\n\n" +
+                      "Just like collision objects, the robot will avoid crashing into attachable objects\n\n" +
                       "Now deselect the Attachable Object tool";
         m_AudioSource.Play();
 
@@ -859,17 +866,108 @@ public class Tutorial : MonoBehaviour
 
         m_Text.text = "Focus Objects\n\n" +
                       "Now the fun starts\n" +
-                      "Select the attachable object to make it the object of focus in the scene";
+                      "Select the attachable object to make it the object of focus in the scene\n\n" +
+                      "When selected, it will turn yellow";
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => m_CollisionObjects.m_FocusObject != null);
 
         m_Text.text = "Focus Objects\n\n" +
-                      "Move the manipulator around ";
+                      "With a focus object in the scene, the manipulator will snap to that object\n\n" +
+                      "Let's give it a try";
         m_AudioSource.Play();
 
+        GameObject target = Instantiate(m_GhostManipulator);
+        target.transform.SetParent(m_Objects.transform);
+        target.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.39f, -0.5f), Quaternion.Euler(new Vector3(0.0f, 150, 90)));
 
+        yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
 
+        m_Text.text = "Focus Objects\n\n" +
+                      "The manipulator turns yellow when snapped to the focus object";
+        m_AudioSource.Play();
+
+        yield return new WaitForSeconds(1.0f);
+
+        m_Text.text += "\n\nNow select SDOF manipulation";
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.SDOF);
+
+        cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 10.0f, 0.0f)));
+        target.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f,100,90)));
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "With a focus object, the axes snap to the focus object coordinate system\n\n" +
+                      "Try placing the manipulator over the focus object";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "Good good, now deselect SDOF and select the Rail creator";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.RAILCREATOR);
+
+        cube.transform.SetPositionAndRotation(new Vector3(0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 45.0f, 0.0f)));
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "With a focus object, the manipulator will snap to the focus object's axes and to the invisible line that connects the focus object to the manipulator\n\n" +
+                      "Rotation\n" +
+                      "If snapped, the manipulator will rotate to face the focus object";
+        m_AudioSource.Play();
+
+        yield return new WaitForSeconds(5.0f);
+
+        target.transform.SetPositionAndRotation(new Vector3(0.4f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 135, 90)));
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "Create a path to place the manipulator over the cube\n\n" +
+                      "Then select Rail manipulation from the menu";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.RAIL);
+
+        Destroy(target);
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "Move the robot over the cube";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
+
+        m_Text.text = "Focus Objects\n\n" +
+                      "Now deselect Rail manipulation from the menu";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+
+        m_Text.text = "Attaching an Object\n\n" +
+                      "Finally, let's grab the focus object to attach it";
+        m_AudioSource.Play();
+
+        cube.transform.SetPositionAndRotation(new Vector3(0.0f, 0.05f, -0.5f), Quaternion.Euler(new Vector3(0.0f, 30.0f, 0.0f)));
+
+        yield return new WaitUntil(() => cube.GetComponent<CollisionHandling>().m_isAttached);
+
+        GameObject x = Instantiate(m_X);
+        x.transform.SetParent(m_Objects.transform);
+        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
+
+        m_Text.text = "Attaching an Object\n\n" +
+                      "When an attachable object becomes attached, it turns green and makes a sound\n\n" +
+                      "Focus Object\n" +
+                      "Grabbing a focus object automatically removes its focus object status\n\n" +
+                      "Place the cube on the X";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
+
+        m_Text.text = "And that's it! Now get ready to practice\n\n" +
+                      "Deselect the Gripper and any other tools";
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => !m_GripperControl.isGripping && m_ManipulationMode.mode == Mode.DIRECT);
 
         stage = Stage.PRACTICE;
 
@@ -910,6 +1008,24 @@ public class Tutorial : MonoBehaviour
             }
 
             yield return new WaitForSeconds(1.0f);
+        }
+    }
+
+    private IEnumerator PracticeObstacle()
+    {
+        while (true)
+        {
+            GameObject obstacle = Instantiate(m_Obstacle);
+            obstacle.transform.SetParent(m_Objects.transform);
+
+            Vector3 position = new Vector3(Random.Range(-0.5f, 0.1f), 0.45f, Random.Range(-0.5f, 0.5f));
+            Quaternion rotation = Quaternion.Euler(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
+
+            obstacle.transform.SetPositionAndRotation(position, rotation);
+
+            yield return new WaitUntil(() => obstacle == null);
+
+            Destroy(obstacle);
         }
     }
 
@@ -956,7 +1072,7 @@ public class Tutorial : MonoBehaviour
 
     public void ResetTutorial()
     {
-        stage = Stage.READY;
+        stage = Stage.WAIT;
         DestroyAllObjects();
     }
 }

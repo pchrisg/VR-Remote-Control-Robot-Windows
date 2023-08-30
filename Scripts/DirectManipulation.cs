@@ -131,16 +131,17 @@ public class DirectManipulation : MonoBehaviour
         Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
         Vector3 connectingVector = m_GhostObject.transform.position - focusObject.position;
 
+        float snappingThreshold = ManipulationMode.ANGLETHRESHOLD * 2.0f;
         float angle = Vector3.Angle(connectingVector, focusObject.up);
-        if (angle < ManipulationMode.ANGLETHRESHOLD)
+        if (angle < snappingThreshold)
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
 
         angle = Vector3.Angle(connectingVector, focusObject.right);
-        if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+        if (angle < snappingThreshold || 180.0f - angle < snappingThreshold)
             return focusObject.position + Vector3.Project(connectingVector, focusObject.right);
 
         angle = Vector3.Angle(connectingVector, focusObject.forward);
-        if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+        if (angle < snappingThreshold || 180.0f - angle < snappingThreshold)
             return focusObject.position + Vector3.Project(connectingVector, focusObject.forward);
 
         return m_GhostObject.transform.position;
