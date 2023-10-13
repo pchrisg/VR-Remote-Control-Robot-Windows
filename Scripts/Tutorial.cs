@@ -72,7 +72,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
 
-        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
+        m_Objects = gameObject.transform.parent.GetComponent<Experiment2Manager>().m_Objects;
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
         
         m_LeftHand = Player.instance.leftHand;
@@ -84,12 +84,6 @@ public class Tutorial : MonoBehaviour
         m_AudioSource = gameObject.GetComponentInChildren<AudioSource>();
         m_SpriteRenderer = gameObject.GetComponentInChildren<SpriteRenderer>();
         m_SpriteRenderer.sprite = null;
-    }
-
-    private void Start()
-    {
-        m_Timer.m_TimeLimit = m_TimeLimit;
-        m_Timer.m_TimePassed = m_TimeLimit;
     }
 
     private void OnDisable()
@@ -105,7 +99,7 @@ public class Tutorial : MonoBehaviour
 
         m_ActiveCoroutine = null;
 
-        m_Timer.m_TimePassed = 600.0f;
+        m_Timer.StopTimer();
     }
 
     private void Update()
@@ -115,7 +109,7 @@ public class Tutorial : MonoBehaviour
             if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
                 stage = Stage.SIMPLEDIRECT;
             else if (m_ManipulationMode.mode == Mode.DIRECT)
-                stage = Stage.COLOBJCREATOR;
+                stage = Stage.ATTOBJCREATOR;
             else
                 m_ManipulationMode.ToggleDirect();
         }
@@ -164,7 +158,7 @@ public class Tutorial : MonoBehaviour
                 m_PracObsCoroutine = StartCoroutine(PracticeObstacle());
             }
                 
-            else if (m_Timer.m_TimePassed >= m_TimeLimit)
+            else if (m_Timer.TimeExhausted())
             {
                 StopCoroutine(m_ActiveCoroutine);
                 StopCoroutine(m_PracObsCoroutine);
@@ -181,7 +175,9 @@ public class Tutorial : MonoBehaviour
         target.transform.SetPositionAndRotation(new Vector3(0.3f, 0.4f, -0.4f), Quaternion.Euler(new Vector3(0.0f, -115.0f, 90.0f)));
 
         m_Text.text = "Move the Robot\n\n" +
-                      "Reach out and grab the manipulator with your right hand";
+                      "Reach out your right hand and hover the manipulator\n" +
+                      "It will have a yellow highlight when you are hoveringit\n\n" +
+                      "Once hovering, grab the manipulator\n\n";
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
@@ -239,28 +235,17 @@ public class Tutorial : MonoBehaviour
         x.transform.SetParent(m_Objects.transform);
         x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
 
-        m_SpriteRenderer.sprite = m_Sprites[0];
-        m_Text.text = "Select Gripper Control\n\n" +
-                      "Touch the trackpad and select the gripper control";
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTrackpadHint(true);
-
-        yield return new WaitUntil( () => m_GripperControl.isGripping);
-
-        m_ControllerHints.ShowTrackpadHint(false);
-
-        m_SpriteRenderer.sprite = null;
         m_Text.text = "Gripper Control\n\n" +
-                      "Grab the right trigger to activate gripper control";
+                      "Making sure that you are not hovering the manipulator\n\n" +
+                      "Grab the left trigger to activate gripper control";
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
 
-        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger);
+        yield return new WaitUntil(() => m_GripperControl.isGripping);
 
-        m_Text.text += "\n\nControl the gripper by slowly squeezing the left trigger\n\n" +
-                       "(You can also activate gripper control by grabbing the left trigger and control it with the right trigger)\n\n" +
+        m_Text.text += "\n\nControl the gripper by slowly squeezing the right trigger\n\n" +
+                       "(You can also activate gripper control by grabbing the right trigger and control it with the left trigger)\n\n" +
                        "Now grab the cube with the gripper";
         m_AudioSource.Play();
 
@@ -273,37 +258,15 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => cube.GetComponent<ExperimentObject>().isMoving == true);
 
-        m_Text.text = "Deselect Gripper Control\n\n" +
-                      "Touch the trackpad and deselect the gripper control";
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTrackpadHint(true);
-
-        yield return new WaitUntil(() => !m_GripperControl.isGripping);
-
-        m_ControllerHints.ShowTrackpadHint(false);
-
         m_Text.text = "Move the Cube\n\n" +
                       "Move the cube over the target X";
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x));
 
-        m_SpriteRenderer.sprite = m_Sprites[0];
-        m_Text.text = "Select Gripper Control\n\n" +
-                      "Touch the trackpad and select the gripper control";
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTrackpadHint(true);
-
-        yield return new WaitUntil(() => m_GripperControl.isGripping);
-
-        m_ControllerHints.ShowTrackpadHint(false);
-
-        m_SpriteRenderer.sprite = null;
         m_Text.text = "Gripper Control\n\n" +
                       "Release the cube by activating gripper control\n\n" +
-                      "(only grab one trigger)";
+                      "(only grab ONE trigger)";
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
@@ -315,16 +278,6 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
-
-        m_Text.text = "Deselect Gripper Control\n\n" +
-                      "Touch the trackpad and deselect the gripper control";
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTrackpadHint(true);
-
-        yield return new WaitUntil(() => !m_GripperControl.isGripping);
-
-        m_ControllerHints.ShowTrackpadHint(false);
 
         GameObject.Destroy(cube);
         GameObject.Destroy(x);
@@ -406,14 +359,6 @@ public class Tutorial : MonoBehaviour
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
-
-        m_Text.text = "Deselect Gripper Control\n\n" +
-                      "Touch the trackpad and deselect the gripper control";
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTrackpadHint(true);
-
-        yield return new WaitUntil(() => !m_GripperControl.isGripping);
 
         m_Text.text = "Deselect SDOF Manipulation\n\n" +
                       "Touch the trackpad and deselect SDOF manipulation";
@@ -650,14 +595,6 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
 
-        m_Text.text = "Deselect Gripper Control\n\n" +
-                      "Touch the trackpad and deselect the gripper control";
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTrackpadHint(true);
-
-        yield return new WaitUntil(() => !m_GripperControl.isGripping);
-
         m_Text.text = "Deselect Rail Manipulation\n\n" +
                       "Touch the trackpad and deselect Rail manipulation";
         m_AudioSource.Play();
@@ -815,10 +752,10 @@ public class Tutorial : MonoBehaviour
         Destroy(x);
 
         m_Text.text = "Well done! You're getting the hang of this!\n\n" +
-                      "Deselect the Gripper and any other tools";
+                      "Deselect manipulation techniques you have selected";
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => !m_GripperControl.isGripping && m_ManipulationMode.mode == Mode.DIRECT);
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
 
         stage = Stage.ATTOBJCREATOR;
 
@@ -872,14 +809,16 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => m_CollisionObjects.m_FocusObject != null);
 
+        GameObject target = Instantiate(m_GhostManipulator);
+        target.transform.SetParent(m_Objects.transform);
+        target.transform.SetPositionAndRotation(new Vector3(0.0f, 0.39f, -0.5f), Quaternion.Euler(new Vector3(0.0f, -120.0f, 90.0f)));
+
         m_Text.text = "Focus Objects\n\n" +
                       "With a focus object in the scene, the manipulator will snap to that object\n\n" +
                       "Let's give it a try";
         m_AudioSource.Play();
 
-        GameObject target = Instantiate(m_GhostManipulator);
-        target.transform.SetParent(m_Objects.transform);
-        target.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.39f, -0.5f), Quaternion.Euler(new Vector3(0.0f, 150, 90)));
+        
 
         yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
 
@@ -894,7 +833,7 @@ public class Tutorial : MonoBehaviour
         yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.SDOF);
 
         cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 10.0f, 0.0f)));
-        target.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f,100,90)));
+        target.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f, -80.0f, 90.0f)));
 
         m_Text.text = "Focus Objects\n\n" +
                       "With a focus object, the axes snap to the focus object coordinate system\n\n" +
@@ -910,6 +849,7 @@ public class Tutorial : MonoBehaviour
         yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.RAILCREATOR);
 
         cube.transform.SetPositionAndRotation(new Vector3(0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 45.0f, 0.0f)));
+        target.transform.SetPositionAndRotation(new Vector3(0.4f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f, -45.0f, 90.0f)));
 
         m_Text.text = "Focus Objects\n\n" +
                       "With a focus object, the manipulator will snap to the focus object's axes and to the invisible line that connects the focus object to the manipulator\n\n" +
@@ -917,9 +857,7 @@ public class Tutorial : MonoBehaviour
                       "If snapped, the manipulator will rotate to face the focus object";
         m_AudioSource.Play();
 
-        yield return new WaitForSeconds(5.0f);
-
-        target.transform.SetPositionAndRotation(new Vector3(0.4f, 0.39f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 135, 90)));
+        yield return new WaitForSeconds(10.0f);
 
         m_Text.text = "Focus Objects\n\n" +
                       "Create a path to place the manipulator over the cube\n\n" +
@@ -928,13 +866,13 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.RAIL);
 
-        Destroy(target);
-
         m_Text.text = "Focus Objects\n\n" +
                       "Move the robot over the cube";
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
+
+        Destroy(target);
 
         m_Text.text = "Focus Objects\n\n" +
                       "Now deselect Rail manipulation from the menu";
@@ -963,11 +901,14 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
 
+        Destroy(cube);
+        Destroy(x);
+
         m_Text.text = "And that's it! Now get ready to practice\n\n" +
-                      "Deselect the Gripper and any other tools";
+                      "Deselect any manipulation tools that you selected";
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => !m_GripperControl.isGripping && m_ManipulationMode.mode == Mode.DIRECT);
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
 
         stage = Stage.PRACTICE;
 
@@ -981,7 +922,7 @@ public class Tutorial : MonoBehaviour
                       "Take this time to practice what you just learnt";
         m_AudioSource.Play();
 
-        m_Timer.m_TimePassed = 0.0f;
+        m_Timer.StartTimer(m_TimeLimit);
 
         GameObject cube = Instantiate(m_Cube);
         cube.transform.SetParent(m_Objects.transform);
@@ -1031,7 +972,7 @@ public class Tutorial : MonoBehaviour
 
     private bool CheckVec3Distance(GameObject first, GameObject second)
     {
-        if (Vector3.Distance(first.transform.position, second.transform.position) < ExperimentManager.ERRORTHRESHOLD)
+        if (Vector3.Distance(first.transform.position, second.transform.position) < Experiment2Manager.ERRORTHRESHOLD)
             return true;
         else
             return false;
@@ -1039,7 +980,7 @@ public class Tutorial : MonoBehaviour
 
     private bool CheckVec2Distance(GameObject first, GameObject second)
     {
-        if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < ExperimentManager.ERRORTHRESHOLD)
+        if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < Experiment2Manager.ERRORTHRESHOLD)
             return true;
         else
             return false;

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class Experiment2 : MonoBehaviour
+public class DominoTask : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private GameObject m_TargetPrefab = null;
@@ -12,7 +12,7 @@ public class Experiment2 : MonoBehaviour
 
     private void Awake()
     {
-        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
+        m_Objects = gameObject.transform.parent.GetComponent<Experiment2Manager>().m_Objects;
     }
 
     public void Setup(bool value)
@@ -20,7 +20,7 @@ public class Experiment2 : MonoBehaviour
         gameObject.SetActive(value);
 
         if (value)
-            ResetExperiment();
+            ResetTask();
     }
 
     private void OnDisable()
@@ -40,7 +40,7 @@ public class Experiment2 : MonoBehaviour
         }
     }
 
-    public void ResetExperiment()
+    public void ResetTask()
     {
         DestroyAllObjects();
 

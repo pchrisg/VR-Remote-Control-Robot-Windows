@@ -1,29 +1,32 @@
-using System.Collections;
-using System.Collections.Generic;
+using System.Xml.Serialization;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 
 public class RadialMenuManager : MonoBehaviour
 {
-    private SteamVR_Action_Boolean m_Trackpad = null;
+    private SteamVR_Action_Boolean m_TouchTrackpad = null;
     private SteamVR_Action_Vector2 m_TouchPos = null;
+    private SteamVR_Action_Boolean m_PressTrackpad = null;
 
     [Header("Scene Objects")]
     [SerializeField] private RadialMenu radialMenu = null;
 
     private void Awake()
     {
-        m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchTrackpad");
+        m_TouchTrackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchTrackpad");
         m_TouchPos = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("TouchPosition");
-        m_Trackpad.onChange += Touch;
+        m_PressTrackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressTrackpad");
+        m_TouchTrackpad.onChange += Touch;
         m_TouchPos.onAxis += Position;
+        m_PressTrackpad.onStateDown += Click;
     }
 
     private void OnDestroy()
     {
-        m_Trackpad.onChange -= Touch;
+        m_TouchTrackpad.onChange -= Touch;
         m_TouchPos.onAxis -= Position;
+        m_PressTrackpad.onStateDown -= Click;
     }
 
     private void Start()
@@ -46,8 +49,11 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Touch(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
-        if (!newState)
-            radialMenu.ActivateHighlightedSection();
         radialMenu.Show(newState);
+    }
+
+    private void Click(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        radialMenu.ActivateHighlightedSection();
     }
 }

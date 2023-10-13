@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using ManipulationModes;
 
-public class ExperimentManager : MonoBehaviour
+public class Experiment2Manager : MonoBehaviour
 {
     [Header("Scene Objects")]
     [SerializeField] private GameObject m_Table = null;
@@ -19,22 +19,23 @@ public class ExperimentManager : MonoBehaviour
 
     [Header("Setup")]
     [SerializeField] private bool m_SetupTutorial = false;
-    [SerializeField] private bool m_SetupExperiment1 = false;
-    [SerializeField] private bool m_SetupExperiment2 = false;
+    [SerializeField] private bool m_SetupTask1 = false;
+    [SerializeField] private bool m_SetupTask2 = false;
 
     [Header("Reset")]
-    [SerializeField] private bool m_ResetTutorial = false;
-    [SerializeField] private bool m_ResetExperiment = false;
+    [SerializeField] private bool m_Reset = false;
 
-    [Header("Start")]
-    [SerializeField] private bool m_StartTutorial = false;
-    [SerializeField] private bool m_StartExperiment = false;
+    [Header("Start/Stop")]
+    [SerializeField] private bool m_Start = false;
 
     [Header("Status")]
-    [SerializeField] private bool m_TutorialActive = false;
-    [SerializeField] private bool m_Experiment1Active = false;
-    [SerializeField] private bool m_Experiment2Active = false;
-    [SerializeField] private bool m_Running = false;
+    [SerializeField] private string m_Active = string.Empty;
+    [SerializeField] private string m_Status = string.Empty;
+
+    private bool m_TutorialActive = false;
+    private bool m_Task1Active = false;
+    private bool m_Task2Active = false;
+    private bool m_Running = false;
 
     [HideInInspector] public const float ERRORTHRESHOLD = 0.05f; //5cm
 
@@ -42,8 +43,8 @@ public class ExperimentManager : MonoBehaviour
     private Tutorial m_Tutorial = null;
 
     // Experiments
-    private Experiment1 m_Experiment1 = null;
-    private Experiment2 m_Experiment2 = null;
+    private BarrelTask m_Task1 = null;
+    private DominoTask m_Task2 = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
@@ -78,21 +79,20 @@ public class ExperimentManager : MonoBehaviour
         m_Timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<Timer>();
 
         m_Tutorial = transform.Find("Tutorial").GetComponent<Tutorial>();
-        m_Experiment1 = transform.Find("Experiment1").GetComponent<Experiment1>();
-        m_Experiment2 = transform.Find("Experiment2").GetComponent<Experiment2>();
+        m_Task1 = transform.Find("Task1").GetComponent<BarrelTask>();
+        m_Task2 = transform.Find("Task2").GetComponent<DominoTask>();
 
         m_Table.SetActive(false);
         m_Glassbox.SetActive(false);
         m_Objects.SetActive(false);
+
+        m_Active = "None";
+        m_Status = "Standby";
     }
 
     private void Start()
     {
         Invoke("ResetRobotPose", 1.0f);
-
-        m_Timer.m_TimeLimit = m_TimeLimit;
-        m_Timer.m_TimePassed = m_TimeLimit;
-        m_Timer.m_Text.text = "Ready";
     }
 
     private void Update()
@@ -104,123 +104,115 @@ public class ExperimentManager : MonoBehaviour
             ResetRobotPose();
         }
 
-        // If no tutorial or experiment are running
+        // If no tutorial or task is running
         if (!m_Running)
         {
             // Setup tutorial
             if (m_SetupTutorial)
             {
                 m_SetupTutorial = false;
-                m_SetupExperiment1 = false;
-                m_SetupExperiment2 = false;
+                m_SetupTask1 = false;
+                m_SetupTask2 = false;
 
                 if (!m_TutorialActive)
                 {
-                    m_Experiment2.Setup(false);
-                    m_Experiment2Active = false;
+                    m_Task2.Setup(false);
+                    m_Task2Active = false;
 
-                    m_Experiment1.Setup(false);
-                    m_Experiment1Active = false;
+                    m_Task1.Setup(false);
+                    m_Task1Active = false;
 
                     m_Tutorial.Setup(true);
                     m_TutorialActive = true;
-                }
-            }
 
-            // Reset tutorial
-            if (m_ResetTutorial)
-            {
-                m_ResetTutorial = false;
-
-                if (m_TutorialActive)
-                {
-                    m_Tutorial.ResetTutorial();
-                    ResetRobotPose();
-                }
-            }
-
-            // Start the tutorial
-            if (m_StartTutorial)
-            {
-                if (!m_TutorialActive)
-                    m_StartTutorial = false;
-
-                else
-                {
-                    m_Running = true;
-                    m_Tutorial.stage = TutorialStages.Stage.START;
+                    m_Active = "Tutorial";
+                    m_Status = "Standby";
                 }
             }
                 
-            // Both experiments can't be active at same time
-            if (m_SetupExperiment1 && m_SetupExperiment2)
+            // Both tasks can't be active at same time
+            if (m_SetupTask1 && m_SetupTask2)
             {
-                m_SetupExperiment1 = false;
-                m_SetupExperiment2 = false;
+                m_SetupTask1 = false;
+                m_SetupTask2 = false;
             }
 
-            // Setup experiment 1
-            if (m_SetupExperiment1)
+            // Setup task 1
+            if (m_SetupTask1)
             {
-                m_SetupExperiment1 = false;
+                m_SetupTask1 = false;
 
-                if (!m_Experiment1Active)
+                if (!m_Task1Active)
                 {
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
 
-                    m_Experiment2.Setup(false);
-                    m_Experiment2Active = false;
+                    m_Task2.Setup(false);
+                    m_Task2Active = false;
 
-                    m_Experiment1.Setup(true);
-                    m_Experiment1Active = true;
+                    m_Task1.Setup(true);
+                    m_Task1Active = true;
+
+                    m_Active = "Barrel Task";
+                    m_Status = "Standby";
                 }
             }
 
             // Setup experiment 2
-            if (m_SetupExperiment2)
+            if (m_SetupTask2)
             {
-                m_SetupExperiment2 = false;
+                m_SetupTask2 = false;
 
-                if (!m_Experiment2Active)
+                if (!m_Task2Active)
                 {
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
 
-                    m_Experiment1.Setup(false);
-                    m_Experiment1Active = false;
+                    m_Task1.Setup(false);
+                    m_Task1Active = false;
 
-                    m_Experiment2.Setup(true);
-                    m_Experiment2Active = true;
+                    m_Task2.Setup(true);
+                    m_Task2Active = true;
+
+                    m_Active = "Domino Task";
+                    m_Status = "Standby";
                 }
             }
 
             // Reset the experiment
-            if (m_ResetExperiment)
+            if (m_Reset)
             {
-                m_ResetExperiment = false;
+                m_Reset = false;
 
-                if (m_Experiment1Active || m_Experiment2Active)
+                if (m_TutorialActive || m_Task1Active || m_Task2Active)
                 {
-                    if (m_Experiment1Active)
-                        m_Experiment1.ResetExperiment();
-                    if (m_Experiment2Active)
-                        m_Experiment2.ResetExperiment();
+                    if (m_TutorialActive)
+                        m_Tutorial.ResetTutorial();
+                    if (m_Task1Active)
+                        m_Task1.ResetTask();
+                    if (m_Task2Active)
+                        m_Task2.ResetTask();
 
                     ResetRobotPose();
                 }
             }
 
             // Start the experiment
-            if (m_StartExperiment)
+            if (m_Start)
             {
-                if (!m_Experiment1Active && !m_Experiment2Active)
-                    m_StartExperiment = false;
+                if (!m_TutorialActive && !m_Task1Active && !m_Task2Active)
+                    m_Start = false;
 
                 else
                 {
                     m_Running = true;
-                    StartExperiment();
+                    m_Status = "Running";
+
+                    if (m_TutorialActive)
+                        m_Tutorial.stage = TutorialStages.Stage.START;
+
+                    else
+                        StartExperiment();
                 }
             }
         }
@@ -228,23 +220,27 @@ public class ExperimentManager : MonoBehaviour
         else if (m_Running)
         {
             // if tutorial stopped
-            if (m_TutorialActive && !m_StartTutorial)
+            if (m_TutorialActive && !m_Start)
+            {
                 m_Running = false;
+                m_Status = "Stopped";
+            }
+                
 
             // if experiment
-            if (m_Experiment1Active || m_Experiment2Active)
+            if (m_Task1Active || m_Task2Active)
             {
                 // if time exhausted
-                if (m_Timer.m_TimePassed == m_TimeLimit)
+                if (m_Timer.TimeExhausted())
                     SaveData();
 
                 // if experiment stopped
-                if (!m_StartExperiment)
+                if (!m_Start)
                 {
                     m_Running = false;
+                    m_Status = "Stopped";
 
-                    m_Timer.m_TimePassed = m_TimeLimit;
-                    m_Timer.m_Text.text = "Ready";
+                    m_Timer.StopTimer();
                 }
 
                 // Data Gathering
@@ -262,23 +258,6 @@ public class ExperimentManager : MonoBehaviour
                     m_TimeInAttObj += Time.deltaTime;
             }
         }
-    }
-
-    public void AddPlacedObject(string name, float posErr, float rotErr)
-    {
-        m_PlacedObjects += m_Timer.m_TimePassed.ToString() + ", " + name + ", " + posErr.ToString() + ", " + rotErr.ToString() + "\n";
-    }
-
-    private void StartExperiment()
-    {
-        m_Timer.m_TimePassed = 0.0f;
-
-        m_TimeInDirMan = 0.0f;
-        m_TimeInSDOFMan = 0.0f;
-        m_TimeInRailCre = 0.0f;
-        m_TimeInRailMan = 0.0f;
-        m_TimeInColObj = 0.0f;
-        m_TimeInAttObj = 0.0f;
     }
 
     private void ResetRobotPose()
@@ -306,16 +285,45 @@ public class ExperimentManager : MonoBehaviour
         yield return null;
     }
 
+    private void StartExperiment()
+    {
+        m_Timer.StartTimer(m_TimeLimit);
+
+        m_TimeInDirMan = 0.0f;
+        m_TimeInSDOFMan = 0.0f;
+        m_TimeInRailCre = 0.0f;
+        m_TimeInRailMan = 0.0f;
+        m_TimeInColObj = 0.0f;
+        m_TimeInAttObj = 0.0f;
+    }
+
+    public void AddPlacedObject(string name, float posErr, float rotErr)
+    {
+        m_PlacedObjects += m_Timer.GetTime().ToString() + ", " + name + ", " + posErr.ToString() + ", " + rotErr.ToString() + "\n";
+    }
+
     public void SaveData()
     {
         if (m_Running)
         {
-            m_TimeTaken = m_Timer.m_TimePassed;
+            if (m_Task1Active)
+            {
+                m_Task1Active = false;
+                m_Task1.Setup(false);
+            }
 
-            m_StartExperiment = false;
+            else if (m_Task2Active)
+            {
+                m_Task2Active = false;
+                m_Task2.Setup(false);
+            }
+
+            m_TimeTaken = m_Timer.GetTime();
+
+            m_Start = false;
             m_Running = false;
-            m_Timer.m_TimePassed = m_TimeLimit;
-            m_Timer.m_Text.text = "End";
+            m_Status = "Finished";
+            m_Timer.StopTimer();
 
             StartCoroutine(WriteToFile());
         }
@@ -325,28 +333,14 @@ public class ExperimentManager : MonoBehaviour
     {
         yield return new WaitForSeconds(1.0f);
 
-        string experiment = string.Empty;
-        if (m_Experiment1Active)
-        {
-            m_Experiment1Active = false;
-            m_Experiment1.Setup(false);
-            experiment = "PicknPlace\\";
-        }
-
-        else if (m_Experiment2Active)
-        {
-            m_Experiment2Active = false;
-            m_Experiment2.Setup(false);
-            experiment = "Stacking\\";
-        }
-
         string technique = string.Empty;
         if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
             technique = "_Simple";
         else
             technique = "_Ours";
 
-        string path = m_FilePathName + experiment + m_ParticipantName + technique + ".csv";
+        string path = m_FilePathName + m_Active + m_ParticipantName + technique + ".csv";
+        m_Active = "None";
 
         if (File.Exists(path))
             File.Delete(path);

@@ -105,6 +105,14 @@ namespace Valve.VR
             }
         }
         
+        public virtual SteamVR_Action_Boolean PressTrackpad
+        {
+            get
+            {
+                return SteamVR_Actions.default_PressTrackpad;
+            }
+        }
+        
         public virtual SteamVR_Action_Vibration Haptic
         {
             get

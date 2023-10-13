@@ -132,6 +132,11 @@ public class CollisionHandling : MonoBehaviour
                 m_Manipulator.Colliding(false);
                 m_GripperControl.Attach();
 
+                if (gameObject == m_CollisionObjects.m_FocusObject)
+                {
+                    m_CollisionObjects.SetFocusObject(null);
+                }
+
                 gameObject.GetComponent<CollisionObject>().RemoveCollisionObject();
             }
         }
@@ -155,7 +160,7 @@ public class CollisionHandling : MonoBehaviour
             if (otherIsEndEffector)
             {
                 Renderer renderer = gameObject.GetComponent<Renderer>();
-                renderer.material = m_CollisionObjects.m_FocusObject == gameObject ? m_FocusObjectMat : m_OriginalMat;
+                renderer.material = gameObject == m_CollisionObjects.m_FocusObject ? m_FocusObjectMat : m_OriginalMat;
                 m_Manipulator.Colliding(false);
             }
         }

@@ -3,11 +3,15 @@ using UnityEngine.UI;
 
 public class Timer : MonoBehaviour
 {
-    private string mm = string.Empty, ss = string.Empty;
+    private Text m_Text = null;
 
-    [HideInInspector] public Text m_Text = null;
-    [HideInInspector] public float m_TimeLimit = 0.0f;
-    [HideInInspector] public float m_TimePassed = 0.0f;
+    private float m_TimeLimit = 0.0f;
+    private float m_TimeElapsed = 0.0f;
+
+    private string m_Mins = string.Empty;
+    private string m_Secs = string.Empty;
+
+    private bool m_Running = false;
 
     private void Awake()
     {
@@ -16,20 +20,53 @@ public class Timer : MonoBehaviour
 
     private void Start()
     {
-        mm = (0.0f).ToString("0");
-        ss = (0.0f).ToString("00");
+        m_Mins = (0.0f).ToString("0");
+        m_Secs = (0.0f).ToString("00");
+        m_Text.text = "Ready";
     }
 
     private void Update()
     {
-        if (m_TimePassed < m_TimeLimit)
+        if (m_Running)
         {
-            m_TimePassed += Time.deltaTime;
-            mm = Mathf.Floor((m_TimePassed / 60.0f) % 60.0f).ToString("0");
-            ss = (m_TimePassed % 60).ToString("00");
-            m_Text.text = mm + ":" + ss;
+            if (m_TimeLimit == 0.0f || m_TimeElapsed < m_TimeLimit)
+            {
+                m_TimeElapsed += Time.deltaTime;
+                m_Mins = Mathf.Floor((m_TimeElapsed / 60.0f) % 60.0f).ToString("0");
+                m_Secs = (m_TimeElapsed % 60).ToString("00");
+                m_Text.text = m_Mins + ":" + m_Secs;
+            }
+            else
+                StopTimer();
         }
-        else
-            m_TimePassed = m_TimeLimit;
+    }
+
+    public void StartTimer(float timeLimit = 0.0f)
+    {
+        m_TimeElapsed = 0.0f;
+        m_TimeLimit = timeLimit;
+
+        m_Running = true;
+    }
+
+    public float GetTime()
+    {
+        return m_TimeElapsed;
+    }
+
+    public void StopTimer()
+    {
+        if (m_TimeLimit != 0.0f && m_TimeElapsed > m_TimeLimit)
+            m_TimeElapsed = m_TimeLimit;
+
+        m_TimeLimit = 0.0f;
+        m_Text.text = "Ready";
+
+        m_Running = false;
+    }
+
+    public bool TimeExhausted()
+    {
+        return !m_Running;
     }
 }

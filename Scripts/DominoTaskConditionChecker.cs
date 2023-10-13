@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Experiment2ConditionChecker : MonoBehaviour
+public class DominoTaskConditionChecker : MonoBehaviour
 {
     [Header("Materials")]
     [SerializeField] private Material m_DominoMat = null;
     [SerializeField] private Material m_PlacedDominoMat = null;
 
-    private ExperimentManager m_ExperimentManager = null;
+    private Experiment2Manager m_ExperimentManager = null;
 
     private List<GameObject> m_Dominoes = new List<GameObject>();
     private List<GameObject> m_PlacedDominoes = new List<GameObject>();
@@ -18,7 +18,7 @@ public class Experiment2ConditionChecker : MonoBehaviour
 
     private void Awake()
     {
-        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment2").GetComponent<Experiment2Manager>();
         gameObject.GetComponent<Renderer>().material.color = new Color(0.8f, 0.8f, 1.0f, 0.4f);
     }
 

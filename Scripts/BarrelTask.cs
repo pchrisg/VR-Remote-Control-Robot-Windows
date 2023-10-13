@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Experiment1 : MonoBehaviour
+public class BarrelTask : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private GameObject m_CratePrefab = null;
@@ -10,7 +10,7 @@ public class Experiment1 : MonoBehaviour
 
     private void Awake()
     {
-        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
+        m_Objects = gameObject.transform.parent.GetComponent<Experiment2Manager>().m_Objects;
     }
 
     public void Setup(bool value)
@@ -18,7 +18,7 @@ public class Experiment1 : MonoBehaviour
         gameObject.SetActive(value);
 
         if(value)
-            ResetExperiment();
+            ResetTask();
     }
 
     private void OnDisable()
@@ -38,7 +38,7 @@ public class Experiment1 : MonoBehaviour
         }
     }
 
-    public void ResetExperiment()
+    public void ResetTask()
     {
         DestroyAllObjects();
 

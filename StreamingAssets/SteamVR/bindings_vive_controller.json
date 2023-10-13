@@ -106,6 +106,9 @@
             },
             {
                "inputs" : {
+                  "click" : {
+                     "output" : "/actions/default/in/presstrackpad"
+                  },
                   "position" : {
                      "output" : "/actions/default/in/touchposition"
                   },

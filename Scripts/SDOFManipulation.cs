@@ -74,8 +74,8 @@ public class SDOFManipulation : MonoBehaviour
         {
             m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
             isInteracting = true;
-            m_InitPos = m_Manipulator.transform.position;
-            m_InitDir = m_Interactable.transform.position - m_InitPos;
+            m_InitPos = m_Interactable.transform.position;
+            m_InitDir = m_InitPos - m_Manipulator.transform.position;
 
             if (m_InteractingHand == Player.instance.rightHand)
                 m_OtherHand = Player.instance.leftHand;

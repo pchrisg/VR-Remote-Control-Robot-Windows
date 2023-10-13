@@ -69,7 +69,7 @@ public class RailCreator : MonoBehaviour
             m_ManipulationMode.isInteracting = isInteracting;
             if (!isInteracting && !locked)
             {
-                if( m_Trigger.GetStateDown(Player.instance.rightHand.handType) ||
+                if (m_Trigger.GetStateDown(Player.instance.rightHand.handType) ||
                     m_Trigger.GetStateDown(Player.instance.leftHand.handType))
                     TriggerGrabbed();
             }
@@ -79,10 +79,7 @@ public class RailCreator : MonoBehaviour
                     TriggerReleased();
 
                 else
-                {
-                    if (m_Trigger.GetState(m_InteractingHand.handType))
-                        RotateRail();
-                }
+                    RotateRail();
             }
         }
     }

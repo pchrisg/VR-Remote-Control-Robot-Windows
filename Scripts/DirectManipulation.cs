@@ -55,8 +55,7 @@ public class DirectManipulation : MonoBehaviour
                     if (m_Trigger.GetStateDown(m_OtherHand.handType))
                         m_InitPos = gameObject.transform.position;
 
-                    if (m_Trigger.GetState(m_InteractingHand.handType))
-                        MoveManipulator();
+                    MoveManipulator();
                 }
             }
         }

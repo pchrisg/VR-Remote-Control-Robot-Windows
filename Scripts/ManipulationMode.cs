@@ -24,7 +24,7 @@ public class ManipulationMode : MonoBehaviour
     private Mode m_PrevMode = Mode.DIRECT;
 
     [HideInInspector] public const float ANGLETHRESHOLD = 5.0f;     //5deg
-    [HideInInspector] public const float DISTANCETHRESHOLD = 0.02f; //2cm
+    [HideInInspector] public const float DISTANCETHRESHOLD = 0.03f; //3cm
     [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
 
     [Header("Scene Objects")]
@@ -83,8 +83,8 @@ public class ManipulationMode : MonoBehaviour
         if (m_PlanningRobot.isPlanning)
             m_PlanningRobot.Show(false);
 
-        if (m_GripperControl.isGripping)
-            m_GripperControl.Show(false);
+        //if (m_GripperControl.isGripping)
+        //    m_GripperControl.Show(false);
 
         if (mode == Mode.SDOF)
             m_SDOFWidget.Show(false);
@@ -149,8 +149,8 @@ public class ManipulationMode : MonoBehaviour
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show(false);
 
-            if (m_GripperControl.isGripping)
-                m_GripperControl.Show(false);
+            //if (m_GripperControl.isGripping)
+            //    m_GripperControl.Show(false);
 
             m_CollisionObjects.isCreating = true;
 
@@ -175,8 +175,8 @@ public class ManipulationMode : MonoBehaviour
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show(false);
 
-            if (m_GripperControl.isGripping)
-                m_GripperControl.Show(false);
+            //if (m_GripperControl.isGripping)
+            //    m_GripperControl.Show(false);
 
             m_CollisionObjects.isCreating = true;
 
@@ -193,7 +193,7 @@ public class ManipulationMode : MonoBehaviour
 
     public void ToggleGripper()
     {
-        if (!m_PlanningRobot.isPlanning &&
+        /*if (!m_PlanningRobot.isPlanning &&
            (mode == Mode.SIMPLEDIRECT ||
            mode == Mode.DIRECT ||
            mode == Mode.SDOF ||
@@ -203,7 +203,7 @@ public class ManipulationMode : MonoBehaviour
                 m_GripperControl.Show(false);
             else
                 m_GripperControl.Show(true);
-        }
+        }*/
     }
 
     public void ToggleRailCreator()
@@ -213,8 +213,8 @@ public class ManipulationMode : MonoBehaviour
             if (m_PlanningRobot.isPlanning)
                 m_PlanningRobot.Show(false);
 
-            if (m_GripperControl.isGripping)
-                m_GripperControl.Show(false);
+            //if (m_GripperControl.isGripping)
+            //    m_GripperControl.Show(false);
 
             m_Manipulator.ResetPositionAndRotation();
             m_RailCreator.Show(true);

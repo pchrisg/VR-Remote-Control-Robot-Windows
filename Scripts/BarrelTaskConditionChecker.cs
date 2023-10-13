@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class Experiment1ConditionChecker : MonoBehaviour
+public class BarrelTaskConditionChecker : MonoBehaviour
 {
-    private ExperimentManager m_ExperimentManager = null;
+    private Experiment2Manager m_ExperimentManager = null;
 
     private List<GameObject> m_Barrels = new List<GameObject>();
     private List<GameObject> m_PlacedBarrels = new List<GameObject>();
@@ -14,7 +14,7 @@ public class Experiment1ConditionChecker : MonoBehaviour
 
     private void Awake()
     {
-        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment2").GetComponent<Experiment2Manager>();
     }
 
     private void Update()
