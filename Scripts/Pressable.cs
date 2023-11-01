@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class Button : MonoBehaviour
+public class Pressable : MonoBehaviour
 {
     [Header ("Scene Objects")]
     [SerializeField] private GameObject m_Presser = null;
@@ -12,12 +12,14 @@ public class Button : MonoBehaviour
     [SerializeField] private UnityEvent m_OnButtonUp;
     [SerializeField] private UnityEvent m_OnButtonIsPressed;
 
-    [Header ("Properties")]
+    [Header("Properties")]
+    [SerializeField] private bool m_isMultiPress = false;
     [Range(0, 1)]
     [SerializeField] private float m_EngageAtPercent = 0.95f;
     [Range(0, 1)]
     [SerializeField] private float m_DisengageAtPercent = 0.9f;
 
+    private AudioSource m_AudioSource = null;
     private Vector3 m_LocalMoveDistance = new Vector3(0, -0.4f, 0);
 
     private bool m_Engaged = false;
@@ -32,6 +34,7 @@ public class Button : MonoBehaviour
 
     private void Awake()
     {
+        m_AudioSource = gameObject.GetComponentInParent<AudioSource>();
         m_PresserColliders = m_Presser.GetComponentsInChildren<Collider>();
     }
 
@@ -58,7 +61,7 @@ public class Button : MonoBehaviour
             }
         }
 
-        if(isPresser & !m_Engaged)
+        if(isPresser & (m_isMultiPress || !m_Engaged))
         {
             bool wasEngaged = m_Engaged;
 
@@ -101,6 +104,7 @@ public class Button : MonoBehaviour
 
     private void OnButtonDown()
     {
+        m_AudioSource.Play();
         ColorSelf(Color.cyan);
     }
 

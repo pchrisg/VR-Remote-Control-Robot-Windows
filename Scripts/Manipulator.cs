@@ -1,25 +1,25 @@
 using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Manipulator : MonoBehaviour
 {
     [Header("Material")]
-    [SerializeField] private Material m_ManipulatorMat;
+    [SerializeField] private Material m_ManipulatorMat = null;
+    [SerializeField] private Material m_PlanRobMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private CollisionObjects m_CollisionObjects = null;
 
-    private Transform m_Robotiq;
+    private Transform m_Robotiq = null;
 
     //Colors
-    private Color m_CurrentColor = new Color();
-    private Color m_DefaultColor = new Color(0.2f, 0.2f, 0.2f, 0.4f);
-    private Color m_CollidingColor = new Color(1.0f, 0.0f, 0.0f, 0.4f);
-    private Color m_Y_AxisColor = new Color(0.0f, 1.0f, 0.0f, 0.4f);
-    private Color m_XZ_PlaneColor = new Color(1.0f, 0.0f, 1.0f, 0.4f);
-    private Color m_FocusObjectColor = new Color(1.0f, 1.0f, 0.0f, 0.4f);
+    private Color m_CurrentColor = new();
+    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 0.4f);
+    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 0.4f);
+    private Color m_Y_AxisColor = new(0.0f, 1.0f, 0.0f, 0.4f);
+    private Color m_XZ_PlaneColor = new(1.0f, 0.0f, 1.0f, 0.4f);
+    private Color m_FocusObjectColor = new(1.0f, 1.0f, 0.0f, 0.4f);
 
     public bool isColliding = false;
     private Coroutine m_Flashing = null;
@@ -35,16 +35,13 @@ public class Manipulator : MonoBehaviour
 
         m_CurrentColor = m_DefaultColor;
         m_ManipulatorMat.color = m_DefaultColor;
+
+        ShowManipulator(false);
     }
 
     private void OnDestroy()
     {
         m_ManipulatorMat.color = m_DefaultColor;
-    }
-
-    private void Start()
-    {
-        Invoke("ResetPositionAndRotation", 1.2f);
     }
 
     private void Update()
@@ -81,16 +78,20 @@ public class Manipulator : MonoBehaviour
 
     private IEnumerator ResetPos()
     {
+        ShowManipulator(false);
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, gameObject.transform.rotation);
+        ShowManipulator(true);
     }
 
     private IEnumerator ResetPose()
     {
+        ShowManipulator(false);
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
+        ShowManipulator(true);
     }
 
     private Color CheckSnapping(Color color)
@@ -119,17 +120,31 @@ public class Manipulator : MonoBehaviour
         isColliding = value;
     }
 
-    public void Flash(bool value)
+    public void ShowManipulator(bool value)
     {
         if (value)
         {
-            if (m_Flashing == null)
-                m_Flashing = StartCoroutine(Flashing());
+            foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
+                renderer.material = m_ManipulatorMat;
         }
+        else
+        {
+            foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
+                renderer.material = m_PlanRobMat;
+        }
+    }
+
+    public void Flash(bool value)
+    {
+        if (value)
+            m_Flashing ??= StartCoroutine(Flashing());
+
         else
         {
             if (m_Flashing != null)
                 StopCoroutine(m_Flashing);
+
+            m_Flashing = null;
             m_ManipulatorMat.color = m_DefaultColor;
         }
     }

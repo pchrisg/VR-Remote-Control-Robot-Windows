@@ -3,6 +3,8 @@ using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationModes;
 
+[RequireComponent(typeof(Interactable))]
+
 public class SimpleDirectManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;

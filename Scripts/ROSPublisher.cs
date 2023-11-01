@@ -84,7 +84,8 @@ public class ROSPublisher : MonoBehaviour
     {
         Robotiq3FGripperRobotOutputMsg outputMessage = new Robotiq3FGripperRobotOutputMsg();
         outputMessage.rACT = 1;
-        outputMessage.rPRA = (byte)(1.0f);
+        //outputMessage.rPRA = (byte)(1.0f);
+        outputMessage.rPRA = (byte)(120.0f);
 
         PublishRobotiqSqueeze(outputMessage);
         PublishRobotiqSqueeze(outputMessage);

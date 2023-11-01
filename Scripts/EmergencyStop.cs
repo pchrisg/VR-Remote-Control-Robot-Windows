@@ -14,7 +14,7 @@ public class EmergencyStop : MonoBehaviour
     [SerializeField] private AudioClip m_CollisionClip = null;
 
     private ROSPublisher m_ROSPublisher = null;
-    private Experiment2Manager m_ExperimentManager = null;
+    private Experiment1Manager m_ExperimentManager = null;
     private AudioSource m_AudioSource = null;
 
     private Renderer[] m_Renderers = null;
@@ -29,8 +29,7 @@ public class EmergencyStop : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        if(GameObject.FindGameObjectWithTag("Experiment2") != null)
-            m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment2").GetComponent<Experiment2Manager>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment1").GetComponent<Experiment1Manager>();
         m_AudioSource = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<AudioSource>();
 
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
@@ -46,7 +45,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
         {
             m_CollisionTime = Time.time;
             string collisionDescription = gameObject.name + ", collided with, " + other.transform.parent.gameObject.name + " \n";
@@ -73,13 +72,13 @@ public class EmergencyStop : MonoBehaviour
             m_AudioSource.clip = m_CollisionClip;
             m_AudioSource.Play();
 
-            m_ROSPublisher.PublishEmergencyStop();
+            //m_ROSPublisher.PublishEmergencyStop();
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
         {
             if (Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime * 2.0f)
             {
@@ -93,7 +92,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.transform.parent != null && other.transform.parent.tag != "Moveable")
+        if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
             ResetColor();
     }
 
