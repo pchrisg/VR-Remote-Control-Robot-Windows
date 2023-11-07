@@ -43,13 +43,12 @@ public class Timer : MonoBehaviour
 
     public void StartTimer(float timeLimit = 0.0f)
     {
-        m_TimeElapsed = 0.0f;
         m_TimeLimit = timeLimit;
 
         m_Running = true;
     }
 
-    public float GetTime()
+    public float SplitTime()
     {
         return m_TimeElapsed;
     }
@@ -59,10 +58,15 @@ public class Timer : MonoBehaviour
         if (m_TimeLimit != 0.0f && m_TimeElapsed > m_TimeLimit)
             m_TimeElapsed = m_TimeLimit;
 
+        m_Text.text = "Stopped";
+        m_Running = false;
+    }
+
+    public void ResetTimer()
+    {
+        m_TimeElapsed = 0.0f;
         m_TimeLimit = 0.0f;
         m_Text.text = "Ready";
-
-        m_Running = false;
     }
 
     public bool TimeExhausted()

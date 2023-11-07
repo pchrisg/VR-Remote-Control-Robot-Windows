@@ -299,7 +299,7 @@ public class Experiment2Manager : MonoBehaviour
 
     public void AddPlacedObject(string name, float posErr, float rotErr)
     {
-        m_PlacedObjects += m_Timer.GetTime().ToString() + ", " + name + ", " + posErr.ToString() + ", " + rotErr.ToString() + "\n";
+        m_PlacedObjects += m_Timer.SplitTime().ToString() + ", " + name + ", " + posErr.ToString() + ", " + rotErr.ToString() + "\n";
     }
 
     public void SaveData()
@@ -318,7 +318,7 @@ public class Experiment2Manager : MonoBehaviour
                 m_Task2.Setup(false);
             }
 
-            m_TimeTaken = m_Timer.GetTime();
+            m_TimeTaken = m_Timer.SplitTime();
 
             m_Start = false;
             m_Running = false;

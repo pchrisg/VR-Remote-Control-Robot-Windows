@@ -26,6 +26,8 @@ public class Manipulator : MonoBehaviour
 
     Coroutine activeCouroutine = null;
 
+    private bool isVisible = false;
+
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
@@ -87,11 +89,13 @@ public class Manipulator : MonoBehaviour
 
     private IEnumerator ResetPose()
     {
+        bool temp = isVisible;
         ShowManipulator(false);
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
-        ShowManipulator(true);
+        if(temp)
+            ShowManipulator(true);
     }
 
     private Color CheckSnapping(Color color)
@@ -122,6 +126,7 @@ public class Manipulator : MonoBehaviour
 
     public void ShowManipulator(bool value)
     {
+        isVisible = value;
         if (value)
         {
             foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())

@@ -4,13 +4,14 @@ using TutorialStages;
 using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.VisualScripting;
 
 public class Tutorial1 : MonoBehaviour
 {
     [Header("Prefab")]
     [SerializeField] private GameObject m_TeapotPrefab = null;
+    [SerializeField] private GameObject m_GhostManipPrefab = null;
+    [SerializeField] private GameObject m_ObstaclePrefab = null;
     [SerializeField] private GameObject m_ButtonPrefab = null;
 
     [Header("Stage")]
@@ -21,7 +22,6 @@ public class Tutorial1 : MonoBehaviour
     // Scripts
     private Experiment1Manager m_ExperimentManager = null;
     private Manipulator m_Manipulator = null;
-    private ManipulationMode m_ManipulationMode = null;
     private ControllerHints m_ControllerHints = null;
 
     // Hands
@@ -29,18 +29,19 @@ public class Tutorial1 : MonoBehaviour
     private Hand m_RightHand = null;
 
     // GameObjects
-    GameObject m_Button = null;
-    GameObject m_Teapot = null;
+    private GameObject m_Teapot = null;
+    private GameObject m_GhostManip = null;
+    private GameObject m_Obstacle = null;
+    private GameObject m_Button = null;
 
     private Coroutine m_ActiveCoroutine = null;
-    private List<Text> m_Text = new List<Text>();
+    private readonly List<Text> m_Text = new();
     private AudioSource m_AudioSource = null;
 
     private void Awake()
     {
         m_ExperimentManager = gameObject.GetComponentInParent<Experiment1Manager>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
-        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
 
         m_LeftHand = Player.instance.leftHand;
@@ -53,18 +54,11 @@ public class Tutorial1 : MonoBehaviour
 
     private void OnDisable()
     {
-        if (m_Button != null)
-            GameObject.Destroy(m_Button);
-
-        stage = Stage.WAIT;
-
-        if (m_ActiveCoroutine != null)
-            StopCoroutine(m_ActiveCoroutine);
-
-        if (m_Manipulator != null)
-            m_Manipulator.Flash(false);
-
-        m_ActiveCoroutine = null;
+        if (m_Manipulator != null && m_Manipulator.GetComponent<SimpleDirectManipulation>() == null)
+        {
+            m_Manipulator.GetComponent<Interactable>().highlightOnHover = true;
+            m_Manipulator.AddComponent<SimpleDirectManipulation>();
+        }
     }
 
     private void Update()
@@ -75,20 +69,9 @@ public class Tutorial1 : MonoBehaviour
 
     public void Setup(bool value)
     {
+        ResetTutorial();
+
         gameObject.SetActive(value);
-
-        if (value)
-            ResetTutorial();
-        else
-        {
-            stage = Stage.WAIT;
-
-            if (m_Manipulator.GetComponent<SimpleDirectManipulation>() == null)
-            {
-                m_Manipulator.GetComponent<Interactable>().highlightOnHover = true;
-                m_Manipulator.AddComponent<SimpleDirectManipulation>();
-            }
-        }
     }
 
     public void ResetTutorial()
@@ -100,8 +83,23 @@ public class Tutorial1 : MonoBehaviour
         if (m_Teapot != null)
             Destroy(m_Teapot);
 
+        if (m_GhostManip != null)
+            Destroy(m_GhostManip);
+
+        if (m_Obstacle != null)
+            Destroy(m_Obstacle);
+
         if (m_Button != null)
             Destroy(m_Button);
+
+        if (m_ActiveCoroutine != null)
+        {
+            StopCoroutine(m_ActiveCoroutine);
+            m_ActiveCoroutine = null;
+        }
+
+        if (m_Manipulator != null)
+            m_Manipulator.Flash(false);
 
         if (m_Manipulator.GetComponent<SimpleDirectManipulation>() != null)
         {
@@ -123,28 +121,45 @@ public class Tutorial1 : MonoBehaviour
 
     private IEnumerator Learning()
     {
+        m_Continue = false;
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+
+        string text = "Controller\n\n" +
+                      "The only important controller button in this experiment is the trigger button\n\n" +
+                      "Look at your controller and pull the trigger button";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger || m_ControllerHints.handStatus.left.trigger);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+
+        text = "Controller\n\n" +
+               "Notice the hand makes a grabbing gesture when you pull the triller button\n\n" +
+               "When I say \"grab\", what I mean is \"pull the trigger button\"";
+        ChangeText(text);
+        m_AudioSource.Play();
+
         yield return new WaitUntil(() => m_Continue);
         m_Continue = false;
 
         m_Teapot = Instantiate(m_TeapotPrefab);
-        m_Teapot.transform.SetPositionAndRotation(new Vector3(-0.49f, 0.29f, 0.1f), Quaternion.Euler(0.0f, 90.0f, 0.0f));
+        m_Teapot.transform.SetPositionAndRotation(new Vector3(-0.1f, 0.29f, -0.49f), Quaternion.Euler(0.0f, 90.0f, 0.0f));
 
-        string text = "Moving objects\n\n" +
-                      "Reach out your hand and grab the teapot\n\n" +
-                      "While grabbing the teapot, move your hand\n\n" +
-                      "Notice how the teapot follows your hand";
+        text = "Moving objects\n\n" +
+               "Reach out your hand and grab the teapot\n\n" +
+               "While grabbing the teapot, move your hand\n\n" +
+               "Notice how the teapot follows your hand";
         ChangeText(text);
         m_AudioSource.Play();
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        
         m_Teapot.GetComponent<Teapot>().Flash(true);
 
         yield return new WaitUntil(() => m_Continue);
         m_Continue = false;
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
 
         Destroy(m_Teapot);
         m_Manipulator.ShowManipulator(true);
@@ -164,8 +179,77 @@ public class Tutorial1 : MonoBehaviour
 
         text = "Robot Control\n\n" +
                "This is the robot that you are controlling\n\n" +
-               "When you move the manipulator, you are telling the robot where you want its end effector to be\n\n +" +
-               "Notice that there is a small delay ";
+               "When you move the manipulator, you are telling the robot where you want its end effector to be";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        text = "Robot Control\n\n" +
+               "Notice that the robot moves much slower than the manipulator\n\n" +
+               "Keep that in mind when controlling the robot and give the robot time to catch up to the manipulator";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        m_GhostManip = Instantiate(m_GhostManipPrefab);
+        m_GhostManip.transform.SetPositionAndRotation(new Vector3(-0.1f,0.39f,-0.9f), Quaternion.Euler(0.0f,-90.0f,90.0f));
+
+        text = "Movement Feedback\n\n" +
+               "If the manipulator turns red and you hear a thump sound, that means that the robot is incapable of reaching that position\n\n" +
+               "Move the manipulator to the indicated position";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        m_GhostManip.transform.position = new Vector3(-0.1f, 0.39f, -0.7f);
+
+        text = "Movement Feedback\n\n" +
+               "If this happens, just move the manipulator until the robot can reach it\n\n" +
+               "Move the manipulator back in range of the robot";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        Destroy(m_GhostManip);
+
+        m_Obstacle = Instantiate(m_ObstaclePrefab);
+        m_Obstacle.transform.position = new Vector3(0.0f,0.3f,-0.3f);
+
+        text = "Movement Feedback\n\n" +
+               "If the robot hits an object, the part of the robot that is colliding will turn red and you will hear a thump sound\n\n" +
+               "When manipulating, try to avoid collisions as much as possible";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        Vector3 motion = new Vector3(0.0f, 0.001f, 0.0f);
+        while (!m_Continue)
+        {
+            if (m_Obstacle.transform.position.y < 0.3 || m_Obstacle.transform.position.y > 0.45f)
+                motion *= -1;
+
+            m_Obstacle.transform.position += motion;
+            yield return new WaitForEndOfFrame();
+        }
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        Destroy(m_Obstacle);
+
+        m_Button = Instantiate(m_ButtonPrefab);
+        m_Button.transform.position = new Vector3(0.0f,0.025f,-0.45f);
+
+        text = "Push the button\n\n" +
+               "Use the manipulator to control the robot to push the button\n\n"+
+               "The button will turn purple and make a sound when pushed successfully\n\n"; ;
         ChangeText(text);
         m_AudioSource.Play();
 

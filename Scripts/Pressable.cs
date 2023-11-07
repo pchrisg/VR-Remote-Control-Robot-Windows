@@ -8,8 +8,8 @@ public class Pressable : MonoBehaviour
     [SerializeField] private Transform m_MovingPart = null;
 
     [Header ("Events")]
-    [SerializeField] private UnityEvent m_OnButtonDown;
-    [SerializeField] private UnityEvent m_OnButtonUp;
+    //[SerializeField] private UnityEvent m_OnButtonDown;
+    //[SerializeField] private UnityEvent m_OnButtonUp;
     [SerializeField] private UnityEvent m_OnButtonIsPressed;
 
     [Header("Properties")]
@@ -23,8 +23,8 @@ public class Pressable : MonoBehaviour
     private Vector3 m_LocalMoveDistance = new Vector3(0, -0.4f, 0);
 
     private bool m_Engaged = false;
-    private bool m_ButtonDown = false;
-    private bool m_ButtonUp = false;
+    //private bool m_ButtonDown = false;
+    //private bool m_ButtonUp = false;
 
     private Vector3 m_StartPosition;
     private Vector3 m_EndPosition;
@@ -35,11 +35,19 @@ public class Pressable : MonoBehaviour
     private void Awake()
     {
         m_AudioSource = gameObject.GetComponentInParent<AudioSource>();
-        m_PresserColliders = m_Presser.GetComponentsInChildren<Collider>();
+
+        if (m_Presser != null)
+            m_PresserColliders = m_Presser.GetComponentsInChildren<Collider>();
     }
 
     private void Start()
     {
+        if (m_Presser == null)
+        {
+            m_Presser = GameObject.FindGameObjectWithTag("Robotiq");
+            m_PresserColliders = m_Presser.GetComponentsInChildren<Collider>();
+        }
+
         if (m_MovingPart == null && this.transform.childCount > 0)
             m_MovingPart = this.transform.GetChild(0);
 
@@ -61,7 +69,7 @@ public class Pressable : MonoBehaviour
             }
         }
 
-        if(isPresser & (m_isMultiPress || !m_Engaged))
+        if(isPresser && (m_isMultiPress || !m_Engaged))
         {
             bool wasEngaged = m_Engaged;
 
@@ -91,13 +99,14 @@ public class Pressable : MonoBehaviour
 
     private void InvokeEvents(bool wasEngaged, bool isEngaged)
     {
-        m_ButtonDown = wasEngaged == false && isEngaged == true;
-        m_ButtonUp = wasEngaged == true && isEngaged == false;
+        bool buttonDown = wasEngaged == false && isEngaged == true;
+        bool buttonUp = wasEngaged == true && isEngaged == false;
 
-        if (m_ButtonDown && m_OnButtonDown != null)
-            m_OnButtonDown.Invoke();
-        if (m_ButtonUp && m_OnButtonUp != null)
-            m_OnButtonUp.Invoke();
+        if (buttonDown)
+            OnButtonDown();
+        if (buttonUp)
+            OnButtonUp();
+
         if (isEngaged && m_OnButtonIsPressed != null)
             m_OnButtonIsPressed.Invoke();
     }
@@ -122,8 +131,6 @@ public class Pressable : MonoBehaviour
     {
         ColorSelf(Color.white);
         m_Engaged = false;
-        m_ButtonDown = false;
-        m_ButtonUp = false;
 
         m_MovingPart.localPosition = m_StartPosition;
     }

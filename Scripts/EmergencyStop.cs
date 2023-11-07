@@ -48,15 +48,12 @@ public class EmergencyStop : MonoBehaviour
         if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
         {
             m_CollisionTime = Time.time;
-            string collisionDescription = gameObject.name + ", collided with, " + other.transform.parent.gameObject.name + " \n";
+            string description = gameObject.name + ",collided with," + other.transform.parent.gameObject.name + "\n";
 
-            if(m_ExperimentManager != null)
-            {
-                m_ExperimentManager.m_CollisionsCount++;
-                m_ExperimentManager.m_CollisionDescriptions.Add(collisionDescription);
-            }
+            if (m_ExperimentManager != null)
+                m_ExperimentManager.RecordCollision(description);
             
-            print(Time.time.ToString() + "Enter - " + collisionDescription);
+            print(Time.time.ToString() + "Enter - " + description);
 
             foreach (Renderer renderer in m_Renderers)
             {
@@ -72,7 +69,7 @@ public class EmergencyStop : MonoBehaviour
             m_AudioSource.clip = m_CollisionClip;
             m_AudioSource.Play();
 
-            //m_ROSPublisher.PublishEmergencyStop();
+            m_ROSPublisher.PublishEmergencyStop();
         }
     }
 

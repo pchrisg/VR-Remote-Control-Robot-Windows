@@ -139,7 +139,7 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishEmergencyStop()
     {
-        StartCoroutine(Lock());
+        //StartCoroutine(Lock());
     }
 
     IEnumerator Lock()
