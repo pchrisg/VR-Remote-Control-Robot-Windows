@@ -422,6 +422,7 @@ public class Experiment1Manager : MonoBehaviour
                 m_InPosition = false;
                 m_TaskActive = false;
                 Setup(false);
+                m_Objects.SetActive(false);
             }
 
             m_Button4Time = m_Timer.SplitTime();

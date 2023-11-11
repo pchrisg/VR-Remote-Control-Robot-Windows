@@ -22438,8 +22438,8 @@ MonoBehaviour:
   m_FVPGuides: {fileID: 1603039009}
   m_GlassMat: {fileID: 2100000, guid: 2d40473710cc8604dbbfe4751fbf2d5c, type: 2}
   m_PlanRobMat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
-  m_ParticipantNumber: 12
-  m_Perspective: 0
+  m_ParticipantNumber: 6
+  m_Perspective: 1
   m_Appearance: 2
   m_ResetRobotPose: 0
   m_SetupTutorial: 0

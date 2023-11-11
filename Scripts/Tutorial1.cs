@@ -147,7 +147,7 @@ public class Tutorial1 : MonoBehaviour
         m_Continue = false;
 
         m_Teapot = Instantiate(m_TeapotPrefab);
-        m_Teapot.transform.SetPositionAndRotation(new Vector3(-0.1f, 0.29f, -0.49f), Quaternion.Euler(0.0f, 90.0f, 0.0f));
+        m_Teapot.transform.position = new Vector3(-0.1f, 0.29f, -0.49f);
 
         text = "Moving objects\n\n" +
                "Reach out your hand and grab the teapot\n\n" +
@@ -156,7 +156,7 @@ public class Tutorial1 : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
         
-        m_Teapot.GetComponent<Teapot>().Flash(true);
+        //m_Teapot.GetComponent<Teapot>().Flash(true);
 
         yield return new WaitUntil(() => m_Continue);
         m_Continue = false;
@@ -215,33 +215,33 @@ public class Tutorial1 : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
+        m_GhostManip.transform.position = new Vector3(-0.1f, 0.39f, -0.4f);
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        m_Obstacle = Instantiate(m_ObstaclePrefab);
+        m_Obstacle.transform.SetPositionAndRotation(new Vector3(0.2f,0.2f,-0.4f),Quaternion.Euler(0.0f,60.0f,0.0f));
+
+        m_GhostManip.transform.position = new Vector3(0.4f, 0.39f, -0.4f);
+
+        text = "Movement Feedback\n\n" +
+               "If the robot hits an object, the part of the robot that is colliding will turn red and you will hear a thump sound\n\n" +
+               "Move the robot to the indicated position";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_Continue);
+        m_Continue = false;
+
+        text = "Movement Feedback\n\n" +
+               "When manipulating, try to avoid collisions as much as possible by guiding the robot around obstacles";
+        ChangeText(text);
+
         yield return new WaitUntil(() => m_Continue);
         m_Continue = false;
 
         Destroy(m_GhostManip);
-
-        m_Obstacle = Instantiate(m_ObstaclePrefab);
-        m_Obstacle.transform.position = new Vector3(0.0f,0.3f,-0.3f);
-
-        text = "Movement Feedback\n\n" +
-               "If the robot hits an object, the part of the robot that is colliding will turn red and you will hear a thump sound\n\n" +
-               "When manipulating, try to avoid collisions as much as possible";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        Vector3 motion = new Vector3(0.0f, 0.001f, 0.0f);
-        while (!m_Continue)
-        {
-            if (m_Obstacle.transform.position.y < 0.3 || m_Obstacle.transform.position.y > 0.45f)
-                motion *= -1;
-
-            m_Obstacle.transform.position += motion;
-            yield return new WaitForEndOfFrame();
-        }
-
-        yield return new WaitUntil(() => m_Continue);
-        m_Continue = false;
-
         Destroy(m_Obstacle);
 
         m_Button = Instantiate(m_ButtonPrefab);
@@ -255,6 +255,8 @@ public class Tutorial1 : MonoBehaviour
 
         yield return new WaitUntil(() => m_Continue);
         m_Continue = false;
+
+        Destroy(m_Button);
 
         stage = Stage.WAIT;
 
