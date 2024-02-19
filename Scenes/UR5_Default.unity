@@ -1134,7 +1134,7 @@ GameObject:
   - component: {fileID: 48714211}
   m_Layer: 0
   m_Name: Collider
-  m_TagString: World
+  m_TagString: Moveable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2893,7 +2893,7 @@ GameObject:
   - component: {fileID: 215331686}
   m_Layer: 0
   m_Name: Table_Top
-  m_TagString: World
+  m_TagString: Moveable
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15866,7 +15866,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1390926848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22438,8 +22438,8 @@ MonoBehaviour:
   m_FVPGuides: {fileID: 1603039009}
   m_GlassMat: {fileID: 2100000, guid: 2d40473710cc8604dbbfe4751fbf2d5c, type: 2}
   m_PlanRobMat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
-  m_ParticipantNumber: 6
-  m_Perspective: 1
+  m_ParticipantNumber: 24
+  m_Perspective: 0
   m_Appearance: 2
   m_ResetRobotPose: 0
   m_SetupTutorial: 0
