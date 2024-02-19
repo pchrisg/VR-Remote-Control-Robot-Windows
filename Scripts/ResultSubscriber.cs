@@ -10,7 +10,7 @@ public class ResultSubscriber : MonoBehaviour
     [SerializeField] private AudioClip m_MotionClip = null;
 
     private ROSConnection m_Ros = null;
-    private Experiment1Manager m_ExperimentManager = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private PlanningRobot m_PlanningRobot = null;
     private GameObject m_UR5 = null;
@@ -26,7 +26,7 @@ public class ResultSubscriber : MonoBehaviour
     private void Awake()
     {
         m_Ros = ROSConnection.GetOrCreateInstance();
-        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment1").GetComponent<Experiment1Manager>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");

@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class BarrelTaskConditionChecker : MonoBehaviour
 {
-    private Experiment2Manager m_ExperimentManager = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private List<GameObject> m_Barrels = new List<GameObject>();
     private List<GameObject> m_PlacedBarrels = new List<GameObject>();
@@ -14,7 +14,7 @@ public class BarrelTaskConditionChecker : MonoBehaviour
 
     private void Awake()
     {
-        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment2").GetComponent<Experiment2Manager>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
     }
 
     private void Update()

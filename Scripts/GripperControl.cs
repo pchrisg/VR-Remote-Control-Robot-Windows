@@ -45,7 +45,8 @@ public class GripperControl : MonoBehaviour
     private void Update()
     {
         if (!m_ManipulationMode.isInteracting &&
-            (m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT ||
+            (m_ManipulationMode.mode == ManipulationModes.Mode.SIMPLEDIRECT || 
+            m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT ||
             m_ManipulationMode.mode == ManipulationModes.Mode.SDOF ||
             m_ManipulationMode.mode == ManipulationModes.Mode.RAIL))
         {

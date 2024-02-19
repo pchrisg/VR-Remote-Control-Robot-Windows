@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using ManipulationModes;
 
-public class Experiment2Manager : MonoBehaviour
+public class ExperimentManager : MonoBehaviour
 {
     [Header("Scene Objects")]
     [SerializeField] private GameObject m_Table = null;
@@ -68,9 +68,16 @@ public class Experiment2Manager : MonoBehaviour
     // objects placed within bounds with their errors
     private string m_PlacedObjects = string.Empty;
 
-    // collisions - updated by EmergencyStop script
-    [HideInInspector] public int m_CollisionsCount = 0;
-    [HideInInspector] public List<string> m_CollisionDescriptions = new();
+
+    // Number of Grabs
+    private bool isInteracting = false;
+    private int m_GrabCount = 0;
+    private List<string> m_GrabDescriptions = new();
+
+    // Errors
+    private int m_CollisionsCount = 0;
+    private int m_OutOfBoundsCount = 0;
+    private List<string> m_ErrorDescriptions = new();
 
     private void Awake()
     {
@@ -297,9 +304,36 @@ public class Experiment2Manager : MonoBehaviour
         m_TimeInAttObj = 0.0f;
     }
 
+    private void RecordGrabTime(bool value)
+    {
+        m_GrabDescriptions.Add(m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
+    }
+
     public void AddPlacedObject(string name, float posErr, float rotErr)
     {
         m_PlacedObjects += m_Timer.SplitTime().ToString() + ", " + name + ", " + posErr.ToString() + ", " + rotErr.ToString() + "\n";
+    }
+
+    public void SplitTime()
+    {
+    }
+
+    public void RecordCollision(string description)
+    {
+        if (m_Running)
+        {
+            m_CollisionsCount++;
+            m_ErrorDescriptions.Add(m_Timer.SplitTime().ToString() + "," + description);
+        }
+    }
+
+    public void RecordOutOfBounds()
+    {
+        if (m_Running)
+        {
+            m_OutOfBoundsCount++;
+            m_ErrorDescriptions.Add(m_Timer.SplitTime().ToString() + ", Out of Bounds \n");
+        }
     }
 
     public void SaveData()
@@ -325,11 +359,11 @@ public class Experiment2Manager : MonoBehaviour
             m_Status = "Finished";
             m_Timer.StopTimer();
 
-            StartCoroutine(WriteToFile());
+            //StartCoroutine(WriteToFile());
         }
     }
 
-    IEnumerator WriteToFile()
+    /*IEnumerator WriteToFile()
     {
         yield return new WaitForSeconds(1.0f);
 
@@ -339,7 +373,7 @@ public class Experiment2Manager : MonoBehaviour
         else
             technique = "_Ours";
 
-        string path = m_FilePathName + m_Active + m_ParticipantName + technique + ".csv";
+        string path = m_FilePathName + m_Active + m_ParticipantNumber + technique + ".csv";
         m_Active = "None";
 
         if (File.Exists(path))
@@ -380,5 +414,67 @@ public class Experiment2Manager : MonoBehaviour
 
         //open the file
         //Application.OpenURL(path);
-    }
+
+        //change path for grab descriptions
+        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Perspective.ToString() + m_Appearance.ToString() + "GRAB.csv";
+
+        if (File.Exists(path))
+            File.Delete(path);
+
+        // Create second file
+        sr = File.CreateText(path);
+
+        //collision descriptions
+        dataCSV = string.Empty;
+
+        foreach (var grab in m_GrabDescriptions)
+            dataCSV += grab;
+
+        dataCSV += m_Button4Time.ToString();
+
+        // Write to file
+        sr.WriteLine(dataCSV);
+
+        //Change to Readonly
+        fInfo = new(path)
+        {
+            IsReadOnly = true
+        };
+
+        //Close file
+        sr.Close();
+
+        print("Data saved to file: " + path);
+
+        //change path for error descriptions
+        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Perspective.ToString() + m_Appearance.ToString() + "ERROR.csv";
+
+        if (File.Exists(path))
+            File.Delete(path);
+
+        // Create third file
+        sr = File.CreateText(path);
+
+        //collision descriptions
+        dataCSV = string.Empty;
+
+        foreach (var collision in m_ErrorDescriptions)
+            dataCSV += collision;
+
+        // Write to file
+        sr.WriteLine(dataCSV);
+
+        //Change to Readonly
+        fInfo = new(path)
+        {
+            IsReadOnly = true
+        };
+
+        //Close file
+        sr.Close();
+
+        print("Data saved to file: " + path);
+
+        yield return new WaitForSeconds(0.5f);
+    }*/
 }

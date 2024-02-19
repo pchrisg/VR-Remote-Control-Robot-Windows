@@ -72,7 +72,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
         m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
 
-        m_Objects = gameObject.transform.parent.GetComponent<Experiment2Manager>().m_Objects;
+        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
         
         m_LeftHand = Player.instance.leftHand;
@@ -972,7 +972,7 @@ public class Tutorial : MonoBehaviour
 
     private bool CheckVec3Distance(GameObject first, GameObject second)
     {
-        if (Vector3.Distance(first.transform.position, second.transform.position) < Experiment2Manager.ERRORTHRESHOLD)
+        if (Vector3.Distance(first.transform.position, second.transform.position) < ExperimentManager.ERRORTHRESHOLD)
             return true;
         else
             return false;
@@ -980,7 +980,7 @@ public class Tutorial : MonoBehaviour
 
     private bool CheckVec2Distance(GameObject first, GameObject second)
     {
-        if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < Experiment2Manager.ERRORTHRESHOLD)
+        if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < ExperimentManager.ERRORTHRESHOLD)
             return true;
         else
             return false;

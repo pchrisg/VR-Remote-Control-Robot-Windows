@@ -10,7 +10,7 @@ public class BarrelTask : MonoBehaviour
 
     private void Awake()
     {
-        m_Objects = gameObject.transform.parent.GetComponent<Experiment2Manager>().m_Objects;
+        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
     }
 
     public void Setup(bool value)

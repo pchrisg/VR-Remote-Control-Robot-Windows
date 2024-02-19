@@ -89,13 +89,11 @@ public class Manipulator : MonoBehaviour
 
     private IEnumerator ResetPose()
     {
-        bool temp = isVisible;
         ShowManipulator(false);
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
-        if(temp)
-            ShowManipulator(true);
+        ShowManipulator(true);
     }
 
     private Color CheckSnapping(Color color)
