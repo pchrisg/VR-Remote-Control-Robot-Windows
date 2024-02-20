@@ -60,6 +60,11 @@
       "requirement": "mandatory"
     },
     {
+      "name": "/actions/default/in/Teleport",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
       "name": "/actions/default/out/Haptic",
       "type": "vibration"
     }
@@ -138,7 +143,8 @@
       "/actions/default/in/SkeletonLeftHand": "Skeleton (Left)",
       "/actions/default/in/TouchRight": "Touch Right",
       "/actions/default/in/TouchLeft": "Touch Left",
-      "/actions/default/in/PressTrackpad": "Press Trackpad"
+      "/actions/default/in/PressTrackpad": "Press Trackpad",
+      "/actions/default/in/Teleport": "Teleport"
     }
   ]
 }

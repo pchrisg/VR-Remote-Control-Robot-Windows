@@ -2,6 +2,7 @@ using RosMessageTypes.Robotiq3fGripperArticulated;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using ManipulationModes;
 
 public class GripperControl : MonoBehaviour
 {
@@ -17,13 +18,12 @@ public class GripperControl : MonoBehaviour
     private SteamVR_Action_Boolean m_Trigger = null;
     private SteamVR_Action_Single m_Squeeze = null;
 
-    private bool[] isHandHovering = { false, false };
-    private Hand m_InitHand = null;
-    private Hand m_InteractingHand = null;
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
-
-    private readonly float m_MaxGrip = 220.0f;
+    private Hand m_ActivationHand = null;
+    private Hand m_InteractingHand = null;
+    
+    private readonly float m_MaxGrip = 120.0f;
     private float m_TargetGrip = 0.0f;
 
     [HideInInspector] public bool isGripping = false;
@@ -40,73 +40,58 @@ public class GripperControl : MonoBehaviour
 
         m_LeftHand = Player.instance.leftHand;
         m_RightHand = Player.instance.rightHand;
+
+        m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_RightHand.handType);
+        m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_LeftHand.handType);
+        m_Trigger.AddOnStateUpListener(TriggerReleased, m_RightHand.handType);
+        m_Trigger.AddOnStateUpListener(TriggerReleased, m_LeftHand.handType);
     }
 
     private void Update()
     {
-        if (!m_ManipulationMode.isInteracting &&
-            (m_ManipulationMode.mode == ManipulationModes.Mode.SIMPLEDIRECT || 
-            m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT ||
-            m_ManipulationMode.mode == ManipulationModes.Mode.SDOF ||
-            m_ManipulationMode.mode == ManipulationModes.Mode.RAIL))
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT || m_ManipulationMode.mode == Mode.DIRECT)
         {
-            if (!isGripping)
+            if (m_ActivationHand != null && isGripping)
+                CloseGripper();
+        }
+    }
+
+    private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (!isGripping && m_ActivationHand == null)
+        {
+            if (m_ManipulationMode.mode == ManipulationModes.Mode.SDOF)
             {
-                if(m_InitHand == null)
-                    TriggerGrabbedCheck();
+                if (m_SDOFManipulation.m_InteractingHand != null &&
+                    m_SDOFManipulation.m_InteractingHand.IsStillHovering(m_SDOFManipulation.m_Interactable))
+                    return;
+            }
+
+            if (fromSource == m_LeftHand.handType)
+            {
+                m_ActivationHand = m_LeftHand;
+                m_InteractingHand = m_RightHand;
             }
             else
             {
-                if (!m_Trigger.GetState(m_InitHand.handType) && m_Squeeze.GetAxis(m_InteractingHand.handType) == 0)
-                    TriggerReleased();
-
-                else if (m_Trigger.GetState(m_InitHand.handType))
-                    CloseGripper();
+                m_ActivationHand = m_RightHand;
+                m_InteractingHand = m_LeftHand;
             }
-        }
-    }
 
-    private void OnHandHoverBegin(Hand hand)
-    {
-        if (hand == m_RightHand)
-            isHandHovering[0] = true;
-        else
-            isHandHovering[1] = true;
-    }
-
-    private void OnHandHoverEnd(Hand hand)
-    {
-        if (hand == m_RightHand)
-            isHandHovering[0] = false;
-        else
-            isHandHovering[1] = false;
-    }
-
-    private void TriggerGrabbedCheck()
-    {
-        if (isHandHovering[0] || isHandHovering[1])
-            return;
-
-        if (m_ManipulationMode.mode == ManipulationModes.Mode.SDOF)
-        {
-            if (m_SDOFManipulation.m_InteractingHand != null &&
-                m_SDOFManipulation.m_InteractingHand.IsStillHovering(m_SDOFManipulation.m_Interactable))
-                return;
-        }
-
-        if (m_Trigger.GetState(m_RightHand.handType))
-        {
-            m_InitHand = m_RightHand;
-            m_InteractingHand = m_LeftHand;
-        }
-        else if (m_Trigger.GetState(m_LeftHand.handType))
-        {
-            m_InitHand = m_LeftHand;
-            m_InteractingHand = m_RightHand;
-        }
-
-        if (m_InitHand != null)
             isGripping = true;
+        }
+    }
+
+    private void TriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
+        {
+            m_ActivationHand = null;
+            m_InteractingHand = null;
+        }
+
+        if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+            isGripping = false;
     }
 
     private void CloseGripper()
@@ -132,12 +117,5 @@ public class GripperControl : MonoBehaviour
     {
         m_ManipulatorAudioSource.clip = m_Detach;
         m_ManipulatorAudioSource.Play();
-    }
-
-    private void TriggerReleased()
-    {
-        m_InitHand = null;
-        m_InteractingHand = null;
-        isGripping = false;
     }
 }

@@ -89,9 +89,9 @@ public class ExperimentManager : MonoBehaviour
         m_Task1 = transform.Find("Task1").GetComponent<BarrelTask>();
         m_Task2 = transform.Find("Task2").GetComponent<DominoTask>();
 
-        m_Table.SetActive(false);
-        m_Glassbox.SetActive(false);
-        m_Objects.SetActive(false);
+        //m_Table.SetActive(false);
+        //m_Glassbox.SetActive(false);
+        //m_Objects.SetActive(false);
 
         m_Active = "None";
         m_Status = "Standby";
@@ -274,9 +274,9 @@ public class ExperimentManager : MonoBehaviour
 
     IEnumerator ResetPose()
     {
-        m_Table.SetActive(false);
-        m_Glassbox.SetActive(false);
-        m_Objects.SetActive(false);
+        //m_Table.SetActive(false);
+        //m_Glassbox.SetActive(false);
+        //m_Objects.SetActive(false);
 
         m_ROSPublisher.PublishResetPose();
 
@@ -285,9 +285,9 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPositionAndRotation();
-        m_Table.SetActive(true);
-        m_Glassbox.SetActive(true);
-        m_Objects.SetActive(true);
+        //m_Table.SetActive(true);
+        //m_Glassbox.SetActive(true);
+        //m_Objects.SetActive(true);
 
         yield return null;
     }

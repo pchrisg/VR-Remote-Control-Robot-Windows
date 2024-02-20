@@ -1,10 +1,11 @@
-using System.Xml.Serialization;
 using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
+using ManipulationModes;
 
 public class RadialMenuManager : MonoBehaviour
 {
+    private ManipulationMode m_ManipulationMode = null;
     private SteamVR_Action_Boolean m_TouchTrackpad = null;
     private SteamVR_Action_Vector2 m_TouchPos = null;
     private SteamVR_Action_Boolean m_PressTrackpad = null;
@@ -14,6 +15,8 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Awake()
     {
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+
         m_TouchTrackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchTrackpad");
         m_TouchPos = SteamVR_Input.GetAction<SteamVR_Action_Vector2>("TouchPosition");
         m_PressTrackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("PressTrackpad");
@@ -49,6 +52,7 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Touch(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
+        if(m_ManipulationMode.mode != Mode.SIMPLEDIRECT)
         radialMenu.Show(newState);
     }
 
