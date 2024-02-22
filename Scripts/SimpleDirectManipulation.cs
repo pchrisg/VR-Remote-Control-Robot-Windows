@@ -69,6 +69,9 @@ public class SimpleDirectManipulation : MonoBehaviour
             m_PreviousPosition = m_InteractingHand.transform.position;
             m_PreviousRotation = m_InteractingHand.transform.rotation;
 
+            m_LeftHand.GetComponent<Hand>().Hide();
+            m_RightHand.GetComponent<Hand>().Hide();
+
             isInteracting = true;
         }
     }
@@ -83,7 +86,12 @@ public class SimpleDirectManipulation : MonoBehaviour
         }
 
         if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+        {
+            m_LeftHand.GetComponent<Hand>().Show();
+            m_RightHand.GetComponent<Hand>().Show();
+
             isInteracting = false;
+        }
     }
 
     private void MoveManipulator()

@@ -28,7 +28,7 @@ public class ROSPublisher : MonoBehaviour
     [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
     private Transform m_ManipulatorPose = null;
-    private PlanningRobot m_PlanningRobot = null;
+    //private PlanningRobot m_PlanningRobot = null;
 
     private ROSConnection m_Ros = null;
 
@@ -43,7 +43,7 @@ public class ROSPublisher : MonoBehaviour
             m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
 
         m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose").transform;
-        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
 
         // Get ROS connection static instance
         m_Ros = ROSConnection.GetOrCreateInstance();
@@ -115,8 +115,8 @@ public class ROSPublisher : MonoBehaviour
 
     public void HandleTrajectoryResponse(TrajectoryPlannerServiceResponse response)
     {
-        if (response.trajectory != null)
-            m_PlanningRobot.DisplayTrajectory(response.trajectory);
+        //if (response.trajectory != null)
+        //    m_PlanningRobot.DisplayTrajectory(response.trajectory);
     }
 
     public void PublishExecutePlan(RobotTrajectoryMsg trajectory)

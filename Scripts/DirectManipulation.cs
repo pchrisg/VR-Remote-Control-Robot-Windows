@@ -35,13 +35,17 @@ public class DirectManipulation : MonoBehaviour
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
 
-        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
-
         m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_RightHand.handType);
         m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_LeftHand.handType);
         m_Trigger.AddOnStateUpListener(TriggerReleased, m_RightHand.handType);
         m_Trigger.AddOnStateUpListener(TriggerReleased, m_LeftHand.handType);
+
+        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
+        m_Grip.AddOnStateDownListener(GripGrabbed, m_RightHand.handType);
+        m_Grip.AddOnStateDownListener(GripGrabbed, m_LeftHand.handType);
+        m_Grip.AddOnStateUpListener(GripReleased, m_RightHand.handType);
+        m_Grip.AddOnStateUpListener(GripReleased, m_LeftHand.handType);
     }
 
     private void Update()
@@ -76,6 +80,9 @@ public class DirectManipulation : MonoBehaviour
             m_PreviousPosition = m_InteractingHand.transform.position;
             m_PreviousRotation = m_InteractingHand.transform.rotation;
 
+            m_LeftHand.GetComponent<Hand>().Hide();
+            m_RightHand.GetComponent<Hand>().Hide();
+
             isInteracting = true;
             m_InitPos = gameObject.transform.position;
         }
@@ -92,7 +99,33 @@ public class DirectManipulation : MonoBehaviour
         }
 
         if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+        {
+            m_LeftHand.GetComponent<Hand>().Show();
+            m_RightHand.GetComponent<Hand>().Show();
+
             isInteracting = false;
+        }
+    }
+
+    private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if(m_ActivationHand != null && fromSource == m_ActivationHand.handType)
+        {
+            if (m_GhostObject != null)
+                m_InitPos = m_GhostObject.transform.position;
+        }
+    }
+
+    private void GripReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
+        {
+            if (m_GhostObject != null)
+            {
+                m_GhostObject.transform.position = gameObject.transform.position;
+                m_GhostObject.transform.rotation = gameObject.transform.rotation;
+            }
+        }
     }
 
     private void MoveManipulator()
@@ -106,7 +139,7 @@ public class DirectManipulation : MonoBehaviour
         Vector3 position = m_GhostObject.transform.position;
         Quaternion rotation = m_GhostObject.transform.rotation;
 
-        if (m_Grip.GetState(m_InteractingHand.handType))
+        if (m_Grip.GetState(m_ActivationHand.handType))
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
             position = m_InitPos + connectingVector * ManipulationMode.SCALINGFACTOR;

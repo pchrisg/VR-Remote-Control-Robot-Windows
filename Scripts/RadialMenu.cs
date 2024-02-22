@@ -7,26 +7,27 @@ public class RadialMenu : MonoBehaviour
     [Header("Scene Objects")]
     [SerializeField] private Transform m_SelectionTransform = null;
     [SerializeField] private Transform m_CursorTransform = null;
-    [SerializeField] private SpriteRenderer m_PlanRobSR = null;
+    //[SerializeField] private SpriteRenderer m_PlanRobSR = null;
     [SerializeField] private SpriteRenderer m_ActiveSR = null;
-    [SerializeField] private SpriteRenderer m_GripperSR = null;
+    //[SerializeField] private SpriteRenderer m_GripperSR = null;
     [SerializeField] private SpriteRenderer m_SelectionSR = null;
     [SerializeField] private SpriteRenderer m_NullSelectionSR = null;
 
     [Header("Events")]
     [SerializeField] private RadialSection north = null;
+    [SerializeField] private RadialSection south = null;
+    /*
     [SerializeField] private RadialSection northeast = null;
     [SerializeField] private RadialSection southeast = null;
-    [SerializeField] private RadialSection south = null;
     [SerializeField] private RadialSection southwest = null;
-    [SerializeField] private RadialSection northwest = null;
+    [SerializeField] private RadialSection northwest = null;*/
     private List<RadialSection> m_RadialSections = null;
 
     [Header("Sprites")]
-    [SerializeField] private Sprite[] m_Sprites = new Sprite[13];
+    [SerializeField] private Sprite[] m_Sprites = new Sprite[4];
 
     private ManipulationMode m_ManipulationMode = null;
-    private PlanningRobot m_PlanningRobot = null;
+    //private PlanningRobot m_PlanningRobot = null;
     private GripperControl m_GripperControl = null;
 
     private Mode m_MenuMode = Mode.DIRECT;
@@ -41,12 +42,12 @@ public class RadialMenu : MonoBehaviour
     private Color m_BlockColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 
 
-    private readonly float degreeIncrement = 60.0f;
+    private readonly float degreeIncrement = 180.0f;
 
     private void Awake()
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         CreateAndSetupSections();
     }
@@ -74,8 +75,8 @@ public class RadialMenu : MonoBehaviour
             SetSeletedEvent(rotation);
         }
 
-        if (m_MenuMode != m_ManipulationMode.mode)
-            SetSectionIcons();
+        //if (m_MenuMode != m_ManipulationMode.mode)
+        //    SetSectionIcons();
     }
 
     public void Show(bool value)
@@ -87,21 +88,53 @@ public class RadialMenu : MonoBehaviour
     {
         m_RadialSections = new List<RadialSection>()
         {
-            north,
+            /*,
             northeast,
             southeast,
-            south,
             southwest,
-            northwest
+            northwest*/
+            north,
+            south
         };
+
+        for (int i = 0; i < 2; i++)
+            m_RadialSections[i].iconRenderer.sprite = m_Sprites[i];
 
         SetSectionIcons();
 
-        m_PlanRobSR.sprite = null;
+        //m_PlanRobSR.sprite = null;
         m_ActiveSR.sprite = null;
     }
 
     private void SetSectionIcons()
+    {
+        if (m_ManipulationMode.mode == Mode.DIRECT)
+        {
+            m_MenuMode = Mode.DIRECT;
+            m_ActiveSR.sprite = null;
+
+            for (int i = 0; i < 2; i++)
+                m_RadialSections[i].iconRenderer.sprite = m_Sprites[i];
+        }
+
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        {
+            m_MenuMode = Mode.ATTOBJCREATOR;
+            m_ActiveSR.sprite = m_Sprites[0];
+
+            m_RadialSections[0].iconRenderer.sprite = m_Sprites[2];
+        }
+
+        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+        {
+            m_MenuMode = Mode.COLOBJCREATOR;
+            m_ActiveSR.sprite = m_Sprites[1];
+
+            m_RadialSections[1].iconRenderer.sprite = m_Sprites[3];
+        }
+    }
+
+    /*private void SetSectionIcons()
     {
         if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
         {
@@ -185,11 +218,11 @@ public class RadialMenu : MonoBehaviour
             SetPlanRobIcon();
             SetGripIcon();
         }
-    }
+    }*/
 
-    private void SetPlanRobIcon()
+    /*private void SetPlanRobIcon()
     {
-        isPlanning = m_PlanningRobot.isPlanning;
+        //isPlanning = m_PlanningRobot.isPlanning;
 
         if (!isPlanning)
         {
@@ -205,9 +238,9 @@ public class RadialMenu : MonoBehaviour
 
             m_RadialSections[4].iconRenderer.sprite = null;
         }
-    }
+    }*/
 
-    private void SetGripIcon()
+    /*private void SetGripIcon()
     {
         isGripping = m_GripperControl.isGripping;
 
@@ -225,7 +258,7 @@ public class RadialMenu : MonoBehaviour
 
             m_RadialSections[0].iconRenderer.sprite = null;
         }
-    }
+    }*/
 
     private float GetDegree(Vector2 direction)
     {
@@ -263,7 +296,7 @@ public class RadialMenu : MonoBehaviour
     {
         int index = GetNearestIncrement(currentRotation);
 
-        if (index == 6)
+        if (index == 2)
             index = 0;
 
         m_HighlightedSection = m_RadialSections[index];
@@ -280,11 +313,11 @@ public class RadialMenu : MonoBehaviour
         {
             m_HighlightedSection.onPress.Invoke();
 
-            if (isPlanning != m_PlanningRobot.isPlanning)
-                SetPlanRobIcon();
+            //if (isPlanning != m_PlanningRobot.isPlanning)
+            //    SetPlanRobIcon();
 
-            if (isGripping != m_GripperControl.isGripping)
-                SetGripIcon();
+            //if (isGripping != m_GripperControl.isGripping)
+            //    SetGripIcon();
 
             if (m_MenuMode != m_ManipulationMode.mode)
                 SetSectionIcons();

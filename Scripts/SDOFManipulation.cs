@@ -6,7 +6,7 @@ using ManipulationModes;
 public class SDOFManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
-    private PlanningRobot m_PlanningRobot = null;
+    //private PlanningRobot m_PlanningRobot = null;
     private ManipulationMode m_ManipulationMode = null;
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
@@ -30,7 +30,7 @@ public class SDOFManipulation : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
@@ -116,8 +116,8 @@ public class SDOFManipulation : MonoBehaviour
         if (isRotating)
             Rotate();
 
-        if (!m_PlanningRobot.isPlanning)
-            m_ROSPublisher.PublishMoveArm();
+        //if (!m_PlanningRobot.isPlanning)
+        m_ROSPublisher.PublishMoveArm();
     }
 
     private void Translate()
@@ -264,9 +264,9 @@ public class SDOFManipulation : MonoBehaviour
         isTranslating = false;
         isRotating = false;
 
-        if (m_PlanningRobot.isPlanning)
-            m_PlanningRobot.RequestTrajectory();
-        else
+        //if (m_PlanningRobot.isPlanning)
+        //    m_PlanningRobot.RequestTrajectory();
+        //else
             m_ROSPublisher.PublishMoveArm();
     }
 

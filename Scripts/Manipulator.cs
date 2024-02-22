@@ -15,11 +15,12 @@ public class Manipulator : MonoBehaviour
 
     //Colors
     private Color m_CurrentColor = new();
-    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 0.4f);
-    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 0.4f);
-    private Color m_Y_AxisColor = new(0.0f, 1.0f, 0.0f, 0.4f);
-    private Color m_XZ_PlaneColor = new(1.0f, 0.0f, 1.0f, 0.4f);
-    private Color m_FocusObjectColor = new(1.0f, 1.0f, 0.0f, 0.4f);
+    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 1.0f);
+    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 1.0f);
+    private Color m_Y_AxisColor = new(0.0f, 1.0f, 0.0f, 1.0f);
+    private Color m_XZ_PlaneColor = new(1.0f, 0.0f, 1.0f, 1.0f);
+    private Color m_FocusObjectColor = new(1.0f, 1.0f, 0.0f, 1.0f);
+    private Color m_InvisColor = new(0.2f, 0.2f, 0.2f, 0.0f);
 
     public bool isColliding = false;
     private Coroutine m_Flashing = null;
@@ -48,17 +49,20 @@ public class Manipulator : MonoBehaviour
 
     private void Update()
     {
-        Color color = m_DefaultColor;
-
-        if (isColliding)
-            color = m_CollidingColor;
-        else if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
-            color = CheckSnapping(color);
-
-        if(color != m_CurrentColor)
+        if(isVisible)
         {
-            m_CurrentColor = color;
-            m_ManipulatorMat.color = m_CurrentColor;
+            Color color = m_DefaultColor;
+
+            if (isColliding)
+                color = m_CollidingColor;
+            else if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
+                color = CheckSnapping(color);
+
+            if(color != m_CurrentColor)
+            {
+                m_CurrentColor = color;
+                m_ManipulatorMat.color = m_CurrentColor;
+            }
         }
     }
 
@@ -68,6 +72,15 @@ public class Manipulator : MonoBehaviour
             StopCoroutine(activeCouroutine);
 
         activeCouroutine = StartCoroutine(ResetPose());
+    }
+
+    private IEnumerator ResetPose()
+    {
+        ShowManipulator(false);
+        yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
+
+        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
+        ShowManipulator(true);
     }
 
     public void ResetPosition()
@@ -84,15 +97,6 @@ public class Manipulator : MonoBehaviour
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, gameObject.transform.rotation);
-        ShowManipulator(true);
-    }
-
-    private IEnumerator ResetPose()
-    {
-        ShowManipulator(false);
-        yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
-
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
         ShowManipulator(true);
     }
 
@@ -124,17 +128,12 @@ public class Manipulator : MonoBehaviour
 
     public void ShowManipulator(bool value)
     {
-        isVisible = value;
         if (value)
-        {
-            foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
-                renderer.material = m_ManipulatorMat;
-        }
+            m_ManipulatorMat.color = m_DefaultColor;
         else
-        {
-            foreach (var renderer in gameObject.GetComponentsInChildren<Renderer>())
-                renderer.material = m_PlanRobMat;
-        }
+            m_ManipulatorMat.color = m_InvisColor;
+
+        isVisible = value;
     }
 
     public void Flash(bool value)

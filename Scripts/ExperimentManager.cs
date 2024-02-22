@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using ManipulationModes;
 
@@ -13,6 +12,7 @@ public class ExperimentManager : MonoBehaviour
 
     [Header("Participant")]
     [SerializeField] private string m_ParticipantName = string.Empty;
+    public Mode m_Technique = Mode.IDLE;
 
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
