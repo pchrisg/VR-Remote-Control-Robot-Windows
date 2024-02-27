@@ -52,8 +52,10 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Touch(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
-        if(m_ManipulationMode.mode == Mode.DIRECT)
-        radialMenu.Show(newState);
+        if(m_ManipulationMode.mode == Mode.DIRECT ||
+           m_ManipulationMode.mode == Mode.ATTOBJCREATOR ||
+           m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+            radialMenu.Show(newState);
     }
 
     private void Click(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)

@@ -14,9 +14,10 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private SpriteRenderer m_NullSelectionSR = null;
 
     [Header("Events")]
-    [SerializeField] private RadialSection north = null;
+    [SerializeField] private RadialSection east = null;
+    [SerializeField] private RadialSection west = null;
+    /*[SerializeField] private RadialSection north = null;
     [SerializeField] private RadialSection south = null;
-    /*
     [SerializeField] private RadialSection northeast = null;
     [SerializeField] private RadialSection southeast = null;
     [SerializeField] private RadialSection southwest = null;
@@ -56,9 +57,7 @@ public class RadialMenu : MonoBehaviour
     {
         SetCursorPosition();
 
-        Vector2 direction = Vector2.zero + m_TouchPosition;
-        
-        if (direction.magnitude < 0.35f)
+        if (m_TouchPosition.magnitude < 0.35f)
         {
             m_SelectionSR.color = m_HideColor;
             m_NullSelectionSR.color = m_ShowColor;
@@ -70,7 +69,7 @@ public class RadialMenu : MonoBehaviour
             m_SelectionSR.color = m_ShowColor;
             m_NullSelectionSR.color = m_BlockColor;
 
-            float rotation = GetDegree(direction);
+            float rotation = GetDegree(m_TouchPosition);
             SetSelectionRotation(rotation);
             SetSeletedEvent(rotation);
         }
@@ -93,8 +92,8 @@ public class RadialMenu : MonoBehaviour
             southeast,
             southwest,
             northwest*/
-            north,
-            south
+            east,
+            west
         };
 
         for (int i = 0; i < 2; i++)
@@ -117,17 +116,17 @@ public class RadialMenu : MonoBehaviour
                 m_RadialSections[i].iconRenderer.sprite = m_Sprites[i];
         }
 
-        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
         {
-            m_MenuMode = Mode.ATTOBJCREATOR;
+            m_MenuMode = Mode.COLOBJCREATOR;
             m_ActiveSR.sprite = m_Sprites[0];
 
             m_RadialSections[0].iconRenderer.sprite = m_Sprites[2];
         }
 
-        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
         {
-            m_MenuMode = Mode.COLOBJCREATOR;
+            m_MenuMode = Mode.ATTOBJCREATOR;
             m_ActiveSR.sprite = m_Sprites[1];
 
             m_RadialSections[1].iconRenderer.sprite = m_Sprites[3];
@@ -262,7 +261,7 @@ public class RadialMenu : MonoBehaviour
 
     private float GetDegree(Vector2 direction)
     {
-        float value = Mathf.Atan2(direction.x, direction.y);
+        float value = Mathf.Atan2(direction.y, direction.x);
         value *= Mathf.Rad2Deg;
 
         if (value < 0)

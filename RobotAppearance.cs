@@ -10,14 +10,14 @@ public class RobotAppearance : MonoBehaviour
     };
 
     [Header("Distance")]
-    [SerializeField] private float m_Distance = 0.0f;
+    [SerializeField] private float m_ChangeDistance = 0.0f;
 
     [Header("Materials")]
     [SerializeField] private Material m_TransparentMat = null;
 
     private GameObject m_UR5 = null;
     private GameObject m_Robotiq = null;
-    private Player m_Player = null;
+    private Collider m_Player = null;
 
     private Appearance m_Appearance = Appearance.OPAQUE;
 
@@ -25,12 +25,14 @@ public class RobotAppearance : MonoBehaviour
     {
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
-        m_Player = Player.instance;
+        m_Player = Player.instance.headCollider;
     }
 
     private void Update()
     {
-        if (Vector3.Distance(m_UR5.transform.position, m_Player.transform.position) <= m_Distance && m_Appearance == Appearance.OPAQUE)
+        float distance = Vector2.Distance(new(m_UR5.transform.position.x, m_UR5.transform.position.z), new(m_Player.transform.position.x, m_Player.transform.position.z));
+
+        if (distance <= m_ChangeDistance && m_Appearance == Appearance.OPAQUE)
         {
             foreach (var joint in m_UR5.GetComponentsInChildren<EmergencyStop>())
                 joint.ChangeAppearance(m_TransparentMat);
@@ -40,7 +42,7 @@ public class RobotAppearance : MonoBehaviour
 
             m_Appearance = Appearance.TRANSPARENT;
         }
-        else if (Vector3.Distance(m_UR5.transform.position, m_Player.transform.position) > m_Distance && m_Appearance == Appearance.TRANSPARENT)
+        else if (distance > m_ChangeDistance && m_Appearance == Appearance.TRANSPARENT)
         {
             foreach (var joint in m_UR5.GetComponentsInChildren<EmergencyStop>())
                 joint.ChangeAppearance();
