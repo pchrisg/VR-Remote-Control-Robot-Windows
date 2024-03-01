@@ -28,15 +28,11 @@ public class RadialMenu : MonoBehaviour
     [SerializeField] private Sprite[] m_Sprites = new Sprite[4];
 
     private ManipulationMode m_ManipulationMode = null;
-    //private PlanningRobot m_PlanningRobot = null;
-    private GripperControl m_GripperControl = null;
 
     private Mode m_MenuMode = Mode.DIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
     
     private RadialSection m_HighlightedSection = null;
-    private bool isPlanning = false;
-    private bool isGripping = false;
 
     private Color m_ShowColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
     private Color m_HideColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -48,8 +44,6 @@ public class RadialMenu : MonoBehaviour
     private void Awake()
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
-        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         CreateAndSetupSections();
     }
 

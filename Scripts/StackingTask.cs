@@ -1,18 +1,17 @@
 using UnityEngine;
-using UnityEngine.UIElements;
 
-public class DominoTask : MonoBehaviour
+public class StackingTask : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private GameObject m_TargetPrefab = null;
-    [SerializeField] private GameObject m_DominoPrefab = null;
+    [SerializeField] private GameObject m_BarrelPrefab = null;
     [SerializeField] private GameObject m_ObstaclePrefab = null;
 
     private GameObject m_Objects = null;
 
     private void Awake()
     {
-        m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
+        m_Objects = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>().m_Objects;
     }
 
     public void Setup(bool value)
@@ -50,27 +49,27 @@ public class DominoTask : MonoBehaviour
         target.transform.SetParent(m_Objects.transform);
 
         //Dominoes
-        GameObject domino = Instantiate(m_DominoPrefab);
+        GameObject domino = Instantiate(m_BarrelPrefab);
         domino.name = "domino_1";
         domino.transform.position = new Vector3(-0.5f, 0.075f, -0.5f);
         domino.transform.SetParent(m_Objects.transform);
 
-        domino = Instantiate(m_DominoPrefab);
+        domino = Instantiate(m_BarrelPrefab);
         domino.name = "domino_2";
         domino.transform.position = new Vector3(-0.5f, 0.075f, 0.5f);
         domino.transform.SetParent(m_Objects.transform);
 
-        domino = Instantiate(m_DominoPrefab);
+        domino = Instantiate(m_BarrelPrefab);
         domino.name = "domino_3";
         domino.transform.position = new Vector3(0.5f, 0.075f, -0.5f);
         domino.transform.SetParent(m_Objects.transform);
 
-        domino = Instantiate(m_DominoPrefab);
+        domino = Instantiate(m_BarrelPrefab);
         domino.name = "domino_4";
         domino.transform.position = new Vector3(0.0f, 0.075f, 0.5f);
         domino.transform.SetParent(m_Objects.transform);
 
-        domino = Instantiate(m_DominoPrefab);
+        domino = Instantiate(m_BarrelPrefab);
         domino.name = "domino_5";
         domino.transform.position = new Vector3(0.5f, 0.075f, 0.5f);
         domino.transform.SetParent(m_Objects.transform);

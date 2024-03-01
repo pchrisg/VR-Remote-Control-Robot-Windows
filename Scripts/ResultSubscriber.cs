@@ -1,18 +1,14 @@
 using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using ActionFeedbackUnity = RosMessageTypes.Moveit.MoveGroupActionFeedbackMsg;
-using System;
 
 public class ResultSubscriber : MonoBehaviour
 {
     [Header("Sounds")]
-    [SerializeField] private AudioClip m_CollisionClip = null;
     [SerializeField] private AudioClip m_MotionClip = null;
 
     private ROSConnection m_Ros = null;
-    private ExperimentManager m_ExperimentManager = null;
 
-    //private PlanningRobot m_PlanningRobot = null;
     private GameObject m_UR5 = null;
     private readonly string m_FeedbackTopic = "/move_group/feedback";
 
@@ -26,9 +22,6 @@ public class ResultSubscriber : MonoBehaviour
     private void Awake()
     {
         m_Ros = ROSConnection.GetOrCreateInstance();
-        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
-
-        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_UR5 = GameObject.FindGameObjectWithTag("robot");
 
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
@@ -56,16 +49,12 @@ public class ResultSubscriber : MonoBehaviour
             if (message.status.text == NotExecuted && isPlanExecuted)
             {
                 m_Manipulator.Colliding(true);
-                m_ExperimentManager.RecordOutOfBounds();
-
-                ur5AudioSource.clip = m_CollisionClip;
-                ur5AudioSource.Play();
                 isPlanExecuted = false;
             }
         }
-        else if (message.feedback.state == "MONITOR")// || m_PlanningRobot.isPlanning)
+        else if (message.feedback.state == "MONITOR")
         {
-            if (!ur5AudioSource.isPlaying)// && !m_PlanningRobot.isPlanning)
+            if (!ur5AudioSource.isPlaying)
             {
                 ur5AudioSource.clip = m_MotionClip;
                 ur5AudioSource.Play();
@@ -78,13 +67,5 @@ public class ResultSubscriber : MonoBehaviour
                 isPlanExecuted = true;
             }
         }
-        /*else if(m_PlanningRobot.isPlanning)
-        {
-            if (!ur5AudioSource.isPlaying)
-            {
-                ur5AudioSource.clip = m_MotionClip;
-                ur5AudioSource.Play();
-            }
-        }*/
     }
 }

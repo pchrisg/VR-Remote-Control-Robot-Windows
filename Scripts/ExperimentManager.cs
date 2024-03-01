@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using ManipulationModes;
 
@@ -10,17 +11,18 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private GameObject m_Glassbox = null;
     public GameObject m_Objects = null;
 
-    [Header("Participant")]
-    [SerializeField] private string m_ParticipantName = string.Empty;
+    [Header("Technique")]
     public Mode m_Technique = Mode.IDLE;
+
+    [Header("Participant")]
+    [SerializeField] private string m_ParticipantNumber = string.Empty;
 
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
 
     [Header("Setup")]
     [SerializeField] private bool m_SetupTutorial = false;
-    [SerializeField] private bool m_SetupTask1 = false;
-    [SerializeField] private bool m_SetupTask2 = false;
+    [SerializeField] private bool m_SetupTask = false;
 
     [Header("Reset")]
     [SerializeField] private bool m_Reset = false;
@@ -32,51 +34,50 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private string m_Active = string.Empty;
     [SerializeField] private string m_Status = string.Empty;
 
-    private bool m_TutorialActive = false;
-    private bool m_Task1Active = false;
-    private bool m_Task2Active = false;
-    private bool m_Running = false;
-
-    [HideInInspector] public const float ERRORTHRESHOLD = 0.05f; //5cm
-
-    //Tutorial
-    private Tutorial m_Tutorial = null;
-
-    // Experiments
-    private BarrelTask m_Task1 = null;
-    private DominoTask m_Task2 = null;
-
+    //Scripts
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private Timer m_Timer = null;
 
+    //Tutorial
+    private Tutorial m_Tutorial = null;
+
+    // Experiment
+    private StackingTask m_Task = null;
+
+    //Settings
+    [HideInInspector] public const float ERRORTHRESHOLD = 0.05f; //5cm
     private readonly float m_TimeLimit = 600.0f;
+
+    //Control
+    private bool m_TutorialActive = false;
+    private bool m_TaskActive = false;
+    private bool m_Running = false;
 
     // File Path
     private readonly string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\";
 
-    /// Data to Store
-    // times
+    // ## Data to Store ##
+    // Time
+    private float m_Barrel1Time = 0.0f;
+    private float m_Barrel2Time = 0.0f;
+    private float m_Barrel3Time = 0.0f;
+    private float m_Barrel4Time = 0.0f;
+    private float m_Barrel5Time = 0.0f;
     private float m_TimeInDirMan = 0.0f;
-    private float m_TimeInSDOFMan = 0.0f;
-    private float m_TimeInRailCre = 0.0f;
-    private float m_TimeInRailMan = 0.0f;
     private float m_TimeInColObj = 0.0f;
     private float m_TimeInAttObj = 0.0f;
-    private float m_TimeTaken = 0.0f;
 
     // objects placed within bounds with their errors
     private string m_PlacedObjects = string.Empty;
 
-
     // Number of Grabs
     private bool isInteracting = false;
-    private int m_GrabCount = 0;
-    private List<string> m_GrabDescriptions = new();
+    private int m_InteractionCount = 0;
+    private List<string> m_InteractionDescriptions = new();
 
     // Errors
     private int m_CollisionsCount = 0;
-    private int m_OutOfBoundsCount = 0;
     private List<string> m_ErrorDescriptions = new();
 
     private void Awake()
@@ -86,12 +87,11 @@ public class ExperimentManager : MonoBehaviour
         m_Timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<Timer>();
 
         m_Tutorial = transform.Find("Tutorial").GetComponent<Tutorial>();
-        m_Task1 = transform.Find("Task1").GetComponent<BarrelTask>();
-        m_Task2 = transform.Find("Task2").GetComponent<DominoTask>();
+        m_Task = transform.Find("Task").GetComponent<StackingTask>();
 
-        //m_Table.SetActive(false);
-        //m_Glassbox.SetActive(false);
-        //m_Objects.SetActive(false);
+        m_Table.SetActive(false);
+        m_Glassbox.SetActive(false);
+        m_Objects.SetActive(false);
 
         m_Active = "None";
         m_Status = "Standby";
@@ -118,16 +118,12 @@ public class ExperimentManager : MonoBehaviour
             if (m_SetupTutorial)
             {
                 m_SetupTutorial = false;
-                m_SetupTask1 = false;
-                m_SetupTask2 = false;
+                m_SetupTask = false;
 
                 if (!m_TutorialActive)
                 {
-                    m_Task2.Setup(false);
-                    m_Task2Active = false;
-
-                    m_Task1.Setup(false);
-                    m_Task1Active = false;
+                    m_Task.Setup(false);
+                    m_TaskActive = false;
 
                     m_Tutorial.Setup(true);
                     m_TutorialActive = true;
@@ -136,52 +132,21 @@ public class ExperimentManager : MonoBehaviour
                     m_Status = "Standby";
                 }
             }
-                
-            // Both tasks can't be active at same time
-            if (m_SetupTask1 && m_SetupTask2)
-            {
-                m_SetupTask1 = false;
-                m_SetupTask2 = false;
-            }
 
-            // Setup task 1
-            if (m_SetupTask1)
+            // Setup task
+            if (m_SetupTask)
             {
-                m_SetupTask1 = false;
+                m_SetupTask = false;
 
-                if (!m_Task1Active)
+                if (!m_TaskActive)
                 {
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
 
-                    m_Task2.Setup(false);
-                    m_Task2Active = false;
+                    m_Task.Setup(true);
+                    m_TaskActive = true;
 
-                    m_Task1.Setup(true);
-                    m_Task1Active = true;
-
-                    m_Active = "Barrel Task";
-                    m_Status = "Standby";
-                }
-            }
-
-            // Setup experiment 2
-            if (m_SetupTask2)
-            {
-                m_SetupTask2 = false;
-
-                if (!m_Task2Active)
-                {
-                    m_Tutorial.Setup(false);
-                    m_TutorialActive = false;
-
-                    m_Task1.Setup(false);
-                    m_Task1Active = false;
-
-                    m_Task2.Setup(true);
-                    m_Task2Active = true;
-
-                    m_Active = "Domino Task";
+                    m_Active = "Experiment";
                     m_Status = "Standby";
                 }
             }
@@ -191,14 +156,12 @@ public class ExperimentManager : MonoBehaviour
             {
                 m_Reset = false;
 
-                if (m_TutorialActive || m_Task1Active || m_Task2Active)
+                if (m_TutorialActive || m_TaskActive)
                 {
                     if (m_TutorialActive)
                         m_Tutorial.ResetTutorial();
-                    if (m_Task1Active)
-                        m_Task1.ResetTask();
-                    if (m_Task2Active)
-                        m_Task2.ResetTask();
+                    if (m_TaskActive)
+                        m_Task.ResetTask();
 
                     ResetRobotPose();
                 }
@@ -207,7 +170,7 @@ public class ExperimentManager : MonoBehaviour
             // Start the experiment
             if (m_Start)
             {
-                if (!m_TutorialActive && !m_Task1Active && !m_Task2Active)
+                if (!m_TutorialActive && !m_TaskActive)
                     m_Start = false;
 
                 else
@@ -232,14 +195,28 @@ public class ExperimentManager : MonoBehaviour
                 m_Running = false;
                 m_Status = "Stopped";
             }
-                
 
             // if experiment
-            if (m_Task1Active || m_Task2Active)
+            if (m_TaskActive)
             {
                 // if time exhausted
                 if (m_Timer.TimeExhausted())
                     SaveData();
+
+                if (isInteracting != m_ManipulationMode.isInteracting)
+                {
+                    isInteracting = !isInteracting;
+
+                    RecordInteractionTime(isInteracting);
+
+                    if (isInteracting)
+                    {
+                        if (m_InteractionCount == 0)
+                            m_Timer.StartTimer(m_TimeLimit);
+
+                        m_InteractionCount++;
+                    }
+                }
 
                 // if experiment stopped
                 if (!m_Start)
@@ -253,12 +230,6 @@ public class ExperimentManager : MonoBehaviour
                 // Data Gathering
                 if (m_ManipulationMode.mode == Mode.DIRECT)
                     m_TimeInDirMan += Time.deltaTime;
-                if (m_ManipulationMode.mode == Mode.SDOF)
-                    m_TimeInSDOFMan += Time.deltaTime;
-                if (m_ManipulationMode.mode == Mode.RAILCREATOR)
-                    m_TimeInRailCre += Time.deltaTime;
-                if (m_ManipulationMode.mode == Mode.RAIL)
-                    m_TimeInRailMan += Time.deltaTime;
                 if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
                     m_TimeInColObj += Time.deltaTime;
                 if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
@@ -274,9 +245,9 @@ public class ExperimentManager : MonoBehaviour
 
     IEnumerator ResetPose()
     {
-        //m_Table.SetActive(false);
-        //m_Glassbox.SetActive(false);
-        //m_Objects.SetActive(false);
+        m_Table.SetActive(false);
+        m_Glassbox.SetActive(false);
+        m_Objects.SetActive(false);
 
         m_ROSPublisher.PublishResetPose();
 
@@ -285,9 +256,9 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPositionAndRotation();
-        //m_Table.SetActive(true);
-        //m_Glassbox.SetActive(true);
-        //m_Objects.SetActive(true);
+        m_Table.SetActive(true);
+        m_Glassbox.SetActive(true);
+        m_Objects.SetActive(true);
 
         yield return null;
     }
@@ -297,25 +268,25 @@ public class ExperimentManager : MonoBehaviour
         m_Timer.StartTimer(m_TimeLimit);
 
         m_TimeInDirMan = 0.0f;
-        m_TimeInSDOFMan = 0.0f;
-        m_TimeInRailCre = 0.0f;
-        m_TimeInRailMan = 0.0f;
         m_TimeInColObj = 0.0f;
         m_TimeInAttObj = 0.0f;
     }
 
-    private void RecordGrabTime(bool value)
-    {
-        m_GrabDescriptions.Add(m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
-    }
-
-    public void AddPlacedObject(string name, float posErr, float rotErr)
-    {
-        m_PlacedObjects += m_Timer.SplitTime().ToString() + ", " + name + ", " + posErr.ToString() + ", " + rotErr.ToString() + "\n";
-    }
-
     public void SplitTime()
     {
+        if (m_Barrel1Time == 0.0f)
+            m_Barrel1Time = m_Timer.SplitTime();
+        else if (m_Barrel2Time == 0.0f)
+            m_Barrel2Time = m_Timer.SplitTime();
+        else if (m_Barrel3Time == 0.0f)
+            m_Barrel3Time = m_Timer.SplitTime();
+        else if (m_Barrel4Time == 0.0f)
+            m_Barrel4Time = m_Timer.SplitTime();
+    }
+
+    private void RecordInteractionTime(bool value)
+    {
+        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_Technique.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
     }
 
     public void RecordCollision(string description)
@@ -323,16 +294,7 @@ public class ExperimentManager : MonoBehaviour
         if (m_Running)
         {
             m_CollisionsCount++;
-            m_ErrorDescriptions.Add(m_Timer.SplitTime().ToString() + "," + description);
-        }
-    }
-
-    public void RecordOutOfBounds()
-    {
-        if (m_Running)
-        {
-            m_OutOfBoundsCount++;
-            m_ErrorDescriptions.Add(m_Timer.SplitTime().ToString() + ", Out of Bounds \n");
+            m_ErrorDescriptions.Add(m_ParticipantNumber + "," + m_Technique.ToString() + "," + m_Timer.SplitTime().ToString() + "," + description);
         }
     }
 
@@ -340,65 +302,93 @@ public class ExperimentManager : MonoBehaviour
     {
         if (m_Running)
         {
-            if (m_Task1Active)
+            if (m_TaskActive)
             {
-                m_Task1Active = false;
-                m_Task1.Setup(false);
+                m_TaskActive = false;
+                m_Task.Setup(false);
             }
 
-            else if (m_Task2Active)
-            {
-                m_Task2Active = false;
-                m_Task2.Setup(false);
-            }
-
-            m_TimeTaken = m_Timer.SplitTime();
+            if(!m_Timer.TimeExhausted())
+                m_Barrel5Time = m_Timer.SplitTime();
 
             m_Start = false;
             m_Running = false;
             m_Status = "Finished";
             m_Timer.StopTimer();
 
-            //StartCoroutine(WriteToFile());
+            StartCoroutine(WriteToFile());
         }
     }
 
-    /*IEnumerator WriteToFile()
+    IEnumerator WriteToFile()
     {
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.5f);
 
-        string technique = string.Empty;
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
-            technique = "_Simple";
-        else
-            technique = "_Ours";
-
-        string path = m_FilePathName + m_Active + m_ParticipantNumber + technique + ".csv";
-        m_Active = "None";
+        // Set path for data
+        string path = m_FilePathName + "Data\\" + m_ParticipantNumber + m_Technique.ToString() + ".csv";
 
         if (File.Exists(path))
             File.Delete(path);
 
-        // Create file
+        // Create first file
         var sr = File.CreateText(path);
 
-        string dataCSV = "Placed Objects:\n Time, Name, Positional Error, Rotational Error \n";
-        dataCSV += m_PlacedObjects + " \n";
-        dataCSV += "Direct, SDOF, Rail Creator, Rail, ColObj, AttObj, Time Taken \n";
-        dataCSV += m_TimeInDirMan.ToString() + ", "
-                + m_TimeInSDOFMan.ToString() + ", "
-                + m_TimeInRailCre.ToString() + ", "
-                + m_TimeInRailMan.ToString() + ", "
-                + m_TimeInColObj.ToString() + ", "
-                + m_TimeInAttObj.ToString() + ", "
-                + m_TimeTaken.ToString() + " \n\n";
+        //participant number, technique, barrel1, barrel2, barrel3, barrel4, barrel5, totaltime, number of interactions, number of collisions, attachable time, collision time, direct time
+        string dataCSV = m_ParticipantNumber +
+                "," + m_Technique.ToString() +
+                "," + m_Barrel1Time.ToString();
 
-        dataCSV += "Number of collisions:, " + m_CollisionsCount.ToString() + " \n";
+        if (m_Barrel5Time == 0.0f)
+        {
+            if(m_Barrel4Time == 0.0f)
+            {
+                if (m_Barrel3Time == 0.0f)
+                {
+                    if (m_Barrel2Time == 0.0f)
+                        dataCSV += "," + m_Barrel2Time.ToString();
+                    else
+                        dataCSV += "," + (m_Barrel2Time - m_Barrel1Time).ToString();
 
-        foreach (var collision in m_CollisionDescriptions)
-            dataCSV += collision;
+                    dataCSV += "," + m_Barrel3Time.ToString();
+                }
+                else
+                {
+                    dataCSV += "," + (m_Barrel2Time - m_Barrel1Time).ToString() +
+                            "," + (m_Barrel3Time - m_Barrel2Time).ToString();
+                }
 
-        // Write to File
+                dataCSV += "," + m_Barrel4Time.ToString();
+            }
+            else
+            {
+                dataCSV += "," + (m_Barrel2Time - m_Barrel1Time).ToString() +
+                        "," + (m_Barrel3Time - m_Barrel2Time).ToString() +
+                        "," + (m_Barrel4Time - m_Barrel3Time).ToString();
+            }
+
+            dataCSV += "," + m_Barrel5Time.ToString() +
+                    "," + m_TimeLimit.ToString();
+        }
+        else
+        {
+            dataCSV += "," + (m_Barrel2Time - m_Barrel1Time).ToString() +
+                    "," + (m_Barrel3Time - m_Barrel2Time).ToString() +
+                    "," + (m_Barrel4Time - m_Barrel3Time).ToString() +
+                    "," + (m_Barrel5Time - m_Barrel4Time).ToString() +
+                    "," + m_Barrel5Time.ToString();
+        }
+
+        dataCSV += "," + m_InteractionCount.ToString() +
+                "," + m_CollisionsCount.ToString();
+
+        if(m_Technique == Mode.DIRECT)
+        {
+            dataCSV += "," + m_TimeInAttObj.ToString() +
+                    "," + m_TimeInColObj.ToString() +
+                    "," + m_TimeInDirMan.ToString();
+        }
+
+        // Write to file
         sr.WriteLine(dataCSV);
 
         //Change to Readonly
@@ -407,8 +397,10 @@ public class ExperimentManager : MonoBehaviour
             IsReadOnly = true
         };
 
-        //Close file
+        //Close first file
         sr.Close();
+
+        print("Data saved to file: " + path);
 
         yield return new WaitForSeconds(0.5f);
 
@@ -416,7 +408,7 @@ public class ExperimentManager : MonoBehaviour
         //Application.OpenURL(path);
 
         //change path for grab descriptions
-        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Perspective.ToString() + m_Appearance.ToString() + "GRAB.csv";
+        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Technique.ToString() + "INTERACTION.csv";
 
         if (File.Exists(path))
             File.Delete(path);
@@ -424,13 +416,16 @@ public class ExperimentManager : MonoBehaviour
         // Create second file
         sr = File.CreateText(path);
 
-        //collision descriptions
+        //participant number, technique
         dataCSV = string.Empty;
 
-        foreach (var grab in m_GrabDescriptions)
+        foreach (var grab in m_InteractionDescriptions)
             dataCSV += grab;
 
-        dataCSV += m_Button4Time.ToString();
+        if (m_Barrel5Time != 0.0f)
+            dataCSV += m_Barrel5Time.ToString();
+        else
+            dataCSV += m_TimeLimit.ToString();
 
         // Write to file
         sr.WriteLine(dataCSV);
@@ -447,7 +442,7 @@ public class ExperimentManager : MonoBehaviour
         print("Data saved to file: " + path);
 
         //change path for error descriptions
-        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Perspective.ToString() + m_Appearance.ToString() + "ERROR.csv";
+        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Technique.ToString() + "COLLISIONS.csv";
 
         if (File.Exists(path))
             File.Delete(path);
@@ -476,5 +471,5 @@ public class ExperimentManager : MonoBehaviour
         print("Data saved to file: " + path);
 
         yield return new WaitForSeconds(0.5f);
-    }*/
+    }
 }

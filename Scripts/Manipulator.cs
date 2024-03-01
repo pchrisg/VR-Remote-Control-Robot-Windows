@@ -5,7 +5,6 @@ public class Manipulator : MonoBehaviour
 {
     [Header("Material")]
     [SerializeField] private Material m_ManipulatorMat = null;
-    [SerializeField] private Material m_PlanRobMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
