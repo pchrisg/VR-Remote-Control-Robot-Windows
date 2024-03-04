@@ -107,13 +107,13 @@ public class GripperControl : MonoBehaviour
         m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
     }
 
-    public void Attach()
+    public void PlayAttachSound()
     {
         m_ManipulatorAudioSource.clip = m_Attach;
         m_ManipulatorAudioSource.Play();
     }
 
-    public void Detach()
+    public void PlayDetachSound()
     {
         m_ManipulatorAudioSource.clip = m_Detach;
         m_ManipulatorAudioSource.Play();

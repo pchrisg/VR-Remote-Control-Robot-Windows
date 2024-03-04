@@ -45,7 +45,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
+        if (!other.CompareTag("Moveable"))
         {
             m_CollisionTime = Time.time;
             string description = gameObject.name + ",collided with," + other.transform.parent.gameObject.name + "\n";
@@ -75,7 +75,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
+        if (!other.CompareTag("Moveable"))
         {
             if (Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime * 2.0f)
             {
@@ -89,7 +89,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.transform.parent != null && !other.transform.parent.CompareTag("Moveable"))
+        if (!other.CompareTag("Moveable"))
             ResetColor();
     }
 

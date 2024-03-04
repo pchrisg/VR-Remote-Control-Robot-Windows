@@ -6,11 +6,10 @@ using ManipulationModes;
 public class SDOFManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
-    //private PlanningRobot m_PlanningRobot = null;
     private ManipulationMode m_ManipulationMode = null;
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
-    private CollisionObjects m_CollisionObjects = null;
+    private InteractableObjects m_InteractableObjects = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -30,11 +29,10 @@ public class SDOFManipulation : MonoBehaviour
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
-        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
     }
@@ -131,7 +129,7 @@ public class SDOFManipulation : MonoBehaviour
         Vector3 movement = m_InitPos + projectedConnectingVector - m_InitDir - m_Manipulator.transform.position;
         Vector3 position = m_Manipulator.transform.position + movement;
 
-        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+        if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
             position = PositionSnapping(position);
 
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, m_Manipulator.transform.rotation);
@@ -139,7 +137,7 @@ public class SDOFManipulation : MonoBehaviour
 
     private Vector3 PositionSnapping(Vector3 position)
     {
-        Transform focusObjectPose = m_CollisionObjects.m_FocusObject.transform;
+        Transform focusObjectPose = m_InteractableObjects.m_FocusObject.transform;
 
         Plane focObjXYPlane = new Plane(focusObjectPose.forward, focusObjectPose.position);
         Plane focObjXZPlane = new Plane(focusObjectPose.up, focusObjectPose.position);
@@ -190,9 +188,9 @@ public class SDOFManipulation : MonoBehaviour
 
     private float RotationSnapping(Vector3 targetVector)
     {
-        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+        if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
         {
-            Transform focusObjectPose = m_CollisionObjects.m_FocusObject.transform;
+            Transform focusObjectPose = m_InteractableObjects.m_FocusObject.transform;
 
             float angleToFocObjX = Vector3.Angle(targetVector, focusObjectPose.right);
             float angleToFocObjY = Vector3.Angle(targetVector, focusObjectPose.up);

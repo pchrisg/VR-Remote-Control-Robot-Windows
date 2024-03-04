@@ -7,7 +7,7 @@ public class DirectManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
-    private CollisionObjects m_CollisionObjects = null;
+    private InteractableObjects m_InteractableObjects = null;
 
     private SteamVR_Action_Boolean m_Grip = null;
     private SteamVR_Action_Boolean m_Trigger = null;
@@ -30,7 +30,7 @@ public class DirectManipulation : MonoBehaviour
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
@@ -147,10 +147,10 @@ public class DirectManipulation : MonoBehaviour
         }
         else
         {
-            if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+            if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
             {
                 position = PositionSnapping();
-                rotation = m_CollisionObjects.LookAtFocusObject(position, m_GhostObject.transform);
+                rotation = m_InteractableObjects.LookAtFocusObject(position, m_GhostObject.transform);
             }
 
             if (rotation == m_GhostObject.transform.rotation)
@@ -166,7 +166,7 @@ public class DirectManipulation : MonoBehaviour
 
     private Vector3 PositionSnapping()
     {
-        Transform focusObject = m_CollisionObjects.m_FocusObject.transform;
+        Transform focusObject = m_InteractableObjects.m_FocusObject.transform;
         Vector3 connectingVector = m_GhostObject.transform.position - focusObject.position;
 
         float snappingThreshold = ManipulationMode.ANGLETHRESHOLD * 2.0f;

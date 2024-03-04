@@ -43,7 +43,7 @@ public class Tutorial : MonoBehaviour
     private GripperControl m_GripperControl = null;
     private ManipulationMode m_ManipulationMode = null;
     private ControllerHints m_ControllerHints = null;
-    private CollisionObjects m_CollisionObjects = null;
+    private InteractableObjects m_InteractableObjects = null;
 
     // Game Objects
     private GameObject m_Objects = null;
@@ -70,7 +70,7 @@ public class Tutorial : MonoBehaviour
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
-        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
         m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
@@ -467,9 +467,6 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
-        Rails rails = GameObject.FindGameObjectWithTag("Rails").GetComponent<Rails>();
-        yield return new WaitUntil(() => !rails.m_Rails.Any());
-
         GameObject cube = Instantiate(m_Cube);
         cube.transform.SetParent(m_Objects.transform);
         cube.transform.position = new Vector3(-0.4f, 0.05f, -0.4f);
@@ -669,14 +666,14 @@ public class Tutorial : MonoBehaviour
         m_Text.text += "\n\nSelect the glass that you don't want the robot to crash into";
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_CollisionObjects.m_CollisionObjects.Any());
+        yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Any());
 
         m_Text.text = "Collision Objects\n\n" +
                       "You can select as many collision objects as you want to avoid\n\n" +
                       "Try selecting another";
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_CollisionObjects.m_CollisionObjects.Count > 1);
+        yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count > 1);
         yield return new WaitForSeconds(0.5f);
 
         m_Text.text = "Collision Objects\n\n" +
@@ -788,8 +785,8 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowGripHint(m_RightHand, true);
         m_ControllerHints.ShowGripHint(m_LeftHand, true);
 
-        int count = m_CollisionObjects.m_CollisionObjects.Count;
-        yield return new WaitUntil(() => m_CollisionObjects.m_CollisionObjects.Count > count);
+        int count = m_InteractableObjects.m_InteractableObjects.Count;
+        yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count > count);
 
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
@@ -807,7 +804,7 @@ public class Tutorial : MonoBehaviour
                       "When selected, it will turn yellow";
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_CollisionObjects.m_FocusObject != null);
+        yield return new WaitUntil(() => m_InteractableObjects.m_FocusObject != null);
 
         GameObject target = Instantiate(m_GhostManipulator);
         target.transform.SetParent(m_Objects.transform);

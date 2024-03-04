@@ -8,7 +8,7 @@ public class Manipulator : MonoBehaviour
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
-    private CollisionObjects m_CollisionObjects = null;
+    private InteractableObjects m_InteractableObjects = null;
 
     private Transform m_Robotiq = null;
 
@@ -32,7 +32,7 @@ public class Manipulator : MonoBehaviour
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_CollisionObjects = GameObject.FindGameObjectWithTag("CollisionObjects").GetComponent<CollisionObjects>();
+        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
         m_CurrentColor = m_DefaultColor;
@@ -108,9 +108,9 @@ public class Manipulator : MonoBehaviour
         if (Mathf.Abs(90.0f - angle) < 0.1f)
             color = m_XZ_PlaneColor;
 
-        if (m_CollisionObjects.m_FocusObject != null && !m_CollisionObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
+        if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
         {
-            Vector3 connectingVector = gameObject.transform.position - m_CollisionObjects.m_FocusObject.transform.position;
+            Vector3 connectingVector = gameObject.transform.position - m_InteractableObjects.m_FocusObject.transform.position;
             angle = Vector3.Angle(gameObject.transform.right.normalized, connectingVector.normalized);
 
             if (angle < 0.1f)

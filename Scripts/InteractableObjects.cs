@@ -4,14 +4,12 @@ using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
-public class CollisionObjects : MonoBehaviour
+public class InteractableObjects : MonoBehaviour
 {
     [Header("Materials")]
     public Material m_AttachedMat = null;
     public Material m_CollidingMat = null;
     public Material m_FocusObjectMat = null;
-
-    [HideInInspector] public GameObject m_FocusObject = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
@@ -24,14 +22,15 @@ public class CollisionObjects : MonoBehaviour
     private int m_Id = 0;
 
     public bool isCreating = false;
+    [HideInInspector] public GameObject m_FocusObject = null;
 
-    public struct ColObj
+    public struct IObject
     {
         public Transform parent;
-        public GameObject colObj;
+        public GameObject iObject;
     }
 
-    public List<ColObj> m_CollisionObjects = new List<ColObj>();
+    public List<IObject> m_InteractableObjects = new();
 
     private void Awake()
     {
@@ -42,83 +41,44 @@ public class CollisionObjects : MonoBehaviour
 
     private void Start()
     {
-        Invoke("SetFingerColliderScript", 0.5f);   //Adds CollisionObjectCreator to fingers
-    }
-
-    private void OnDestroy()
-    {
-        foreach (var colObj in m_CollisionObjects)
-        {
-            Destroy(colObj.colObj);
-        }
+        Invoke(nameof(SetFingerColliderScript), 0.5f);   //Adds CollisionObjectCreator to fingers
     }
 
     private void SetFingerColliderScript()
     {
         GameObject rightIndex = Player.instance.transform.Find(m_FingerNames[0]).gameObject;
-        rightIndex.AddComponent<CollisionObjectCreator>();
-        rightIndex.GetComponent<CollisionObjectCreator>().hand = Player.instance.rightHand;
+        rightIndex.AddComponent<InteractableObjectCreator>();
+        rightIndex.GetComponent<InteractableObjectCreator>().hand = Player.instance.rightHand;
 
         GameObject leftIndex = Player.instance.transform.Find(m_FingerNames[1]).gameObject;
-        leftIndex.AddComponent<CollisionObjectCreator>();
-        leftIndex.GetComponent<CollisionObjectCreator>().hand = Player.instance.leftHand;
+        leftIndex.AddComponent<InteractableObjectCreator>();
+        leftIndex.GetComponent<InteractableObjectCreator>().hand = Player.instance.leftHand;
     }
 
-    /*private void MakeBox(Vector3 position, Vector3 scale)
+    public void AddInteractableObject(GameObject obj)
     {
-        GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-        box.transform.position = position;
-        box.transform.localScale = scale;
-        box.GetComponent<Renderer>().material = m_ColObjMat;
-
-        box.AddComponent<Rigidbody>();
-        box.GetComponent<Rigidbody>().isKinematic = true;
-        
-        box.AddComponent<CollisionHandling>();
-        box.GetComponent<CollisionHandling>().m_EludingMaterial = m_ColObjMat;
-        box.GetComponent<CollisionHandling>().m_CollidingMaterial = m_CollidingMat;
-
-        box.AddComponent<CollisionBox>();
-        box.GetComponent<CollisionBox>().AddCollisionBox(GetFreeID().ToString());
-    }*/
-
-    public void AddCollisionObject(GameObject colobj)
-    {
-        ColObj obj = new ColObj
+        IObject iObj = new()
         {
-            parent = colobj.transform.parent,
-            colObj = colobj
+            parent = obj.transform.parent,
+            iObject = obj
         };
 
-        m_CollisionObjects.Add(obj);
-        colobj.transform.SetParent(gameObject.transform);
+        m_InteractableObjects.Add(iObj);
+        obj.transform.SetParent(gameObject.transform);
     }
 
-    public void RemoveCollisionObject(GameObject colObj)
+    public void RemoveInteractableObject(GameObject obj)
     {
-        foreach (var obj in m_CollisionObjects)
+        foreach (var iObj in m_InteractableObjects)
         {
-            if (obj.colObj == colObj)
+            if (iObj.iObject == obj)
             {
-                colObj.transform.SetParent(obj.parent);
+                if (iObj.parent != null)
+                    obj.transform.SetParent(iObj.parent);
 
-                m_CollisionObjects.Remove(obj);
+                m_InteractableObjects.Remove(iObj);
                 break;
             }
-        }
-    }
-
-    public void RemoveAllCollisionObjects()
-    {
-        foreach (var obj in m_CollisionObjects)
-        {
-            obj.colObj.transform.SetParent(obj.parent);
-
-            Destroy(obj.colObj.GetComponent<CollisionHandling>());
-
-            if (obj.colObj.GetComponent<CollisionObject>() != null)
-                Destroy(obj.colObj.GetComponent<CollisionObject>());
         }
     }
 
@@ -128,7 +88,7 @@ public class CollisionObjects : MonoBehaviour
         return m_Id - 1;
     }
 
-    public void SetFocusObject(GameObject focusObject)
+    public void SetFocusObject(GameObject focusObject = null)
     {
         m_FocusObject = focusObject;
 
