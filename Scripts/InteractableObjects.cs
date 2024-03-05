@@ -73,9 +73,7 @@ public class InteractableObjects : MonoBehaviour
         {
             if (iObj.iObject == obj)
             {
-                if (iObj.parent != null)
-                    obj.transform.SetParent(iObj.parent);
-
+                obj.transform.SetParent(iObj.parent);
                 m_InteractableObjects.Remove(iObj);
                 break;
             }

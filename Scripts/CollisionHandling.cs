@@ -29,14 +29,13 @@ public class CollisionHandling : MonoBehaviour
     private int finger1Touching = 0;
     private int finger2Touching = 0;
     
-    private Vector3 m_ReleasePosition = Vector3.zero;
+    private Vector3 m_PreviousPosition = new();
 
     //States
     private bool isCreating = false;
     private bool m_isColliding = false;
     private bool m_isFocusObject = false;
-
-    //change to private and check out
+    private bool m_isMoving = false;
     public bool m_isAttached = false;
 
     private void Awake()
@@ -50,6 +49,8 @@ public class CollisionHandling : MonoBehaviour
         m_FingerMColliders = robotiq.transform.Find(m_FingerLinkNames[0]).GetComponentsInChildren<Collider>();
         m_Finger1Colliders = robotiq.transform.Find(m_FingerLinkNames[1]).GetComponentsInChildren<Collider>();
         m_Finger2Colliders = robotiq.transform.Find(m_FingerLinkNames[2]).GetComponentsInChildren<Collider>();
+
+        m_PreviousPosition = gameObject.transform.position;
     }
 
     private void OnDestroy()
@@ -69,19 +70,22 @@ public class CollisionHandling : MonoBehaviour
             isCreating = m_InteractableObjects.isCreating;
             SetMaterial();
         }
-    }
 
-    private void FixedUpdate()
-    {
-        if (m_ReleasePosition != Vector3.zero)
+        if (!m_isMoving && gameObject.transform.position != m_PreviousPosition)
         {
-            if (gameObject.transform.position == m_ReleasePosition)
+            m_isMoving = true;
+            gameObject.GetComponent<InteractableObject>().RemoveInteractableObject();
+        }
+
+        if (m_isMoving)
+        {
+            if (!m_isAttached && gameObject.transform.position == m_PreviousPosition)
             {
                 gameObject.GetComponent<InteractableObject>().AddInteractableObject();
-                m_ReleasePosition = Vector3.zero;
+                m_isMoving = false;
             }
             else
-                m_ReleasePosition = gameObject.transform.position;
+                m_PreviousPosition = gameObject.transform.position;
         }
     }
 
@@ -109,8 +113,6 @@ public class CollisionHandling : MonoBehaviour
         {
             if (fingerMTouching > 0 && (finger1Touching > 0 || finger2Touching > 0))
             {
-                gameObject.GetComponent<InteractableObject>().RemoveInteractableObject();
-
                 m_isAttached = true;
                 m_GripperControl.PlayAttachSound();
                 m_Manipulator.Colliding(false);
@@ -172,8 +174,6 @@ public class CollisionHandling : MonoBehaviour
             {
                 m_isAttached = false;
                 m_GripperControl.PlayDetachSound();
-
-                m_ReleasePosition = gameObject.transform.position;
 
                 if (m_isFocusObject)
                     m_InteractableObjects.SetFocusObject(gameObject);

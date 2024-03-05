@@ -22,7 +22,7 @@ public class InteractableObjectCreator : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!m_Grip.GetState(hand.handType) || !other.CompareTag("WorldObject") || !other.isTrigger || !((other is BoxCollider) || (other is CapsuleCollider)))
+        if (!m_Grip.GetState(hand.handType) || !other.isTrigger || !((other is BoxCollider) || (other is CapsuleCollider)))
             return;
 
         else

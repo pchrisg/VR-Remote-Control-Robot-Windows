@@ -13,17 +13,12 @@ public class InteractableObject : MonoBehaviour
 
     private InteractableObjects m_InteractableObjects = null;
 
-    private readonly float modifier = 1.1f;
+    private readonly float modifier = 0.005f;
 
     void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
-    }
-
-    public void OnDestroy()
-    {
-        RemoveInteractableObject();
     }
 
     public String GetID()
@@ -107,36 +102,34 @@ public class InteractableObject : MonoBehaviour
     {
         var primitive = new SolidPrimitiveMsg();
 
-        if (collider is BoxCollider)
+        if (collider is BoxCollider boxCollider)
         {
-            BoxCollider boxCollider = (BoxCollider)collider;
-
             primitive.type = SolidPrimitiveMsg.BOX;
             Array.Resize(ref primitive.dimensions, 3);
 
-            float width = gameObject.transform.lossyScale.z * boxCollider.size.z * modifier;
-            float depth = gameObject.transform.lossyScale.x * boxCollider.size.x * modifier;
-            float height = gameObject.transform.lossyScale.y * boxCollider.size.y * modifier;
+            float width = gameObject.transform.lossyScale.z * boxCollider.size.z + modifier;
+            float depth = gameObject.transform.lossyScale.x * boxCollider.size.x + modifier;
+            float height = gameObject.transform.lossyScale.y * boxCollider.size.y + modifier;
+
+            print(height);
 
             primitive.dimensions[SolidPrimitiveMsg.BOX_X] = width;
             primitive.dimensions[SolidPrimitiveMsg.BOX_Y] = depth;
             primitive.dimensions[SolidPrimitiveMsg.BOX_Z] = height;
         }
 
-        if (collider is CapsuleCollider)
+        if (collider is CapsuleCollider capsuleCollider)
         {
-            CapsuleCollider capsuleCollider = (CapsuleCollider)collider;
-
             primitive.type = SolidPrimitiveMsg.CYLINDER;
             Array.Resize(ref primitive.dimensions, 2);
 
-            float height = gameObject.transform.lossyScale.y * capsuleCollider.height;
-            float radius = gameObject.transform.lossyScale.x * capsuleCollider.radius;
+            float height = gameObject.transform.lossyScale.y * capsuleCollider.height + modifier;
+            float radius = gameObject.transform.lossyScale.x * capsuleCollider.radius + modifier;
 
             primitive.dimensions[SolidPrimitiveMsg.CYLINDER_HEIGHT] = height;
             primitive.dimensions[SolidPrimitiveMsg.CYLINDER_RADIUS] = radius;
         }
-        
+
         return primitive;
     }
 
