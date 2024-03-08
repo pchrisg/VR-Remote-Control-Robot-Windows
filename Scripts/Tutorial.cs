@@ -94,8 +94,8 @@ public class Tutorial : MonoBehaviour
         if(m_ActiveCoroutine != null)
             StopCoroutine(m_ActiveCoroutine);
 
-        if(m_Manipulator != null)
-            m_Manipulator.Flash(false);
+        //if(m_Manipulator != null)
+        //    m_Manipulator.Flash(false);
 
         m_ActiveCoroutine = null;
 
@@ -181,7 +181,7 @@ public class Tutorial : MonoBehaviour
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
-        m_Manipulator.Flash(true);
+        //m_Manipulator.Flash(true);
 
         yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
 
@@ -222,7 +222,7 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => CheckVec3Distance(m_Robotiq, target) && CheckRotation(m_Robotiq, target));
 
-        m_Manipulator.Flash(false);
+        //m_Manipulator.Flash(false);
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
         GameObject.Destroy(target);
@@ -410,7 +410,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
-        m_Manipulator.Flash(true);
+        //m_Manipulator.Flash(true);
 
         yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
 
@@ -422,7 +422,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-        m_Manipulator.Flash(false);
+        //m_Manipulator.Flash(false);
 
         m_Text.text = "The Planning Robot\n\n" +
                       "The planning robot shows the path that the robot will take while moving along that rail";
@@ -438,13 +438,13 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
-        m_Manipulator.Flash(true);
+        //m_Manipulator.Flash(true);
 
         yield return new WaitUntil(() => CheckVec3Distance(m_Manipulator.gameObject, target) && !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-        m_Manipulator.Flash(false);
+        //m_Manipulator.Flash(false);
 
         m_Text.text = "The Planning Robot\n\n" +
                       "The manipulator will turn red and play a sound if the robot is incapable of moving to a location\n\n" +
@@ -520,7 +520,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
-        m_Manipulator.Flash(true);
+        //m_Manipulator.Flash(true);
 
         yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
 
@@ -538,7 +538,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-        m_Manipulator.Flash(false);
+        //m_Manipulator.Flash(false);
 
         m_Text.text = "Rail Manipulation\n\n" +
                       "On your left controller, rest your thumb on the trackpad in the right direction";

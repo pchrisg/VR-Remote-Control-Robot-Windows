@@ -14,21 +14,18 @@ public class ROSPublisher : MonoBehaviour
     public bool m_Gazebo = true;
 
     [Header("ROS Topics")]
-    [SerializeField] private readonly string m_ResetPoseTopic = "chris_reset_pose";
-    [SerializeField] private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
-    [SerializeField] private readonly string m_ExecPlanTopic = "chris_execute_plan";
-    [SerializeField] private readonly string m_MoveArmTopic = "chris_move_arm";
-    [SerializeField] private readonly string m_EmergencyStopTopic = "chris_emergency_stop";
-    [SerializeField] private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
-    [SerializeField] private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
-    //[SerializeField] private readonly string m_SdofTranslateTopic = "chris_sdof_translate";
-    //[SerializeField] private readonly string m_AttachCollisionObjectTopic = "chris_attach_collision_object";
-    //[SerializeField] private readonly string m_DetachCollisionObjectTopic = "chris_detach_collision_object";
+    private readonly string m_ResetPoseTopic = "chris_reset_pose";
+    private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
+    private readonly string m_ExecPlanTopic = "chris_execute_plan";
+    private readonly string m_StopArmTopic = "chris_stop_arm";
+    private readonly string m_MoveArmTopic = "chris_move_arm";
+    private readonly string m_EmergencyStopTopic = "chris_emergency_stop";
+    private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
+    private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
 
     [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
     private Transform m_ManipulatorPose = null;
-    //private PlanningRobot m_PlanningRobot = null;
 
     private ROSConnection m_Ros = null;
 
@@ -42,8 +39,7 @@ public class ROSPublisher : MonoBehaviour
         else
             m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
 
-        m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose").transform;
-        //m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose");
 
         // Get ROS connection static instance
         m_Ros = ROSConnection.GetOrCreateInstance();
@@ -53,25 +49,25 @@ public class ROSPublisher : MonoBehaviour
 
         m_Ros.RegisterPublisher<EmptyMsg>(m_ResetPoseTopic);
         m_Ros.RegisterPublisher<RobotTrajectoryMsg>(m_ExecPlanTopic);
+        m_Ros.RegisterPublisher<EmptyMsg>(m_StopArmTopic);
         m_Ros.RegisterPublisher<PoseMsg>(m_MoveArmTopic);
         m_Ros.RegisterPublisher<BoolMsg>(m_EmergencyStopTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_AddCollisionObjectTopic);
         m_Ros.RegisterPublisher<CollisionObjectMsg>(m_RemoveCollisionObjectTopic);
         m_Ros.RegisterPublisher<Robotiq3FGripperRobotOutputMsg>(m_RoboticSqueezeTopic);
-        //m_Ros.RegisterPublisher<SdofTranslationMsg>(m_SdofTranslateTopic);
-        //m_Ros.RegisterPublisher<AttachedCollisionObjectMsg>(m_AttachCollisionObjectTopic);
-        //m_Ros.RegisterPublisher<CollisionObjectMsg>(m_DetachCollisionObjectTopic);
     }
 
     private void Start()
     {
-        Invoke("RemoveAnyCollisionObjects", 0.5f);
+        Invoke(nameof(RemoveAnyCollisionObjects), 0.5f);
     }
 
     private void RemoveAnyCollisionObjects()
     {
-        CollisionObjectMsg colobjmsg = new CollisionObjectMsg();
-        colobjmsg.id = "-1";
+        CollisionObjectMsg colobjmsg = new()
+        {
+            id = "-1"
+        };
         PublishAddCollisionObject(colobjmsg);
     }
 
@@ -82,33 +78,35 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishResetPose()
     {
-        Robotiq3FGripperRobotOutputMsg outputMessage = new Robotiq3FGripperRobotOutputMsg();
-        outputMessage.rACT = 1;
-        //outputMessage.rPRA = (byte)(1.0f);
-        outputMessage.rPRA = (byte)(120.0f);
+        Robotiq3FGripperRobotOutputMsg outputMessage = new()
+        {
+            rACT = 1,
+            rPRA = (byte)(120.0f)
+        };
 
         PublishRobotiqSqueeze(outputMessage);
         PublishRobotiqSqueeze(outputMessage);
 
-        EmptyMsg msg = new EmptyMsg();
+        EmptyMsg msg = new();
 
         m_Ros.Publish(m_ResetPoseTopic, msg);
     }
 
     public void PublishTrajectoryRequest(Vector3 startPos, Quaternion startRot, Vector3 destPos, Quaternion destRot)
     {
-        var request = new TrajectoryPlannerServiceRequest();
-
-        request.start = new PoseMsg
+        TrajectoryPlannerServiceRequest request = new()
         {
-            position = startPos.To<FLU>(),
-            orientation = startRot.To<FLU>()
-        };
+            start = new PoseMsg
+            {
+                position = startPos.To<FLU>(),
+                orientation = startRot.To<FLU>()
+            },
 
-        request.destination = new PoseMsg
-        {
-            position = destPos.To<FLU>(),
-            orientation = destRot.To<FLU>()
+            destination = new PoseMsg
+            {
+                position = destPos.To<FLU>(),
+                orientation = destRot.To<FLU>()
+            }
         };
         m_Ros.SendServiceMessage<TrajectoryPlannerServiceResponse>(m_PlanTrajTopic, request, HandleTrajectoryResponse);
     }
@@ -122,6 +120,12 @@ public class ROSPublisher : MonoBehaviour
     public void PublishExecutePlan(RobotTrajectoryMsg trajectory)
     {
         m_Ros.Publish(m_ExecPlanTopic, trajectory);
+    }
+
+    public void PublishStopArm()
+    {
+        EmptyMsg msg = new();
+        m_Ros.Publish(m_StopArmTopic, msg);
     }
 
     public void PublishMoveArm()
@@ -146,8 +150,10 @@ public class ROSPublisher : MonoBehaviour
     {
         locked = true;
 
-        BoolMsg msg = new BoolMsg();
-        msg.data = true;
+        BoolMsg msg = new()
+        {
+            data = true
+        };
         m_Ros.Publish(m_EmergencyStopTopic, msg);
         yield return new WaitForSeconds(m_LockedTime);
 
@@ -155,35 +161,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.Publish(m_EmergencyStopTopic, msg);
 
         locked = false;
-        yield return null;
     }
-
-    /*public void PublishConstrainedMovement()
-    {
-        var dest = new PoseMsg
-        {
-            position = m_Manipulator.position.To<FLU>(),
-            orientation = m_Manipulator.rotation.To<FLU>()
-        };
-        var ocm = new OrientationConstraintMsg
-        {
-            link_name = "tool0",
-            orientation = m_Manipulator.rotation.To<FLU>(),
-            absolute_x_axis_tolerance = 0.01f,
-            absolute_y_axis_tolerance = 0.01f,
-            absolute_z_axis_tolerance = 0.01f,
-            weight = 1.0
-        };
-        ocm.header.frame_id = "base_link";
-
-        var sdofTranslation = new SdofTranslationMsg()
-        {
-            orientation_constraint = ocm,
-            destination = dest
-        };
-
-        m_Ros.Publish(m_SdofTranslateTopic, sdofTranslation);
-    }*/
 
     public void PublishAddCollisionObject(CollisionObjectMsg collisionObject)
     {
@@ -194,16 +172,6 @@ public class ROSPublisher : MonoBehaviour
     {
         m_Ros.Publish(m_RemoveCollisionObjectTopic, collisionObject);
     }
-
-    /*public void PublishAttachCollisionObject(AttachedCollisionObjectMsg attColObj)
-    {
-        m_Ros.Publish(m_AttachCollisionObjectTopic, attColObj);
-    }
-
-    public void PublishDetachCollisionObject(CollisionObjectMsg collisionObject)
-    {
-        m_Ros.Publish(m_DetachCollisionObjectTopic, collisionObject);
-    }*/
 
     public void PublishRobotiqSqueeze(Robotiq3FGripperRobotOutputMsg outputMessage)
     {

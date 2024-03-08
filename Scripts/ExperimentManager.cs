@@ -272,16 +272,20 @@ public class ExperimentManager : MonoBehaviour
         m_TimeInAttObj = 0.0f;
     }
 
-    public void SplitTime()
+    public void SplitTime(int barrelNumber)
     {
-        if (m_Barrel1Time == 0.0f)
+        if (barrelNumber == 1 && m_Barrel1Time == 0.0f)
             m_Barrel1Time = m_Timer.SplitTime();
-        else if (m_Barrel2Time == 0.0f)
+        else if (barrelNumber == 2 && m_Barrel2Time == 0.0f)
             m_Barrel2Time = m_Timer.SplitTime();
-        else if (m_Barrel3Time == 0.0f)
+        else if (barrelNumber == 3 && m_Barrel3Time == 0.0f)
             m_Barrel3Time = m_Timer.SplitTime();
-        else if (m_Barrel4Time == 0.0f)
+        else if (barrelNumber == 4 && m_Barrel4Time == 0.0f)
             m_Barrel4Time = m_Timer.SplitTime();
+        else if (barrelNumber == 5 && m_Barrel5Time == 0.0f)
+            m_Barrel5Time = m_Timer.SplitTime();
+
+        print("saved time " + barrelNumber);
     }
 
     private void RecordInteractionTime(bool value)
@@ -308,8 +312,8 @@ public class ExperimentManager : MonoBehaviour
                 m_Task.Setup(false);
             }
 
-            if(!m_Timer.TimeExhausted())
-                m_Barrel5Time = m_Timer.SplitTime();
+            if(m_Timer.TimeExhausted())
+                m_Barrel5Time = 0.0f;
 
             m_Start = false;
             m_Running = false;

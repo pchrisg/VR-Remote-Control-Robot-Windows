@@ -9,22 +9,28 @@ public class DirectManipulation : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
 
-    private SteamVR_Action_Boolean m_Grip = null;
-    private SteamVR_Action_Boolean m_Trigger = null;
-    
-    private bool isInteracting = false;
-
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
     private Hand m_ActivationHand = null;
     private Hand m_InteractingHand = null;
 
+    private SteamVR_Action_Boolean m_Grip = null;
+    private SteamVR_Action_Boolean m_Trigger = null;
+
     private Vector3 m_PreviousPosition = new();
     private Quaternion m_PreviousRotation = new();
 
+    private Transform m_Robotiq = null;
+    private Transform m_ManipulatorPose = null;
+    private readonly Vector3 m_Offset= new(0.0f,0.04f,0.0f);
+    private float m_TotalDistance = 0.0f;
+    private float m_TotalAngle = 0.0f;
+    private float m_PreviousDistance = 0.0f;
+    private float m_PreviousAngle = 0.0f;
+
     private Vector3 m_InitPos = new();
-    private Quaternion m_FocusRot = new();
     private GameObject m_GhostObject = null;
+    private bool isInteracting = false;
 
     private void Awake()
     {
@@ -46,6 +52,9 @@ public class DirectManipulation : MonoBehaviour
         m_Grip.AddOnStateDownListener(GripGrabbed, m_LeftHand.handType);
         m_Grip.AddOnStateUpListener(GripReleased, m_RightHand.handType);
         m_Grip.AddOnStateUpListener(GripReleased, m_LeftHand.handType);
+
+        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
+        m_ManipulatorPose = gameObject.transform.Find("Pose");
     }
 
     private void Update()
@@ -77,6 +86,9 @@ public class DirectManipulation : MonoBehaviour
                 m_InteractingHand = m_LeftHand;
             }
 
+            m_PreviousDistance = Vector3.Distance(m_Robotiq.position, m_ManipulatorPose.position);
+            m_PreviousAngle = Quaternion.Angle(m_Robotiq.rotation, m_ManipulatorPose.rotation);
+
             m_PreviousPosition = m_InteractingHand.transform.position;
             m_PreviousRotation = m_InteractingHand.transform.rotation;
 
@@ -94,7 +106,13 @@ public class DirectManipulation : MonoBehaviour
         {
             m_ActivationHand = null;
             Destroy(m_GhostObject);
+
+            m_TotalDistance = 0.0f;
+            m_PreviousDistance = 0.0f;
+            m_PreviousAngle = 0.0f;
+
             m_InitPos = Vector3.zero;
+
             m_ROSPublisher.PublishMoveArm();
         }
 
@@ -121,10 +139,7 @@ public class DirectManipulation : MonoBehaviour
         if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
         {
             if (m_GhostObject != null)
-            {
-                m_GhostObject.transform.position = gameObject.transform.position;
-                m_GhostObject.transform.rotation = gameObject.transform.rotation;
-            }
+                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
         }
     }
 
@@ -159,6 +174,22 @@ public class DirectManipulation : MonoBehaviour
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
         m_ROSPublisher.PublishMoveArm();
+
+        float distance = Vector3.Distance(m_Robotiq.position, m_ManipulatorPose.position);
+        float angle = Quaternion.Angle(m_Robotiq.rotation, m_ManipulatorPose.rotation);
+
+        float deltaDistance = distance - m_PreviousDistance;
+        if (deltaDistance > 0)
+        {
+            m_TotalDistance += deltaDistance;
+            if (m_TotalDistance > ManipulationMode.DISTANCETHRESHOLD)
+                m_ROSPublisher.PublishStopArm();
+        }
+        else
+            m_TotalDistance = 0.0f;
+
+        m_PreviousDistance = Vector3.Distance(m_Robotiq.position, position + m_Offset);
+        m_PreviousAngle = Quaternion.Angle(m_Robotiq.rotation, m_ManipulatorPose.rotation);
 
         m_PreviousPosition = m_InteractingHand.transform.position;
         m_PreviousRotation = m_InteractingHand.transform.rotation;

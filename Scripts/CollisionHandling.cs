@@ -17,6 +17,9 @@ public class CollisionHandling : MonoBehaviour
 
     //Colliders
     private Collider[] m_ManipulatorColliders = null;
+
+    private int m_ManipulatorTouching = 0;
+
     private readonly string[] m_FingerLinkNames = {
         "finger_middle_link_0",
         "finger_1_link_0",
@@ -25,9 +28,9 @@ public class CollisionHandling : MonoBehaviour
     private Collider[] m_Finger1Colliders = null;
     private Collider[] m_Finger2Colliders = null;
 
-    private int fingerMTouching = 0;
-    private int finger1Touching = 0;
-    private int finger2Touching = 0;
+    private int m_FingerMTouching = 0;
+    private int m_Finger1Touching = 0;
+    private int m_Finger2Touching = 0;
     
     private Vector3 m_PreviousPosition = new();
 
@@ -71,7 +74,7 @@ public class CollisionHandling : MonoBehaviour
             SetMaterial();
         }
 
-        if (!m_isMoving && gameObject.transform.position != m_PreviousPosition)
+        if (!m_isMoving && Vector3.Distance(gameObject.transform.position,m_PreviousPosition) > 0.001f)
         {
             m_isMoving = true;
             gameObject.GetComponent<InteractableObject>().RemoveInteractableObject();
@@ -79,7 +82,7 @@ public class CollisionHandling : MonoBehaviour
 
         if (m_isMoving)
         {
-            if (!m_isAttached && gameObject.transform.position == m_PreviousPosition)
+            if (!m_isAttached && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
             {
                 gameObject.GetComponent<InteractableObject>().AddInteractableObject();
                 m_isMoving = false;
@@ -91,27 +94,60 @@ public class CollisionHandling : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        bool colliderFound = false;
+
         foreach (var collider in m_FingerMColliders)
         {
             if (other == collider)
-                fingerMTouching++;
+            {
+                m_FingerMTouching++;
+                colliderFound = true;
+                break;
+            }
         }
 
-        foreach (var collider in m_Finger1Colliders)
+        if (!colliderFound)
         {
-            if (other == collider)
-                finger1Touching++;
+            foreach (var collider in m_Finger1Colliders)
+            {
+                if (other == collider)
+                {
+                    m_Finger1Touching++;
+                    colliderFound = true;
+                    break;
+                }
+            }
         }
 
-        foreach (var collider in m_Finger2Colliders)
+        if (!colliderFound)
         {
-            if (other == collider)
-                finger2Touching++;
+            foreach (var collider in m_Finger2Colliders)
+            {
+                if (other == collider)
+                {
+                    m_Finger2Touching++;
+                    colliderFound = true;
+                    break;
+                }
+            }
+        }
+
+        if (!colliderFound)
+        {
+            foreach (var collider in m_ManipulatorColliders)
+            {
+                if (other == collider)
+                {
+                    m_ManipulatorTouching++;
+                    colliderFound = true;
+                    break;
+                }
+            }
         }
 
         if (m_isAttachable && !m_isAttached)
         {
-            if (fingerMTouching > 0 && (finger1Touching > 0 || finger2Touching > 0))
+            if (m_FingerMTouching > 0 && (m_Finger1Touching > 0 || m_Finger2Touching > 0))
             {
                 m_isAttached = true;
                 m_GripperControl.PlayAttachSound();
@@ -120,29 +156,19 @@ public class CollisionHandling : MonoBehaviour
                 if (m_isFocusObject)
                     m_InteractableObjects.SetFocusObject();
 
+                print("trigger enter settingMaterial when attached " + other.name);
                 SetMaterial();
-
-                return;
             }
         }
 
-        if (!m_isAttached)
+        if (!m_isAttached && !m_isColliding)
         {
-            bool otherIsManipulator = false;
-            foreach (var collider in m_ManipulatorColliders)
-            {
-                if (other == collider)
-                {
-                    otherIsManipulator = true;
-                    break;
-                }
-            }
-
-            if (otherIsManipulator)
+            if (m_ManipulatorTouching > 0)
             {
                 m_isColliding = true;
                 m_Manipulator.Colliding(true);
 
+                print("trigger enter SettingMaterial when colliding" + other.name);
                 SetMaterial();
             }
         }
@@ -150,27 +176,60 @@ public class CollisionHandling : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        bool colliderFound = false;
+
         foreach (var collider in m_FingerMColliders)
         {
             if (other == collider)
-                fingerMTouching--;
+            {
+                m_FingerMTouching--;
+                colliderFound = true;
+                break;
+            }
         }
 
-        foreach (var collider in m_Finger1Colliders)
+        if (!colliderFound)
         {
-            if (other == collider)
-                finger1Touching--;
+            foreach (var collider in m_Finger1Colliders)
+            {
+                if (other == collider)
+                {
+                    m_Finger1Touching--;
+                    colliderFound = true;
+                    break;
+                }
+            }
         }
 
-        foreach (var collider in m_Finger2Colliders)
+        if (!colliderFound)
         {
-            if (other == collider)
-                finger2Touching--;
+            foreach (var collider in m_Finger2Colliders)
+            {
+                if (other == collider)
+                {
+                    m_Finger2Touching--;
+                    colliderFound = true;
+                    break;
+                }
+            }
+        }
+
+        if (!colliderFound)
+        {
+            foreach (var collider in m_ManipulatorColliders)
+            {
+                if (other == collider)
+                {
+                    m_ManipulatorTouching--;
+                    colliderFound = true;
+                    break;
+                }
+            }
         }
 
         if (m_isAttached)
         {
-            if (fingerMTouching == 0)
+            if (m_FingerMTouching == 0)
             {
                 m_isAttached = false;
                 m_GripperControl.PlayDetachSound();
@@ -178,29 +237,19 @@ public class CollisionHandling : MonoBehaviour
                 if (m_isFocusObject)
                     m_InteractableObjects.SetFocusObject(gameObject);
 
+                print("trigger exit SettingMaterial when attached" + other.name);
                 SetMaterial();
-
-                return;
             }
         }
 
-        if (!m_isAttached)
+        if (!m_isAttached && m_isColliding)
         {
-            bool otherIsManipulator = false;
-            foreach (var collider in m_ManipulatorColliders)
-            {
-                if (other == collider)
-                {
-                    otherIsManipulator = true;
-                    break;
-                }
-            }
-
-            if (otherIsManipulator)
+            if (m_ManipulatorTouching == 0)
             {
                 m_isColliding = false;
                 m_Manipulator.Colliding(false);
 
+                print("trigger exit SettingMaterial when colliding" + other.name);
                 SetMaterial();
             }
         }
@@ -245,10 +294,7 @@ public class CollisionHandling : MonoBehaviour
         else if (gameObject.GetComponentsInChildren<Renderer>() != null)
         {
             foreach (var child in gameObject.GetComponentsInChildren<Renderer>())
-            //{
                 child.AddComponent<MaterialChanger>();
-            //    child.GetComponent<MaterialChanger>().SetOriginalMat();
-            //}
         }
 
         m_CollidingMat = m_InteractableObjects.m_CollidingMat;

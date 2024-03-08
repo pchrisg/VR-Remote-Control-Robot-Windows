@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
+using ManipulationModes;
 
 public class InteractableObjects : MonoBehaviour
 {
@@ -90,12 +91,12 @@ public class InteractableObjects : MonoBehaviour
     {
         m_FocusObject = focusObject;
 
-        if (m_FocusObject != null && m_ManipulationMode.mode != ManipulationModes.Mode.SDOF)
+        if (m_FocusObject != null && m_ManipulationMode.mode != Mode.SDOF)
         {
             Quaternion rotation = LookAtFocusObject(m_Manipulator.transform.position, m_Manipulator.transform);
             m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
 
-            if (m_ManipulationMode.mode != ManipulationModes.Mode.RAILCREATOR)
+            if (m_ManipulationMode.mode != Mode.RAILCREATOR)
                 StartCoroutine(PublishMoveArm());
         }
     }
@@ -107,7 +108,7 @@ public class InteractableObjects : MonoBehaviour
         m_ROSPublisher.PublishMoveArm();
     }
 
-    public Quaternion LookAtFocusObject(Vector3 position, Transform initPose, Vector3 connectingVector = new Vector3())
+    public Quaternion LookAtFocusObject(Vector3 position, Transform initPose, Vector3 connectingVector = new())
     {
         if (m_FocusObject == null)
             return initPose.rotation;
@@ -121,16 +122,22 @@ public class InteractableObjects : MonoBehaviour
             angleToForward = 180.0f - angleToForward;
 
         Vector3 right = position - m_FocusObject.transform.position;
-        Vector3 up = Vector3.zero;
-        Vector3 forward = Vector3.zero;
+        Vector3 up;
+        Vector3 forward;
         float angle = Vector3.Angle(right, m_FocusObject.transform.up);
         if (angle < 0.1f)
         {
-            if (angleToRight < angleToForward)
-                up = Vector3.Project(initPose.up, m_FocusObject.transform.right);
-            else
-                up = Vector3.Project(initPose.up, m_FocusObject.transform.forward);
+            //if (angleToRight < angleToForward)
+            //    up = Vector3.Project(initPose.up, m_FocusObject.transform.right);
+            //else
+            //    up = Vector3.Project(initPose.up, m_FocusObject.transform.forward);
 
+            //forward = Vector3.Cross(right.normalized, up.normalized);
+
+            //return Quaternion.LookRotation(forward, up);
+
+            right = Vector3.Project(initPose.right, m_FocusObject.transform.up);
+            up = Vector3.ProjectOnPlane(initPose.up, m_FocusObject.transform.up);
             forward = Vector3.Cross(right.normalized, up.normalized);
 
             return Quaternion.LookRotation(forward, up);
@@ -154,7 +161,7 @@ public class InteractableObjects : MonoBehaviour
             return Quaternion.LookRotation(forward, up);
         }
 
-        if (m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.DIRECT)
         {
             angle = Vector3.Angle(initPose.right, right);
             if (angle < ManipulationMode.ANGLETHRESHOLD)

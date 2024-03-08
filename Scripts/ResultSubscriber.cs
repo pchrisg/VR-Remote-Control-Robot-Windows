@@ -17,6 +17,9 @@ public class ResultSubscriber : MonoBehaviour
     private bool isPlanExecuted = true;
     private readonly string NotExecuted = "No motion plan found. No execution attempted.";
 
+    private bool m_isMoving = false;
+    private float m_ElapsedTime = 0.0f;
+
     [HideInInspector] public string m_RobotState = "";
 
     private void Awake()
@@ -37,15 +40,38 @@ public class ResultSubscriber : MonoBehaviour
         m_Ros.Unsubscribe(m_FeedbackTopic);
     }
 
+    private void Update()
+    {
+        AudioSource ur5AudioSource = m_UR5.GetComponent<AudioSource>();
+
+        if (m_isMoving)
+        {
+            if (!ur5AudioSource.isPlaying)
+            {
+                if (ur5AudioSource.clip != m_MotionClip)
+                    ur5AudioSource.clip = m_MotionClip;
+
+                ur5AudioSource.Play();
+            }
+        }
+        else
+        {
+            m_ElapsedTime += Time.deltaTime;
+
+            if (ur5AudioSource.isPlaying && m_ElapsedTime > 0.2f)
+                ur5AudioSource.Stop();
+        }
+    }
+
     private void CheckResult(ActionFeedbackUnity message)
     {
         m_RobotState = message.feedback.state;
 
-        AudioSource ur5AudioSource = m_UR5.GetComponent<AudioSource>();
-
         if (message.feedback.state == "IDLE")
         {
-            ur5AudioSource.Stop();
+            m_isMoving = false;
+            m_ElapsedTime = 0.0f;
+
             if (message.status.text == NotExecuted && isPlanExecuted)
             {
                 m_Manipulator.Colliding(true);
@@ -54,16 +80,11 @@ public class ResultSubscriber : MonoBehaviour
         }
         else if (message.feedback.state == "MONITOR")
         {
-            if (!ur5AudioSource.isPlaying)
-            {
-                ur5AudioSource.clip = m_MotionClip;
-                ur5AudioSource.Play();
-            }
+            m_isMoving = true;
 
             if (message.status.text != NotExecuted && !isPlanExecuted)
             {
                 m_Manipulator.Colliding(false);
-
                 isPlanExecuted = true;
             }
         }

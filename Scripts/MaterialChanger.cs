@@ -1,3 +1,7 @@
+/**
+ * Added to every interactable object in CollisionHandling Script
+ */
+
 using UnityEngine;
 
 public class MaterialChanger : MonoBehaviour
@@ -5,11 +9,6 @@ public class MaterialChanger : MonoBehaviour
     Material m_OriginalMat = null;
 
     private void Awake()
-    {
-        m_OriginalMat = gameObject.GetComponent<Renderer>().material;
-    }
-
-    public void SetOriginalMat()
     {
         m_OriginalMat = gameObject.GetComponent<Renderer>().material;
     }

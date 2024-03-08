@@ -9,33 +9,31 @@ public class Manipulator : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
+    private Indicator m_Indicator = null;
 
     private Transform m_Robotiq = null;
 
     //Colors
-    private Color m_CurrentColor = new();
     private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 1.0f);
     private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 1.0f);
-    private Color m_Y_AxisColor = new(0.0f, 1.0f, 0.0f, 1.0f);
-    private Color m_XZ_PlaneColor = new(1.0f, 0.0f, 1.0f, 1.0f);
-    private Color m_FocusObjectColor = new(1.0f, 1.0f, 0.0f, 1.0f);
     private Color m_InvisColor = new(0.2f, 0.2f, 0.2f, 0.0f);
+    private Color m_Y_AxisColor = new(0.0f, 1.0f, 0.0f, 0.5f);
+    private Color m_XZ_PlaneColor = new(1.0f, 0.0f, 1.0f, 0.5f);
+    private Color m_FocusObjectColor = new(1.0f, 1.0f, 0.0f, 0.5f);
 
     public bool isColliding = false;
-    private Coroutine m_Flashing = null;
 
     Coroutine activeCouroutine = null;
-
-    private bool isVisible = false;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
+        m_Indicator = gameObject.transform.Find("Indicator").GetComponent<Indicator>();
+
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
-        m_CurrentColor = m_DefaultColor;
         m_ManipulatorMat.color = m_DefaultColor;
 
         ShowManipulator(false);
@@ -48,21 +46,8 @@ public class Manipulator : MonoBehaviour
 
     private void Update()
     {
-        if(isVisible)
-        {
-            Color color = m_DefaultColor;
-
-            if (isColliding)
-                color = m_CollidingColor;
-            else if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
-                color = CheckSnapping(color);
-
-            if(color != m_CurrentColor)
-            {
-                m_CurrentColor = color;
-                m_ManipulatorMat.color = m_CurrentColor;
-            }
-        }
+        if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
+            CheckSnapping();
     }
 
     public void ResetPositionAndRotation()
@@ -99,8 +84,10 @@ public class Manipulator : MonoBehaviour
         ShowManipulator(true);
     }
 
-    private Color CheckSnapping(Color color)
+    private void CheckSnapping()
     {
+        Color color = m_InvisColor;
+
         float angle = Vector3.Angle(gameObject.transform.right.normalized, Vector3.up.normalized);
         if (angle < 0.1f)
             color = m_Y_AxisColor;
@@ -114,55 +101,29 @@ public class Manipulator : MonoBehaviour
             angle = Vector3.Angle(gameObject.transform.right.normalized, connectingVector.normalized);
 
             if (angle < 0.1f)
-                color =  m_FocusObjectColor;
+                color = m_FocusObjectColor;
         }
 
-        return color;
+        m_Indicator.SetColour(color);
     }
 
     public void Colliding(bool value)
     {
         isColliding = value;
+
+        if (isColliding)
+            m_ManipulatorMat.color = m_CollidingColor;
+        else
+            m_ManipulatorMat.color = m_DefaultColor;
     }
 
     public void ShowManipulator(bool value)
     {
+        m_Indicator.Show(value);
+
         if (value)
             m_ManipulatorMat.color = m_DefaultColor;
         else
             m_ManipulatorMat.color = m_InvisColor;
-
-        isVisible = value;
-    }
-
-    public void Flash(bool value)
-    {
-        if (value)
-            m_Flashing ??= StartCoroutine(Flashing());
-
-        else
-        {
-            if (m_Flashing != null)
-                StopCoroutine(m_Flashing);
-
-            m_Flashing = null;
-            m_ManipulatorMat.color = m_DefaultColor;
-        }
-    }
-
-    private IEnumerator Flashing()
-    {
-        while (true)
-        {
-            if (m_ManipulationMode.isInteracting)
-                m_ManipulatorMat.color = m_DefaultColor;
-            else
-            {
-                m_ManipulatorMat.color = m_FocusObjectColor;
-                yield return new WaitForSeconds(1.0f);
-                m_ManipulatorMat.color = m_DefaultColor;
-            }
-            yield return new WaitForSeconds(1.0f);
-        }
     }
 }

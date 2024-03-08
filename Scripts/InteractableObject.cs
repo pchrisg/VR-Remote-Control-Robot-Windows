@@ -111,8 +111,6 @@ public class InteractableObject : MonoBehaviour
             float depth = gameObject.transform.lossyScale.x * boxCollider.size.x + modifier;
             float height = gameObject.transform.lossyScale.y * boxCollider.size.y + modifier;
 
-            print(height);
-
             primitive.dimensions[SolidPrimitiveMsg.BOX_X] = width;
             primitive.dimensions[SolidPrimitiveMsg.BOX_Y] = depth;
             primitive.dimensions[SolidPrimitiveMsg.BOX_Z] = height;
