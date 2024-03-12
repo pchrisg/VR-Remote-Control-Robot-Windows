@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -8,9 +7,9 @@ using ManipulationModes;
 public class InteractableObjects : MonoBehaviour
 {
     [Header("Materials")]
-    public Material m_AttachedMat = null;
-    public Material m_CollidingMat = null;
-    public Material m_FocusObjectMat = null;
+    [SerializeField] private Material m_CollidingMat = null;
+    [SerializeField] private Material m_AttachedMat = null;
+    [SerializeField] private Material m_FocusObjectMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
@@ -22,13 +21,12 @@ public class InteractableObjects : MonoBehaviour
 
     private int m_Id = 0;
 
-    public bool isCreating = false;
     [HideInInspector] public GameObject m_FocusObject = null;
 
     public struct IObject
     {
         public Transform parent;
-        public GameObject iObject;
+        public GameObject gameObj;
     }
 
     public List<IObject> m_InteractableObjects = new();
@@ -56,29 +54,60 @@ public class InteractableObjects : MonoBehaviour
         leftIndex.GetComponent<InteractableObjectCreator>().hand = Player.instance.leftHand;
     }
 
-    public void AddInteractableObject(GameObject obj)
+    public void IsCreating(bool value)
     {
+        foreach (var iObj in m_InteractableObjects)
+            iObj.gameObj.GetComponent<CollisionHandling>().IsCreating(value);
+    }
+
+    public void AddInteractableObject(Collider collider)
+    {
+        bool isAttachable = false;
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+            isAttachable = true;
+
+        collider.AddComponent<CollisionHandling>();
+        collider.GetComponent<CollisionHandling>().SetupCollisionHandling(isAttachable, m_CollidingMat, m_AttachedMat, m_FocusObjectMat);
+
+        collider.AddComponent<InteractableObject>();
+        collider.GetComponent<InteractableObject>().AddInteractableObject(isAttachable, GetFreeID().ToString(), collider);
+
         IObject iObj = new()
         {
-            parent = obj.transform.parent,
-            iObject = obj
+            parent = collider.transform.parent,
+            gameObj = collider.gameObject
         };
 
         m_InteractableObjects.Add(iObj);
-        obj.transform.SetParent(gameObject.transform);
+        collider.transform.SetParent(gameObject.transform);
     }
 
-    public void RemoveInteractableObject(GameObject obj)
+    public void RemoveInteractableObject(Collider collider)
     {
         foreach (var iObj in m_InteractableObjects)
         {
-            if (iObj.iObject == obj)
+            if (iObj.gameObj == collider.gameObject)
             {
-                obj.transform.SetParent(iObj.parent);
-                m_InteractableObjects.Remove(iObj);
+                RemoveInteractableObject(iObj);
                 break;
             }
         }
+    }
+
+    public void RemoveInteractableObject(IObject iObj)
+    {
+        Destroy(iObj.gameObj.GetComponent<CollisionHandling>());
+        iObj.gameObj.GetComponent<InteractableObject>().RemoveInteractableObject();
+        Destroy(iObj.gameObj.GetComponent<InteractableObject>());
+
+        iObj.gameObj.transform.SetParent(iObj.parent);
+        m_InteractableObjects.Remove(iObj);
+    }
+
+    public void RemoveAllInteractableObjects()
+    {
+        foreach (var iObj in m_InteractableObjects)
+            RemoveInteractableObject(iObj);
     }
 
     public int GetFreeID()
@@ -87,25 +116,24 @@ public class InteractableObjects : MonoBehaviour
         return m_Id - 1;
     }
 
-    public void SetFocusObject(GameObject focusObject = null)
+    public void SetFocusObject(Collider collider)
     {
-        m_FocusObject = focusObject;
-
-        if (m_FocusObject != null && m_ManipulationMode.mode != Mode.SDOF)
+        if (m_FocusObject == null)
         {
-            Quaternion rotation = LookAtFocusObject(m_Manipulator.transform.position, m_Manipulator.transform);
-            m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
+            m_FocusObject = collider.gameObject;
+            m_FocusObject.GetComponent<CollisionHandling>().SetAsFocusObject(true);
+        }
 
-            if (m_ManipulationMode.mode != Mode.RAILCREATOR)
-                StartCoroutine(PublishMoveArm());
+        else if (m_FocusObject == collider.gameObject)
+        {
+            m_FocusObject.GetComponent<CollisionHandling>().SetAsFocusObject(false);
+            m_FocusObject = null;
         }
     }
 
-    private IEnumerator PublishMoveArm()
+    public void SetFocusObject(GameObject focusObject = null)
     {
-        yield return new WaitForNextFrameUnit();
-
-        m_ROSPublisher.PublishMoveArm();
+        m_FocusObject = focusObject;
     }
 
     public Quaternion LookAtFocusObject(Vector3 position, Transform initPose, Vector3 connectingVector = new())
@@ -113,29 +141,14 @@ public class InteractableObjects : MonoBehaviour
         if (m_FocusObject == null)
             return initPose.rotation;
 
-        float angleToRight = Vector3.Angle(initPose.up, m_FocusObject.transform.right);
-        float angleToForward = Vector3.Angle(initPose.up, m_FocusObject.transform.forward);
-
-        if (180.0f - angleToRight < angleToRight)
-            angleToRight = 180.0f - angleToRight;
-        if (180.0f - angleToForward < angleToForward)
-            angleToForward = 180.0f - angleToForward;
-
         Vector3 right = position - m_FocusObject.transform.position;
         Vector3 up;
         Vector3 forward;
+
+        // manipulator above focus object
         float angle = Vector3.Angle(right, m_FocusObject.transform.up);
         if (angle < 0.1f)
         {
-            //if (angleToRight < angleToForward)
-            //    up = Vector3.Project(initPose.up, m_FocusObject.transform.right);
-            //else
-            //    up = Vector3.Project(initPose.up, m_FocusObject.transform.forward);
-
-            //forward = Vector3.Cross(right.normalized, up.normalized);
-
-            //return Quaternion.LookRotation(forward, up);
-
             right = Vector3.Project(initPose.right, m_FocusObject.transform.up);
             up = Vector3.ProjectOnPlane(initPose.up, m_FocusObject.transform.up);
             forward = Vector3.Cross(right.normalized, up.normalized);
@@ -143,6 +156,7 @@ public class InteractableObjects : MonoBehaviour
             return Quaternion.LookRotation(forward, up);
         }
 
+        // manipulator to the right/left of focus object
         angle = Vector3.Angle(right, m_FocusObject.transform.right);
         if (angle < 0.1f || 180.0f - angle < 0.1f)
         {
@@ -152,6 +166,7 @@ public class InteractableObjects : MonoBehaviour
             return Quaternion.LookRotation(forward, up);
         }
 
+        // manipulator infront/behind focus object
         angle = Vector3.Angle(right, m_FocusObject.transform.forward);
         if (angle < 0.1f || 180.0f - angle < 0.1f)
         {
@@ -161,6 +176,7 @@ public class InteractableObjects : MonoBehaviour
             return Quaternion.LookRotation(forward, up);
         }
 
+        // manipulator facing focus object
         if (m_ManipulationMode.mode == Mode.DIRECT)
         {
             angle = Vector3.Angle(initPose.right, right);

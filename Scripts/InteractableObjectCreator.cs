@@ -2,7 +2,6 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationModes;
-using Unity.VisualScripting;
 
 public class InteractableObjectCreator : MonoBehaviour
 {
@@ -42,15 +41,17 @@ public class InteractableObjectCreator : MonoBehaviour
 
     private void AddInteractableObject(Collider other)
     {
-        bool isAttachable = false;
-        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-            isAttachable = true;
+        //bool isAttachable = false;
+        //if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        //    isAttachable = true;
 
-        other.AddComponent<CollisionHandling>();
-        other.GetComponent<CollisionHandling>().SetupCollisionHandling(isAttachable);
+        m_InteractableObjects.AddInteractableObject(other);
 
-        other.AddComponent<InteractableObject>();
-        other.GetComponent<InteractableObject>().AddInteractableObject(isAttachable, other);
+        //other.AddComponent<CollisionHandling>();
+        //other.GetComponent<CollisionHandling>().SetupCollisionHandling(isAttachable);
+
+        //other.AddComponent<InteractableObject>();
+        //other.GetComponent<InteractableObject>().AddInteractableObject(isAttachable, other);
     }
 
     private void RemoveInteractableObject(Collider other)
@@ -61,24 +62,31 @@ public class InteractableObjectCreator : MonoBehaviour
         if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR && !other.GetComponent<CollisionHandling>().m_isAttachable)
             return;
 
-        Destroy(other.GetComponent<CollisionHandling>());
+        m_InteractableObjects.RemoveInteractableObject(other);
 
-        if (other.GetComponent<InteractableObject>() != null)
-            Destroy(other.GetComponent<InteractableObject>());
+        //Destroy(other.GetComponent<CollisionHandling>());
+
+        //if (other.GetComponent<InteractableObject>() != null)
+        //{
+        //    other.GetComponent<InteractableObject>().RemoveInteractableObject();
+        //    Destroy(other.GetComponent<InteractableObject>());
+        //}
     }
 
     private void SetFocusObject(Collider other)
     {
-        if (m_InteractableObjects.m_FocusObject == null)
-        {
-            m_InteractableObjects.SetFocusObject(other.gameObject);
-            other.GetComponent<CollisionHandling>().SetAsFocusObject(true);
-        }
+        m_InteractableObjects.SetFocusObject(other);
 
-        else if (m_InteractableObjects.m_FocusObject == other.gameObject)
-        {
-            m_InteractableObjects.SetFocusObject(null);
-            other.GetComponent<CollisionHandling>().SetAsFocusObject(false);
-        }
+        //if (m_InteractableObjects.m_FocusObject == null)
+        //{
+        //    m_InteractableObjects.SetFocusObject(other.gameObject);
+        //    other.GetComponent<CollisionHandling>().SetAsFocusObject(true);
+        //}
+
+        //else if (m_InteractableObjects.m_FocusObject == other.gameObject)
+        //{
+        //    m_InteractableObjects.SetFocusObject(null);
+        //    other.GetComponent<CollisionHandling>().SetAsFocusObject(false);
+        //}
     }
 }

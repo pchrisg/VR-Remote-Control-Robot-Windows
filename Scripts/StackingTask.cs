@@ -11,7 +11,7 @@ public class StackingTask : MonoBehaviour
     private ExperimentManager m_ExperimentManager = null;
 
     private GameObject m_ObjectsContainer = null;
-    private List<Transform> m_Barrels = new();
+    private readonly List<Transform> m_Barrels = new();
 
     private Vector2 m_Target = new();
     private bool m_isHighlighted = false;
@@ -35,6 +35,7 @@ public class StackingTask : MonoBehaviour
     private void OnDisable()
     {
         DestroyAllObjects();
+        m_Barrels.Clear();
     }
 
     private void Update()

@@ -32,7 +32,7 @@ public class ManipulationMode : MonoBehaviour
     [HideInInspector] public const float DISTANCETHRESHOLD = 0.03f; //3cm
     [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
 
-    public bool isInteracting = false;
+    private bool m_isInteracting = false;
 
     private void Awake()
     {
@@ -90,6 +90,16 @@ public class ManipulationMode : MonoBehaviour
         }
     }
 
+    public void IsInteracting(bool isInteracting)
+    {
+        m_isInteracting = isInteracting;
+    }
+
+    public bool IsInteracting()
+    {
+        return m_isInteracting;
+    }
+
     public void ToggleDirect()
     {
         if (mode == Mode.IDLE || mode == Mode.SIMPLEDIRECT)
@@ -119,13 +129,15 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.DIRECT)
         {
-            m_InteractableObjects.isCreating = true;
+            m_isInteracting = true;
+            m_InteractableObjects.IsCreating(true);
             mode = Mode.ATTOBJCREATOR;
         }
 
         else if (mode == Mode.ATTOBJCREATOR)
         {
-            m_InteractableObjects.isCreating = false;
+            m_isInteracting = false;
+            m_InteractableObjects.IsCreating(false);
             mode = Mode.DIRECT;
         }
     }
@@ -134,13 +146,15 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.DIRECT)
         {
-            m_InteractableObjects.isCreating = true;
+            m_isInteracting = true;
+            m_InteractableObjects.IsCreating(true);
             mode = Mode.COLOBJCREATOR;
         }
 
         else if (mode == Mode.COLOBJCREATOR)
         {
-            m_InteractableObjects.isCreating = false;
+            m_isInteracting = false;
+            m_InteractableObjects.IsCreating(false);
             mode = Mode.DIRECT;
         }
     }

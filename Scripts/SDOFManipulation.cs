@@ -41,7 +41,7 @@ public class SDOFManipulation : MonoBehaviour
     {
         if (m_ManipulationMode.mode == Mode.SDOF && !m_GripperControl.isGripping)
         {
-            m_ManipulationMode.isInteracting = isInteracting;
+            m_ManipulationMode.IsInteracting(isInteracting);
 
             if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
                 TriggerGrabbed();

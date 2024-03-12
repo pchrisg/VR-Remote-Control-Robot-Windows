@@ -9,56 +9,72 @@ using RosMessageTypes.BuiltinInterfaces;
 public class InteractableObject : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
-    private CollisionObjectMsg m_ColisionObject = null;
+    private CollisionObjectMsg m_ColisionObjectMsg = null;
 
-    private InteractableObjects m_InteractableObjects = null;
+    private Vector3 m_PreviousPosition = new();
+
+    private bool m_isMoving = false;
 
     private readonly float modifier = 0.005f;
 
-    void Awake()
+    private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
-        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
+
+        m_PreviousPosition = gameObject.transform.position;
     }
 
-    public String GetID()
+    private void Update()
     {
-        return m_ColisionObject.id;
+        if (!m_isMoving && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) > 0.001f)
+        {
+            m_isMoving = true;
+            RemoveInteractableObject();
+        }
+
+        if (m_isMoving)
+        {
+            if (!gameObject.GetComponent<CollisionHandling>().m_isAttached && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
+            {
+                AddInteractableObject();
+                m_isMoving = false;
+            }
+            else
+                m_PreviousPosition = gameObject.transform.position;
+        }
     }
 
     public void AddInteractableObject()
     {
-        if (m_ColisionObject != null)
+        if (m_ColisionObjectMsg != null)
         {
-            m_ColisionObject.header.stamp = new TimeMsg((uint)Time.time, 0);
+            m_ColisionObjectMsg.header.stamp = new TimeMsg((uint)Time.time, 0);
 
-            Collider col = null;
-            foreach (var collider in gameObject.GetComponents<Collider>())
+            Collider collider = null;
+            foreach (var col in gameObject.GetComponents<Collider>())
             {
-                if ((collider is BoxCollider || collider is CapsuleCollider) && collider.isTrigger)
+                if ((col is BoxCollider || col is CapsuleCollider) && col.isTrigger)
                 {
-                    col = collider;
+                    collider = col;
                     break;
                 }
             }
 
-            if (col != null)
+            if (collider != null)
             {
-                var pose = new PoseMsg
+                var poseMsg = new PoseMsg
                 {
-                    position = col.bounds.center.To<FLU>(),
+                    position = collider.bounds.center.To<FLU>(),
                     orientation = gameObject.transform.rotation.To<FLU>()
                 };
 
-                m_ColisionObject.primitive_poses[0] = pose;
-
-                m_InteractableObjects.AddInteractableObject(gameObject);
-                m_ROSPublisher.PublishAddCollisionObject(m_ColisionObject);
+                m_ColisionObjectMsg.primitive_poses[0] = poseMsg;
+                m_ROSPublisher.PublishAddCollisionObject(m_ColisionObjectMsg);
             }
         }
     }
 
-    public void AddInteractableObject(bool isAttachable, Collider collider)
+    public void AddInteractableObject(bool isAttachable, string idnum, Collider collider)
     {
         string id = string.Empty;
         if (isAttachable)
@@ -66,74 +82,73 @@ public class InteractableObject : MonoBehaviour
         else
             id += "-(Collision)";
 
-        id = m_InteractableObjects.GetFreeID().ToString() + id;
+        id = idnum + id;
 
-        var pose = new PoseMsg
+        var poseMsg = new PoseMsg
         {
             position = collider.bounds.center.To<FLU>(),
             orientation = gameObject.transform.rotation.To<FLU>()
         };
 
-        AddInteractableObject(id, pose, GetPrimitive(collider));
+        AddInteractableObject(id, poseMsg, GetSolidPrimitiveMsg(collider));
     }
 
-    private void AddInteractableObject(string id, PoseMsg pose, SolidPrimitiveMsg primitive)
+    private void AddInteractableObject(string id, PoseMsg poseMsg, SolidPrimitiveMsg solidPrimitiveMsg)
     {
-        m_ColisionObject = new CollisionObjectMsg();
+        m_ColisionObjectMsg = new CollisionObjectMsg();
 
-        m_ColisionObject.header.stamp = new TimeMsg((uint)Time.time, 0);
-        m_ColisionObject.header.frame_id = "base_link";
-        m_ColisionObject.id = id;
-        m_ColisionObject.operation = CollisionObjectMsg.ADD;
+        m_ColisionObjectMsg.header.stamp = new TimeMsg((uint)Time.time, 0);
+        m_ColisionObjectMsg.header.frame_id = "base_link";
+        m_ColisionObjectMsg.id = id;
+        m_ColisionObjectMsg.operation = CollisionObjectMsg.ADD;
 
         //Add pose
-        Array.Resize(ref m_ColisionObject.primitive_poses, 1);
-        m_ColisionObject.primitive_poses[0] = pose;
+        Array.Resize(ref m_ColisionObjectMsg.primitive_poses, 1);
+        m_ColisionObjectMsg.primitive_poses[0] = poseMsg;
 
         //Add scale
-        Array.Resize(ref m_ColisionObject.primitives, 1);
-        m_ColisionObject.primitives[0] = primitive;
+        Array.Resize(ref m_ColisionObjectMsg.primitives, 1);
+        m_ColisionObjectMsg.primitives[0] = solidPrimitiveMsg;
 
-        m_InteractableObjects.AddInteractableObject(gameObject);
-        m_ROSPublisher.PublishAddCollisionObject(m_ColisionObject);
+        //m_InteractableObjects.AddInteractableObject(gameObject);
+        m_ROSPublisher.PublishAddCollisionObject(m_ColisionObjectMsg);
     }
 
-    private SolidPrimitiveMsg GetPrimitive(Collider collider)
+    private SolidPrimitiveMsg GetSolidPrimitiveMsg(Collider collider)
     {
-        var primitive = new SolidPrimitiveMsg();
+        var solidPrimitiveMsg = new SolidPrimitiveMsg();
 
         if (collider is BoxCollider boxCollider)
         {
-            primitive.type = SolidPrimitiveMsg.BOX;
-            Array.Resize(ref primitive.dimensions, 3);
+            solidPrimitiveMsg.type = SolidPrimitiveMsg.BOX;
+            Array.Resize(ref solidPrimitiveMsg.dimensions, 3);
 
             float width = gameObject.transform.lossyScale.z * boxCollider.size.z + modifier;
             float depth = gameObject.transform.lossyScale.x * boxCollider.size.x + modifier;
             float height = gameObject.transform.lossyScale.y * boxCollider.size.y + modifier;
 
-            primitive.dimensions[SolidPrimitiveMsg.BOX_X] = width;
-            primitive.dimensions[SolidPrimitiveMsg.BOX_Y] = depth;
-            primitive.dimensions[SolidPrimitiveMsg.BOX_Z] = height;
+            solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.BOX_X] = width;
+            solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.BOX_Y] = depth;
+            solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.BOX_Z] = height;
         }
 
         if (collider is CapsuleCollider capsuleCollider)
         {
-            primitive.type = SolidPrimitiveMsg.CYLINDER;
-            Array.Resize(ref primitive.dimensions, 2);
+            solidPrimitiveMsg.type = SolidPrimitiveMsg.CYLINDER;
+            Array.Resize(ref solidPrimitiveMsg.dimensions, 2);
 
             float height = gameObject.transform.lossyScale.y * capsuleCollider.height + modifier;
             float radius = gameObject.transform.lossyScale.x * capsuleCollider.radius + modifier;
 
-            primitive.dimensions[SolidPrimitiveMsg.CYLINDER_HEIGHT] = height;
-            primitive.dimensions[SolidPrimitiveMsg.CYLINDER_RADIUS] = radius;
+            solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.CYLINDER_HEIGHT] = height;
+            solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.CYLINDER_RADIUS] = radius;
         }
 
-        return primitive;
+        return solidPrimitiveMsg;
     }
 
     public void RemoveInteractableObject()
     {
-        m_InteractableObjects.RemoveInteractableObject(gameObject);
-        m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionObject);
+        m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionObjectMsg);
     }
 }

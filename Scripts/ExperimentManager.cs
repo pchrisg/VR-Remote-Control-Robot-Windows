@@ -37,6 +37,7 @@ public class ExperimentManager : MonoBehaviour
     //Scripts
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
+    private InteractableObjects m_InteractableObjects = null;
     private Timer m_Timer = null;
 
     //Tutorial
@@ -68,22 +69,20 @@ public class ExperimentManager : MonoBehaviour
     private float m_TimeInColObj = 0.0f;
     private float m_TimeInAttObj = 0.0f;
 
-    // objects placed within bounds with their errors
-    private string m_PlacedObjects = string.Empty;
-
     // Number of Grabs
-    private bool isInteracting = false;
+    private bool m_IsInteracting = false;
     private int m_InteractionCount = 0;
-    private List<string> m_InteractionDescriptions = new();
+    private readonly List<string> m_InteractionDescriptions = new();
 
     // Errors
     private int m_CollisionsCount = 0;
-    private List<string> m_ErrorDescriptions = new();
+    private readonly List<string> m_ErrorDescriptions = new();
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_Timer = GameObject.FindGameObjectWithTag("Timer").GetComponent<Timer>();
 
         m_Tutorial = transform.Find("Tutorial").GetComponent<Tutorial>();
@@ -99,7 +98,7 @@ public class ExperimentManager : MonoBehaviour
 
     private void Start()
     {
-        Invoke("ResetRobotPose", 1.0f);
+        Invoke(nameof(ResetRobotPose), 1.0f);
     }
 
     private void Update()
@@ -140,6 +139,8 @@ public class ExperimentManager : MonoBehaviour
 
                 if (!m_TaskActive)
                 {
+                    ClearData();
+
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
 
@@ -158,6 +159,8 @@ public class ExperimentManager : MonoBehaviour
 
                 if (m_TutorialActive || m_TaskActive)
                 {
+                    ClearData();
+
                     if (m_TutorialActive)
                         m_Tutorial.ResetTutorial();
                     if (m_TaskActive)
@@ -203,21 +206,6 @@ public class ExperimentManager : MonoBehaviour
                 if (m_Timer.TimeExhausted())
                     SaveData();
 
-                if (isInteracting != m_ManipulationMode.isInteracting)
-                {
-                    isInteracting = !isInteracting;
-
-                    RecordInteractionTime(isInteracting);
-
-                    if (isInteracting)
-                    {
-                        if (m_InteractionCount == 0)
-                            m_Timer.StartTimer(m_TimeLimit);
-
-                        m_InteractionCount++;
-                    }
-                }
-
                 // if experiment stopped
                 if (!m_Start)
                 {
@@ -225,6 +213,21 @@ public class ExperimentManager : MonoBehaviour
                     m_Status = "Stopped";
 
                     m_Timer.StopTimer();
+                }
+
+                if (m_IsInteracting != m_ManipulationMode.IsInteracting())
+                {
+                    m_IsInteracting = !m_IsInteracting;
+
+                    RecordInteractionTime(m_IsInteracting);
+
+                    if (m_IsInteracting)
+                    {
+                        if (m_InteractionCount == 0)
+                            m_Timer.StartTimer(m_TimeLimit);
+
+                        m_InteractionCount++;
+                    }
                 }
 
                 // Data Gathering
@@ -272,6 +275,35 @@ public class ExperimentManager : MonoBehaviour
         m_TimeInAttObj = 0.0f;
     }
 
+    private void RecordInteractionTime(bool value)
+    {
+        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
+    }
+
+    private void ClearData()
+    {
+        // Times
+        m_Barrel1Time = 0.0f;
+        m_Barrel2Time = 0.0f;
+        m_Barrel3Time = 0.0f;
+        m_Barrel4Time = 0.0f;
+        m_Barrel5Time = 0.0f;
+        m_TimeInDirMan = 0.0f;
+        m_TimeInColObj = 0.0f;
+        m_TimeInAttObj = 0.0f;
+
+        // Number of Grabs
+        m_IsInteracting = false;
+        m_InteractionCount = 0;
+        m_InteractionDescriptions.Clear();
+
+        // Errors
+        m_CollisionsCount = 0;
+        m_ErrorDescriptions.Clear();
+
+        m_InteractableObjects.RemoveAllInteractableObjects();
+    }
+
     public void SplitTime(int barrelNumber)
     {
         if (barrelNumber == 1 && m_Barrel1Time == 0.0f)
@@ -286,11 +318,6 @@ public class ExperimentManager : MonoBehaviour
             m_Barrel5Time = m_Timer.SplitTime();
 
         print("saved time " + barrelNumber);
-    }
-
-    private void RecordInteractionTime(bool value)
-    {
-        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_Technique.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
     }
 
     public void RecordCollision(string description)
@@ -396,10 +423,7 @@ public class ExperimentManager : MonoBehaviour
         sr.WriteLine(dataCSV);
 
         //Change to Readonly
-        FileInfo fInfo = new(path)
-        {
-            IsReadOnly = true
-        };
+        FileInfo _ = new(path) { IsReadOnly = true };
 
         //Close first file
         sr.Close();
@@ -435,10 +459,7 @@ public class ExperimentManager : MonoBehaviour
         sr.WriteLine(dataCSV);
 
         //Change to Readonly
-        fInfo = new(path)
-        {
-            IsReadOnly = true
-        };
+        _ = new(path) { IsReadOnly = true };
 
         //Close file
         sr.Close();
@@ -464,10 +485,7 @@ public class ExperimentManager : MonoBehaviour
         sr.WriteLine(dataCSV);
 
         //Change to Readonly
-        fInfo = new(path)
-        {
-            IsReadOnly = true
-        };
+        _ = new(path) { IsReadOnly = true };
 
         //Close file
         sr.Close();

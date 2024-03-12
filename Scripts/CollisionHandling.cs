@@ -31,14 +31,11 @@ public class CollisionHandling : MonoBehaviour
     private int m_FingerMTouching = 0;
     private int m_Finger1Touching = 0;
     private int m_Finger2Touching = 0;
-    
-    private Vector3 m_PreviousPosition = new();
 
     //States
-    private bool isCreating = false;
+    private bool m_isCreating = false;
     private bool m_isColliding = false;
     private bool m_isFocusObject = false;
-    private bool m_isMoving = false;
     public bool m_isAttached = false;
 
     private void Awake()
@@ -52,44 +49,16 @@ public class CollisionHandling : MonoBehaviour
         m_FingerMColliders = robotiq.transform.Find(m_FingerLinkNames[0]).GetComponentsInChildren<Collider>();
         m_Finger1Colliders = robotiq.transform.Find(m_FingerLinkNames[1]).GetComponentsInChildren<Collider>();
         m_Finger2Colliders = robotiq.transform.Find(m_FingerLinkNames[2]).GetComponentsInChildren<Collider>();
-
-        m_PreviousPosition = gameObject.transform.position;
     }
 
     private void OnDestroy()
     {
-        isCreating = false;
+        m_isCreating = false;
         m_isColliding = false;
         m_isAttached = false;
         m_isFocusObject = false;
 
         SetMaterial();
-    }
-
-    private void Update()
-    {
-        if (isCreating != m_InteractableObjects.isCreating)
-        {
-            isCreating = m_InteractableObjects.isCreating;
-            SetMaterial();
-        }
-
-        if (!m_isMoving && Vector3.Distance(gameObject.transform.position,m_PreviousPosition) > 0.001f)
-        {
-            m_isMoving = true;
-            gameObject.GetComponent<InteractableObject>().RemoveInteractableObject();
-        }
-
-        if (m_isMoving)
-        {
-            if (!m_isAttached && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
-            {
-                gameObject.GetComponent<InteractableObject>().AddInteractableObject();
-                m_isMoving = false;
-            }
-            else
-                m_PreviousPosition = gameObject.transform.position;
-        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -156,7 +125,6 @@ public class CollisionHandling : MonoBehaviour
                 if (m_isFocusObject)
                     m_InteractableObjects.SetFocusObject();
 
-                print("trigger enter settingMaterial when attached " + other.name);
                 SetMaterial();
             }
         }
@@ -168,7 +136,6 @@ public class CollisionHandling : MonoBehaviour
                 m_isColliding = true;
                 m_Manipulator.Colliding(true);
 
-                print("trigger enter SettingMaterial when colliding" + other.name);
                 SetMaterial();
             }
         }
@@ -237,7 +204,6 @@ public class CollisionHandling : MonoBehaviour
                 if (m_isFocusObject)
                     m_InteractableObjects.SetFocusObject(gameObject);
 
-                print("trigger exit SettingMaterial when attached" + other.name);
                 SetMaterial();
             }
         }
@@ -249,7 +215,6 @@ public class CollisionHandling : MonoBehaviour
                 m_isColliding = false;
                 m_Manipulator.Colliding(false);
 
-                print("trigger exit SettingMaterial when colliding" + other.name);
                 SetMaterial();
             }
         }
@@ -259,7 +224,7 @@ public class CollisionHandling : MonoBehaviour
     {
         Material mat = m_OriginalMat;
 
-        if (isCreating)
+        if (m_isCreating)
         {
             if (m_isAttachable)
                 mat = m_AttachedMat;
@@ -286,8 +251,16 @@ public class CollisionHandling : MonoBehaviour
         }
     }
 
-    public void SetupCollisionHandling(bool isAttachable)
+    public void IsCreating(bool value)
     {
+        m_isCreating = value;
+        SetMaterial();
+    }
+
+    public void SetupCollisionHandling(bool isAttachable, Material collidingMat, Material attachedMat, Material focusObjectMat)
+    {
+        m_isCreating = true;
+
         if(gameObject.GetComponent<Renderer>() != null)
             m_OriginalMat = gameObject.GetComponent<Renderer>().material;
 
@@ -297,14 +270,16 @@ public class CollisionHandling : MonoBehaviour
                 child.AddComponent<MaterialChanger>();
         }
 
-        m_CollidingMat = m_InteractableObjects.m_CollidingMat;
+        m_CollidingMat = collidingMat;
 
         m_isAttachable = isAttachable;
         if (isAttachable)
         {
-            m_AttachedMat = m_InteractableObjects.m_AttachedMat;
-            m_FocusObjectMat = m_InteractableObjects.m_FocusObjectMat;
+            m_AttachedMat = attachedMat;
+            m_FocusObjectMat = focusObjectMat;
         }
+
+        SetMaterial();
     }
 
     public void SetAsFocusObject(bool isFocusObject)

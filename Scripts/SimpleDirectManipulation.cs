@@ -10,7 +10,7 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
-    private bool isInteracting = false;
+    private bool m_isInteracting = false;
 
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
@@ -39,58 +39,61 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
-        {
-            m_ManipulationMode.isInteracting = isInteracting;
-
-            if (m_ActivationHand != null && isInteracting)
-                MoveManipulator();
-        }
+        if (m_isInteracting)
+            MoveManipulator();
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (!isInteracting && m_ActivationHand == null)
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
         {
-            m_GhostObject = new GameObject("GhostObject");
-            m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
-
-            if (fromSource == m_LeftHand.handType)
+            if (!m_isInteracting && m_ActivationHand == null)
             {
-                m_ActivationHand = m_LeftHand;
-                m_InteractingHand = m_RightHand;
+                m_isInteracting = true;
+                m_ManipulationMode.IsInteracting(m_isInteracting);
+
+                if (fromSource == m_LeftHand.handType)
+                {
+                    m_ActivationHand = m_LeftHand;
+                    m_InteractingHand = m_RightHand;
+                }
+                else
+                {
+                    m_ActivationHand = m_RightHand;
+                    m_InteractingHand = m_LeftHand;
+                }
+
+                m_PreviousPosition = m_InteractingHand.transform.position;
+                m_PreviousRotation = m_InteractingHand.transform.rotation;
+
+                m_LeftHand.GetComponent<Hand>().Hide();
+                m_RightHand.GetComponent<Hand>().Hide();
+
+                m_GhostObject = new GameObject("GhostObject");
+                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
             }
-            else
-            {
-                m_ActivationHand = m_RightHand;
-                m_InteractingHand = m_LeftHand;
-            }
-
-            m_PreviousPosition = m_InteractingHand.transform.position;
-            m_PreviousRotation = m_InteractingHand.transform.rotation;
-
-            m_LeftHand.GetComponent<Hand>().Hide();
-            m_RightHand.GetComponent<Hand>().Hide();
-
-            isInteracting = true;
         }
     }
 
     private void TriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
         {
-            m_ActivationHand = null;
-            Destroy(m_GhostObject);
-            m_ROSPublisher.PublishMoveArm();
-        }
+            if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
+            {
+                m_ActivationHand = null;
+                Destroy(m_GhostObject);
+                m_ROSPublisher.PublishMoveArm();
+            }
 
-        if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
-        {
-            m_LeftHand.GetComponent<Hand>().Show();
-            m_RightHand.GetComponent<Hand>().Show();
+            if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+            {
+                m_isInteracting = false;
+                m_ManipulationMode.IsInteracting(m_isInteracting);
 
-            isInteracting = false;
+                m_LeftHand.GetComponent<Hand>().Show();
+                m_RightHand.GetComponent<Hand>().Show();
+            }
         }
     }
 

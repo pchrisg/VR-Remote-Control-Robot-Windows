@@ -19,8 +19,7 @@ public class Barrel : MonoBehaviour
         m_RobotColliders = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
 
         m_OriginalMat = gameObject.GetComponent<Renderer>().material;
-        m_HighlightMat = new(m_OriginalMat);
-        m_HighlightMat.color = new(0.8f, 0.8f, 1.0f, 1.0f);
+        m_HighlightMat = new(m_OriginalMat){color = new(1.0f, 1.0f, 1.0f, 1.0f)};
     }
 
     private void Update()
@@ -36,12 +35,12 @@ public class Barrel : MonoBehaviour
 
         if (m_isMoving)
         {
-            if (Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
+            if (Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f && m_RobotPartsColliding == 0)
             {
                 m_isMoving = false;
 
                 float angle = Vector3.Angle(gameObject.transform.up, Vector3.up);
-                if (angle > 45 && m_RobotPartsColliding == 0)
+                if (angle > 45)
                     gameObject.transform.SetPositionAndRotation(new(gameObject.transform.position.x, 0.058f, gameObject.transform.position.z), Quaternion.Euler(0.0f, 0.0f, 0.0f));
             }
 

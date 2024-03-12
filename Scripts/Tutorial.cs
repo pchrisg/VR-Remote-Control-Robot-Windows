@@ -183,7 +183,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         //m_Manipulator.Flash(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
         m_Text.text = "Move the Robot\n\n" +
                       "While grabbing the manipulator, move your hand";
@@ -211,7 +211,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
         if (stage == Stage.DIRECT)
         {
@@ -312,7 +312,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
         m_SDOFManipulation.Flash(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
         m_Text.text = "Separated Degrees of Freedom Translation\n\n" +
                       "While grabbing the Handle, move your hand towards or away from the manipulator" +
@@ -412,7 +412,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
         //m_Manipulator.Flash(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
         m_Text.text += "\n\nThe Rail\n\n" +
                       "Notice a rail is created from the robot's gripper to the manipulator";
@@ -522,7 +522,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
         //m_Manipulator.Flash(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
         m_Text.text += "\n\nScaled Movement\n\n" +
                       "Grab the trigger of the other hand to activate scaled movement";
@@ -694,7 +694,7 @@ public class Tutorial : MonoBehaviour
                       "Now try to move the manipulator to the target again";
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_ManipulationMode.isInteracting);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
         yield return new WaitForSeconds(3.0f);
 
         m_Text.text = "Collision Objects\n\n" +
@@ -739,7 +739,7 @@ public class Tutorial : MonoBehaviour
                               "The robot won't collide but the cube still can, be careful!";
                 m_AudioSource.Play();
 
-                yield return new WaitUntil(() => !m_ManipulationMode.isInteracting);
+                yield return new WaitUntil(() => !m_ManipulationMode.IsInteracting());
             }
 
             Destroy(cube);
