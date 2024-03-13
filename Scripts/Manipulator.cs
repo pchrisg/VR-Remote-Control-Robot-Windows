@@ -55,32 +55,17 @@ public class Manipulator : MonoBehaviour
         if (activeCouroutine != null)
             StopCoroutine(activeCouroutine);
 
-        activeCouroutine = StartCoroutine(ResetPose());
+        activeCouroutine = StartCoroutine(ResetPositionAndRotationRoutine());
     }
 
-    private IEnumerator ResetPose()
+    private IEnumerator ResetPositionAndRotationRoutine()
     {
         ShowManipulator(false);
+
+        yield return new WaitForSeconds(0.2f);
         yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
-        ShowManipulator(true);
-    }
-
-    public void ResetPosition()
-    {
-        if (activeCouroutine != null)
-            StopCoroutine(activeCouroutine);
-
-        activeCouroutine = StartCoroutine(ResetPos());
-    }
-
-    private IEnumerator ResetPos()
-    {
-        ShowManipulator(false);
-        yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
-
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, gameObject.transform.rotation);
         ShowManipulator(true);
     }
 

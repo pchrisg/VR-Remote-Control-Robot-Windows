@@ -6948,7 +6948,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mode: 0
   m_SDOFWidget: {fileID: 7659439181079122306}
-  isInteracting: 0
 --- !u!114 &621543382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11238,7 +11237,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1116083131
 Transform:
   m_ObjectHideFlags: 0
@@ -18037,7 +18036,7 @@ MonoBehaviour:
   m_Glassbox: {fileID: 492438394}
   m_Objects: {fileID: 1711905459}
   m_Technique: 2
-  m_ParticipantNumber: 
+  m_ParticipantNumber: Test
   m_ResetRobotPose: 0
   m_SetupTutorial: 0
   m_SetupTask: 0
@@ -18045,6 +18044,7 @@ MonoBehaviour:
   m_Start: 0
   m_Active: 
   m_Status: 
+  m_TaskActive: 0
 --- !u!64 &2114069379
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -18239,10 +18239,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e089b2873ae34f42884478f3529615f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AttachedMat: {fileID: 2100000, guid: 407182e7d9468e040bb9b8700ca07d38, type: 2}
   m_CollidingMat: {fileID: 2100000, guid: 2d38dab9d565c724fb8c4f27c59920de, type: 2}
+  m_AttachedMat: {fileID: 2100000, guid: 407182e7d9468e040bb9b8700ca07d38, type: 2}
   m_FocusObjectMat: {fileID: 2100000, guid: 4ec20a9c23b454b4bb42ca8f0577b56b, type: 2}
-  isCreating: 0
   m_FocusObject: {fileID: 0}
 --- !u!1 &2139876225
 GameObject:

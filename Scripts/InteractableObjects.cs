@@ -3,6 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 using ManipulationModes;
+using System.Collections;
 
 public class InteractableObjects : MonoBehaviour
 {
@@ -54,6 +55,31 @@ public class InteractableObjects : MonoBehaviour
         leftIndex.GetComponent<InteractableObjectCreator>().hand = Player.instance.leftHand;
     }
 
+    private int GetFreeID()
+    {
+        m_Id++;
+        return m_Id - 1;
+    }
+
+    private IEnumerator RemoveAllInteractableObjectsRoutine()
+    {
+        while (m_InteractableObjects.Count > 0)
+        {
+            RemoveInteractableObject(m_InteractableObjects[^1]);
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    private void RemoveInteractableObject(IObject iObj)
+    {
+        Destroy(iObj.gameObj.GetComponent<CollisionHandling>());
+        iObj.gameObj.GetComponent<InteractableObject>().RemoveInteractableObject();
+        Destroy(iObj.gameObj.GetComponent<InteractableObject>());
+
+        iObj.gameObj.transform.SetParent(iObj.parent);
+        m_InteractableObjects.Remove(iObj);
+    }
+
     public void IsCreating(bool value)
     {
         foreach (var iObj in m_InteractableObjects)
@@ -94,26 +120,9 @@ public class InteractableObjects : MonoBehaviour
         }
     }
 
-    public void RemoveInteractableObject(IObject iObj)
-    {
-        Destroy(iObj.gameObj.GetComponent<CollisionHandling>());
-        iObj.gameObj.GetComponent<InteractableObject>().RemoveInteractableObject();
-        Destroy(iObj.gameObj.GetComponent<InteractableObject>());
-
-        iObj.gameObj.transform.SetParent(iObj.parent);
-        m_InteractableObjects.Remove(iObj);
-    }
-
     public void RemoveAllInteractableObjects()
     {
-        foreach (var iObj in m_InteractableObjects)
-            RemoveInteractableObject(iObj);
-    }
-
-    public int GetFreeID()
-    {
-        m_Id++;
-        return m_Id - 1;
+        StartCoroutine(RemoveAllInteractableObjectsRoutine());
     }
 
     public void SetFocusObject(Collider collider)

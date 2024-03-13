@@ -1,4 +1,7 @@
+using RosMessageTypes.Std;
+using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class StackingTask : MonoBehaviour
@@ -9,6 +12,7 @@ public class StackingTask : MonoBehaviour
     [SerializeField] private GameObject m_ObstaclePrefab = null;
 
     private ExperimentManager m_ExperimentManager = null;
+    private InteractableObjects m_InteractableObjects = null;
 
     private GameObject m_ObjectsContainer = null;
     private readonly List<Transform> m_Barrels = new();
@@ -21,21 +25,17 @@ public class StackingTask : MonoBehaviour
     private void Awake()
     {
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
+
         m_ObjectsContainer = m_ExperimentManager.m_Objects;
     }
 
     public void Setup(bool value)
     {
-        gameObject.SetActive(value);
-
         if (value)
-            ResetTask();
-    }
-
-    private void OnDisable()
-    {
-        DestroyAllObjects();
-        m_Barrels.Clear();
+            SetupTask();
+        else
+            StartCoroutine(DestroyAllObjects());
     }
 
     private void Update()
@@ -86,7 +86,7 @@ public class StackingTask : MonoBehaviour
 
             m_ExperimentManager.SplitTime(count);
 
-            if (count == 5)
+            if (count == 3)
                 m_Timer = 3.0f;
         }
 
@@ -103,28 +103,14 @@ public class StackingTask : MonoBehaviour
                         count++;
                 }
 
-                if (count == 5)
+                if (count == 3)
                     m_ExperimentManager.SaveData();
             }
         }
     }
 
-    private void DestroyAllObjects()
+    private void SetupTask()
     {
-        if (m_ObjectsContainer != null && m_ObjectsContainer.transform.childCount > 0)
-        {
-            for (var i = m_ObjectsContainer.transform.childCount - 1; i >= 0; i--)
-            {
-                GameObject obj = m_ObjectsContainer.transform.GetChild(i).gameObject;
-                Destroy(obj);
-            }
-        }
-    }
-
-    public void ResetTask()
-    {
-        DestroyAllObjects();
-
         //Target
         GameObject target = Instantiate(m_TargetPrefab);
         target.transform.position = new Vector3(0.0f, 0.0f, -0.45f);
@@ -204,5 +190,27 @@ public class StackingTask : MonoBehaviour
         obstacle.transform.SetPositionAndRotation(new(0.323f, 0.15f, 0.245f), Quaternion.Euler(0.0f, -103, 0.0f));
         obstacle.transform.localScale = new Vector3(0.733f, 0.3f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
+    }    
+
+    private IEnumerator DestroyAllObjects()
+    {
+        yield return new WaitUntil( () => m_InteractableObjects.m_InteractableObjects.Count == 0);
+
+        if (m_ObjectsContainer != null && m_ObjectsContainer.transform.childCount > 0)
+        {
+            for (var i = m_ObjectsContainer.transform.childCount - 1; i >= 0; i--)
+            {
+                GameObject obj = m_ObjectsContainer.transform.GetChild(i).gameObject;
+                Destroy(obj);
+            }
+        }
+
+        m_Barrels.Clear();
+    }
+
+    public void ResetTask()
+    {
+        foreach (var barrel in m_Barrels)
+            barrel.GetComponent<Barrel>().m_ResetPosition = true;
     }
 }

@@ -5,13 +5,15 @@ public class Timer : MonoBehaviour
 {
     private Text m_Text = null;
 
-    private float m_TimeLimit = 0.0f;
     private float m_TimeElapsed = 0.0f;
+    private float m_TimeLimit = 0.0f;
+    
 
     private string m_Mins = string.Empty;
     private string m_Secs = string.Empty;
 
     private bool m_Running = false;
+    private bool m_TimeExhausted = false;
 
     private void Awake()
     {
@@ -41,8 +43,19 @@ public class Timer : MonoBehaviour
         }
     }
 
+    private void ResetTimer()
+    {
+        m_Running = false;
+        m_TimeExhausted = false;
+        m_TimeElapsed = 0.0f;
+        m_TimeLimit = 0.0f;
+        m_Text.text = "Ready";
+    }
+
     public void StartTimer(float timeLimit = 0.0f)
     {
+        ResetTimer();
+
         m_TimeLimit = timeLimit;
 
         m_Running = true;
@@ -55,22 +68,18 @@ public class Timer : MonoBehaviour
 
     public void StopTimer()
     {
-        if (m_TimeLimit != 0.0f && m_TimeElapsed > m_TimeLimit)
+        if (m_TimeLimit != 0.0f && m_TimeElapsed >= m_TimeLimit)
+        {
+            m_TimeExhausted = true;
             m_TimeElapsed = m_TimeLimit;
+        }
 
         m_Text.text = "Stopped";
         m_Running = false;
     }
 
-    public void ResetTimer()
-    {
-        m_TimeElapsed = 0.0f;
-        m_TimeLimit = 0.0f;
-        m_Text.text = "Ready";
-    }
-
     public bool TimeExhausted()
     {
-        return !m_Running;
+        return m_TimeExhausted;
     }
 }
