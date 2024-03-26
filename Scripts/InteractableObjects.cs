@@ -48,11 +48,11 @@ public class InteractableObjects : MonoBehaviour
     {
         GameObject rightIndex = Player.instance.transform.Find(m_FingerNames[0]).gameObject;
         rightIndex.AddComponent<InteractableObjectCreator>();
-        rightIndex.GetComponent<InteractableObjectCreator>().hand = Player.instance.rightHand;
+        rightIndex.GetComponent<InteractableObjectCreator>().Setup("right");
 
         GameObject leftIndex = Player.instance.transform.Find(m_FingerNames[1]).gameObject;
         leftIndex.AddComponent<InteractableObjectCreator>();
-        leftIndex.GetComponent<InteractableObjectCreator>().hand = Player.instance.leftHand;
+        leftIndex.GetComponent<InteractableObjectCreator>().Setup("left");
     }
 
     private int GetFreeID()
@@ -186,21 +186,21 @@ public class InteractableObjects : MonoBehaviour
         }
 
         // manipulator facing focus object
-        if (m_ManipulationMode.mode == Mode.DIRECT)
-        {
-            angle = Vector3.Angle(initPose.right, right);
-            if (angle < ManipulationMode.ANGLETHRESHOLD)
-            {
-                up = Vector3.Cross(initPose.forward, right);
-                angle = Vector3.Angle(up, Vector3.up);
-                up = angle <= 90 ? Vector3.up : -Vector3.up;
+        //if (m_ManipulationMode.mode == Mode.DIRECT)
+        //{
+        //    angle = Vector3.Angle(initPose.right, right);
+        //    if (angle < ManipulationMode.ANGLETHRESHOLD)
+        //    {
+        //        up = Vector3.Cross(initPose.forward, right);
+        //        angle = Vector3.Angle(up, Vector3.up);
+        //        up = angle <= 90 ? Vector3.up : -Vector3.up;
 
-                forward = Vector3.Cross(right.normalized, up.normalized);
-                up = Vector3.Cross(forward.normalized, right.normalized);
+        //        forward = Vector3.Cross(right.normalized, up.normalized);
+        //        up = Vector3.Cross(forward.normalized, right.normalized);
 
-                return Quaternion.LookRotation(forward, up);
-            }
-        }
+        //        return Quaternion.LookRotation(forward, up);
+        //    }
+        //}
 
         else if (connectingVector != Vector3.zero)
         {

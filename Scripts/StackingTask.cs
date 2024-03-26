@@ -1,7 +1,5 @@
-using RosMessageTypes.Std;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class StackingTask : MonoBehaviour
@@ -17,8 +15,9 @@ public class StackingTask : MonoBehaviour
     private GameObject m_ObjectsContainer = null;
     private readonly List<Transform> m_Barrels = new();
 
-    private Vector2 m_Target = new();
-    private bool m_isHighlighted = false;
+    private GameObject m_Target = null;
+    private readonly Vector2 m_TargetPos = new(0.0f, -0.45f);
+    private bool m_isWithinBounds = false;
 
     private float m_Timer = 0.0f;
 
@@ -52,41 +51,55 @@ public class StackingTask : MonoBehaviour
 
         if(movingBarrel != null)
         {
-            if (Vector2.Distance(m_Target, new(movingBarrel.position.x, movingBarrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+            if (Vector2.Distance(m_TargetPos, new(movingBarrel.position.x, movingBarrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
             {
-                if(!m_isHighlighted)
+                if(!m_isWithinBounds)
                 {
-                    m_isHighlighted = true;
+                    m_isWithinBounds = true;
+                    m_Target.GetComponent<Target>().WithinBounds();
+                    
                     foreach (Transform barrel in m_Barrels)
                     {
-                        if (Vector2.Distance(m_Target, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+                        if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
                             barrel.GetComponent<Barrel>().Highlight(true);
                     }
                 }
             }
-            else if (m_isHighlighted)
+            else
             {
-                m_isHighlighted = false;
-                foreach (Transform barrel in m_Barrels)
-                    barrel.GetComponent<Barrel>().Highlight(false);
+                if (m_isWithinBounds)
+                {
+                    m_isWithinBounds = false;
+                    foreach (Transform barrel in m_Barrels)
+                        barrel.GetComponent<Barrel>().Highlight(false);
+                }
+
+                if (Vector2.Distance(m_TargetPos, new(movingBarrel.position.x, movingBarrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD * 2)
+                    m_Target.GetComponent<Target>().CloseToBounds();
+
+                else
+                    m_Target.GetComponent<Target>().FarFromBounds();
             }
         }
-        else if (m_isHighlighted)
+        else if (m_isWithinBounds)
         {
-            m_isHighlighted = false;
+            m_isWithinBounds = false;
+            m_Target.GetComponent<Target>().FarFromBounds();
 
             int count = 0;
             foreach (Transform barrel in m_Barrels)
             {
-                barrel.GetComponent<Barrel>().Highlight(false);
-
-                if (Vector2.Distance(m_Target, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+                if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+                {
+                    print("eyo");
                     count++;
+                    barrel.GetComponent<Barrel>().Highlight(false);
+                }
             }
 
             m_ExperimentManager.SplitTime(count);
 
-            if (count == 3)
+            if (count == 5)
                 m_Timer = 3.0f;
         }
 
@@ -99,11 +112,11 @@ public class StackingTask : MonoBehaviour
                 int count = 0;
                 foreach (Transform barrel in m_Barrels)
                 {
-                    if (Vector2.Distance(m_Target, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+                    if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
                         count++;
                 }
 
-                if (count == 3)
+                if (count == 5)
                     m_ExperimentManager.SaveData();
             }
         }
@@ -113,9 +126,9 @@ public class StackingTask : MonoBehaviour
     {
         //Target
         GameObject target = Instantiate(m_TargetPrefab);
-        target.transform.position = new Vector3(0.0f, 0.0f, -0.45f);
+        target.transform.position = new Vector3(m_TargetPos.x, 0.5f, m_TargetPos.y);
         target.transform.SetParent(m_ObjectsContainer.transform);
-        m_Target = new(target.transform.position.x, target.transform.position.z);
+        m_Target = target;
 
         //Barrels
         GameObject barrel = Instantiate(m_BarrelPrefab);

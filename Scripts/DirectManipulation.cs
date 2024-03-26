@@ -109,7 +109,7 @@ public class DirectManipulation : MonoBehaviour
             {
                 m_ActivationHand = null;
                 Destroy(m_GhostObject);
-                m_ROSPublisher.PublishMoveArm();
+                //m_ROSPublisher.PublishMoveArm();
             }
 
             if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
@@ -179,6 +179,14 @@ public class DirectManipulation : MonoBehaviour
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
         m_ROSPublisher.PublishMoveArm();
 
+        StopRobot(position, rotation);
+
+        m_PreviousPosition = m_InteractingHand.transform.position;
+        m_PreviousRotation = m_InteractingHand.transform.rotation;
+    }
+
+    private void StopRobot(Vector3 position, Quaternion rotation)
+    {
         float distance = Vector3.Distance(m_Robotiq.position, m_ManipulatorPose.position);
         float deltaDistance = distance - m_PreviousDistance;
         if (deltaDistance > 0)
@@ -196,16 +204,16 @@ public class DirectManipulation : MonoBehaviour
         {
             m_TotalAngle += deltaAngle;
             if (m_TotalAngle > ManipulationMode.ANGLETHRESHOLD)
+            {
                 m_ROSPublisher.PublishStopArm();
+                print("stop");
+            }
         }
         else
             m_TotalAngle = 0.0f;
 
         m_PreviousDistance = Vector3.Distance(m_Robotiq.position, position + transform.TransformVector(m_ManipulatorPose.localPosition));
         m_PreviousAngle = Quaternion.Angle(m_Robotiq.rotation, rotation * m_ManipulatorPose.localRotation);
-        
-        m_PreviousPosition = m_InteractingHand.transform.position;
-        m_PreviousRotation = m_InteractingHand.transform.rotation;
     }
 
     private Vector3 PositionSnapping()
@@ -213,7 +221,7 @@ public class DirectManipulation : MonoBehaviour
         Transform focusObject = m_InteractableObjects.m_FocusObject.transform;
         Vector3 connectingVector = m_GhostObject.transform.position - focusObject.position;
 
-        float snappingThreshold = ManipulationMode.ANGLETHRESHOLD * 2.0f;
+        float snappingThreshold = ManipulationMode.ANGLETHRESHOLD;
         float angle = Vector3.Angle(connectingVector, focusObject.up);
         if (angle < snappingThreshold)
             return focusObject.position + Vector3.Project(connectingVector, focusObject.up);

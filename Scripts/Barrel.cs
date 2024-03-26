@@ -18,8 +18,7 @@ public class Barrel : MonoBehaviour
     {
         m_RobotColliders = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
 
-        m_OriginalMat = gameObject.GetComponent<Renderer>().material;
-        m_HighlightMat = new(m_OriginalMat){color = new(1.0f, 1.0f, 1.0f, 1.0f)};
+        m_HighlightMat = new(gameObject.GetComponent<Renderer>().material) {color = new(1.0f, 1.0f, 0.0f, 1.0f)};
     }
 
     private void Update()
@@ -82,7 +81,10 @@ public class Barrel : MonoBehaviour
     public void Highlight(bool value)
     {
         if (value)
+        {
+            m_OriginalMat = gameObject.GetComponent<Renderer>().material;
             gameObject.GetComponent<Renderer>().material = m_HighlightMat;
+        }
         else
             gameObject.GetComponent<Renderer>().material = m_OriginalMat;
     }

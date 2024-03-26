@@ -10,23 +10,24 @@ public class InteractableObjectCreator : MonoBehaviour
 
     private SteamVR_Action_Boolean m_Grip = null;
 
-    public Hand hand = null;
+    private Hand m_Hand = null;
+    private Hand m_OtherHand = null;
+
+    private bool m_isInteracting = false;
 
     private void Awake()
     {
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
+
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!m_Grip.GetState(hand.handType) || !other.isTrigger || !((other is BoxCollider) || (other is CapsuleCollider)))
-            return;
-
-        else
+        if (other.isTrigger && ((other is BoxCollider) || (other is CapsuleCollider)))
         {
-            if (m_ManipulationMode.mode == Mode.COLOBJCREATOR || m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+            if (m_isInteracting)
             {
                 if (other.GetComponent<CollisionHandling>() == null)
                     AddInteractableObject(other);
@@ -34,8 +35,45 @@ public class InteractableObjectCreator : MonoBehaviour
                     RemoveInteractableObject(other);
             }
 
-            else if (other.GetComponent<CollisionHandling>() != null && other.GetComponent<CollisionHandling>().m_isAttachable)
+            else if (m_Grip.GetState(m_Hand.handType) && other.GetComponent<CollisionHandling>() != null && other.GetComponent<CollisionHandling>().m_isAttachable)
                 SetFocusObject(other);
+        }
+    }
+
+    public void Setup(string indexFinger)
+    {
+        if(indexFinger == "right")
+        {
+            m_Hand = Player.instance.rightHand;
+            m_OtherHand = Player.instance.leftHand;
+        }
+        else if (indexFinger == "left")
+        {
+            m_Hand = Player.instance.leftHand;
+            m_OtherHand = Player.instance.rightHand;
+        }
+
+        m_Grip.AddOnStateDownListener(GripGrabbed, m_Hand.handType);
+        m_Grip.AddOnStateUpListener(GripReleased, m_Hand.handType);
+    }
+
+    private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR || m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        {
+            m_isInteracting = true;
+            m_ManipulationMode.IsInteracting(m_isInteracting);
+        }
+    }
+
+    private void GripReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_ManipulationMode.mode == Mode.COLOBJCREATOR || m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+        {
+            m_isInteracting = false;
+
+            if (!m_Grip.GetState(m_OtherHand.handType))
+                m_ManipulationMode.IsInteracting(m_isInteracting);
         }
     }
 

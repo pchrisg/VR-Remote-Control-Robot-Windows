@@ -26,7 +26,7 @@ public class InteractableObject : MonoBehaviour
 
     private void Update()
     {
-        if (!m_isMoving && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) > 0.001f)
+        if (!m_isMoving && gameObject.GetComponent<CollisionHandling>().m_isAttached)
         {
             m_isMoving = true;
             RemoveInteractableObject();
@@ -36,8 +36,8 @@ public class InteractableObject : MonoBehaviour
         {
             if (!gameObject.GetComponent<CollisionHandling>().m_isAttached && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
             {
-                AddInteractableObject();
                 m_isMoving = false;
+                AddInteractableObject();
             }
             else
                 m_PreviousPosition = gameObject.transform.position;
