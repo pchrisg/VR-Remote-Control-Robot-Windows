@@ -242,7 +242,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
 
-        yield return new WaitUntil(() => m_GripperControl.isGripping);
+        //yield return new WaitUntil(() => m_GripperControl.isGripping);
 
         m_Text.text += "\n\nControl the gripper by slowly squeezing the right trigger\n\n" +
                        "(You can also activate gripper control by grabbing the right trigger and control it with the left trigger)\n\n" +

@@ -28,11 +28,11 @@ public class ManipulationMode : MonoBehaviour
     private InteractableObjects m_InteractableObjects = null;
     private ExperimentManager m_ExperimentManager = null;
 
+    private bool m_isInteracting = false;
+
     [HideInInspector] public const float ANGLETHRESHOLD = 10.0f;     //10deg
     [HideInInspector] public const float DISTANCETHRESHOLD = 0.03f; //3cm
     [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
-
-    private bool m_isInteracting = false;
 
     private void Awake()
     {

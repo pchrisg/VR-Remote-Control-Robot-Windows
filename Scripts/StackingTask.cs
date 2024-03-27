@@ -71,7 +71,10 @@ public class StackingTask : MonoBehaviour
                 {
                     m_isWithinBounds = false;
                     foreach (Transform barrel in m_Barrels)
-                        barrel.GetComponent<Barrel>().Highlight(false);
+                    {
+                        if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+                            barrel.GetComponent<Barrel>().Highlight(false);
+                    }
                 }
 
                 if (Vector2.Distance(m_TargetPos, new(movingBarrel.position.x, movingBarrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD * 2)
@@ -91,7 +94,6 @@ public class StackingTask : MonoBehaviour
             {
                 if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
                 {
-                    print("eyo");
                     count++;
                     barrel.GetComponent<Barrel>().Highlight(false);
                 }

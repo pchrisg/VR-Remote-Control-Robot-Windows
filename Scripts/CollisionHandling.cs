@@ -232,14 +232,14 @@ public class CollisionHandling : MonoBehaviour
                 mat = m_CollidingMat;
         }
 
-        if (m_isFocusObject)
-            mat = m_FocusObjectMat;
-
         if (m_isColliding)
             mat = m_CollidingMat;
 
         if (m_isAttached)
             mat = m_AttachedMat;
+
+        if (m_isFocusObject)
+            mat = m_FocusObjectMat;
 
         if (gameObject.GetComponent<Renderer>() != null)
             gameObject.GetComponent<Renderer>().material = mat;

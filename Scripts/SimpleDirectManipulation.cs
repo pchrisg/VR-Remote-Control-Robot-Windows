@@ -39,7 +39,7 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting)
+        if (m_isInteracting && m_ActivationHand != null)
             MoveManipulator();
     }
 
@@ -83,7 +83,6 @@ public class SimpleDirectManipulation : MonoBehaviour
             {
                 m_ActivationHand = null;
                 Destroy(m_GhostObject);
-                m_ROSPublisher.PublishMoveArm();
             }
 
             if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))

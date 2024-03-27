@@ -1,18 +1,60 @@
-using System.Collections;
-using System.Collections.Generic;
+
+using System.Xml.Serialization;
 using UnityEngine;
 
 public class UR5Robot : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [Header("Sounds")]
+    [SerializeField] private AudioClip m_MotionClip = null;
+
+    private AudioSource m_AudioSource = null;
+    private Transform m_Robotiq = null;
+
+    private Vector3 m_PreviousPosition = new();
+    private bool m_isMoving = false;
+    private float m_ElapsedTime = 0.0f;
+
+    private void Awake()
     {
-        
+        m_AudioSource = gameObject.GetComponent<AudioSource>();
+
+        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
+        m_PreviousPosition = m_Robotiq.position;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
+        if (!m_isMoving && Vector3.Distance(m_Robotiq.position, m_PreviousPosition) > 0.00001f)
+            m_isMoving = true;
+
+        if (m_isMoving)
+        {
+            if (!m_AudioSource.isPlaying)
+            {
+                if (m_AudioSource.clip != m_MotionClip)
+                    m_AudioSource.clip = m_MotionClip;
+
+                m_AudioSource.Play();
+            }
+
+            if (Vector3.Distance(m_Robotiq.position, m_PreviousPosition) < 0.00001f)
+            {
+                m_isMoving = false;
+                m_ElapsedTime = 0.05f;
+            }
+            else
+                m_PreviousPosition = m_Robotiq.position;
+        }
+        else if (m_ElapsedTime != 0.0f)
+        {
+            m_ElapsedTime -= Time.deltaTime;
+            
+            if(m_ElapsedTime <= 0.0f)
+            {
+                m_ElapsedTime = 0.0f;
+                if (m_AudioSource.isPlaying)
+                    m_AudioSource.Stop();
+            }
+        }
     }
 }

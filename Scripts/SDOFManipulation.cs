@@ -8,83 +8,155 @@ public class SDOFManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private Manipulator m_Manipulator = null;
-    private GripperControl m_GripperControl = null;
     private InteractableObjects m_InteractableObjects = null;
 
+    private Hand m_RightHand = null;
+    private Hand m_LeftHand = null;
+    private Hand m_HoveringHand = null;
+    private Hand m_InteractingHand = null;
+
+    private Transform m_Handle = null;
+
     private SteamVR_Action_Boolean m_Trigger = null;
+    private SteamVR_Action_Boolean m_Grip = null;
 
     private bool isTranslating = false;
     private bool isRotating = false;
 
-    private Vector3 m_PlaneNormal = Vector3.zero;
-    private Vector3 m_InitHandPos = Vector3.zero;
-    private Vector3 m_InitPos = Vector3.zero;
-    private Vector3 m_InitDir = Vector3.zero;
+    private Vector3 m_PlaneNormal = new();
+    private Vector3 m_InitHandPos = new();
+    private Vector3 m_InitPos = new();
+    private Vector3 m_InitDir = new();
+    private Vector3 m_PreviousDir = new();
 
-    private Hand m_OtherHand = null;
-    [HideInInspector] public bool isInteracting = false;
-    [HideInInspector] public Hand m_InteractingHand = null;
-    [HideInInspector] public Interactable m_Interactable = null;
+    private bool m_isInteracting = false;
+    private bool m_isGripping = false;
+    private bool m_isScaling = false;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
-        m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
+        m_RightHand = Player.instance.rightHand;
+        m_LeftHand = Player.instance.leftHand;
+
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
+        m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_RightHand.handType);
+        m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_LeftHand.handType);
+        m_Trigger.AddOnStateUpListener(TriggerReleased, m_RightHand.handType);
+        m_Trigger.AddOnStateUpListener(TriggerReleased, m_LeftHand.handType);
+
+        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
+        m_Grip.AddOnStateDownListener(GripGrabbed, m_RightHand.handType);
+        m_Grip.AddOnStateDownListener(GripGrabbed, m_LeftHand.handType);
+        m_Grip.AddOnStateUpListener(GripReleased, m_RightHand.handType);
+        m_Grip.AddOnStateUpListener(GripReleased, m_LeftHand.handType);
     }
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == Mode.SDOF && !m_GripperControl.isGripping)
+        if (m_isInteracting && m_InteractingHand != null)
+            MoveManipulator();
+    }
+
+    public void SetHoveringHand(Hand hand, Transform handle)
+    {
+        m_HoveringHand = hand;
+        m_Handle = handle;
+    }
+
+    public Hand GetHoveringHand()
+    {
+        return m_HoveringHand;
+    }
+
+    public bool IsInteracting()
+    {
+        return m_isInteracting;
+    }
+
+    private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_ManipulationMode.mode == Mode.SDOF)
         {
-            m_ManipulationMode.IsInteracting(isInteracting);
+            if (m_HoveringHand == null)
+                m_isGripping = true;
 
-            if (!isInteracting && m_InteractingHand != null && m_Trigger.GetStateDown(m_InteractingHand.handType))
-                TriggerGrabbed();
-
-            if (isInteracting)
+            else
             {
-                if (m_Trigger.GetStateUp(m_InteractingHand.handType))
-                    TriggerReleased();
-
-                else
+                if (!m_isGripping && !m_isInteracting && m_InteractingHand == null && fromSource == m_HoveringHand.handType)
                 {
-                    if (m_Trigger.GetStateDown(m_OtherHand.handType))
-                    {
-                        m_InitPos = m_Interactable.transform.position;
-                        m_InitDir = m_InitPos - m_Manipulator.transform.position;
-                    }
+                    m_isInteracting = true;
+                    m_ManipulationMode.IsInteracting(m_isInteracting);
 
-                    if (m_Trigger.GetState(m_InteractingHand.handType))
-                        TriggerHeld();
+                    if (fromSource == m_LeftHand.handType)
+                        m_InteractingHand = m_LeftHand;
+
+                    else
+                        m_InteractingHand = m_RightHand;
+
+                    m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
+                    m_InitPos = m_Handle.position;
+                    m_InitDir = m_InitPos - m_Manipulator.transform.position;
+                    m_PreviousDir = m_InitDir;
                 }
             }
         }
     }
 
-    private void TriggerGrabbed()
+    private void TriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_InteractingHand.IsStillHovering(m_Interactable))
+        if (m_ManipulationMode.mode == Mode.SDOF)
         {
-            m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
-            isInteracting = true;
-            m_InitPos = m_Interactable.transform.position;
-            m_InitDir = m_InitPos - m_Manipulator.transform.position;
+            if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
+                m_InteractingHand = null;
 
-            if (m_InteractingHand == Player.instance.rightHand)
-                m_OtherHand = Player.instance.leftHand;
-            else
-                m_OtherHand = Player.instance.rightHand;
+            if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+            {
+                m_isGripping = false;
+                m_isInteracting = false;
+                m_ManipulationMode.IsInteracting(m_isInteracting);
+
+                isTranslating = false;
+                isRotating = false;
+
+                m_LeftHand.GetComponent<Hand>().Show();
+                m_RightHand.GetComponent<Hand>().Show();
+            }
         }
     }
 
-    private void TriggerHeld()
+    private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if(!isTranslating && !isRotating)
+        if (m_ManipulationMode.mode == Mode.SDOF)
+        {
+            if (m_InteractingHand == null)
+                m_isScaling = true;
+
+            else if (m_InteractingHand != null && fromSource != m_InteractingHand.handType)
+            {
+                m_isScaling = true;
+                m_InitPos = m_Handle.position;
+                m_InitDir = m_InitPos - m_Manipulator.transform.position;
+            }
+        }
+    }
+
+    private void GripReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
+    {
+        if (m_ManipulationMode.mode == Mode.SDOF)
+        {
+            if ((!m_Grip.GetState(m_RightHand.handType) && !m_Grip.GetState(m_LeftHand.handType)) || (m_InteractingHand != null && fromSource != m_InteractingHand.handType))
+                m_isScaling = false;
+        }
+    }
+
+    private void MoveManipulator()
+    {
+        if (!isTranslating && !isRotating)
         {
             Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitHandPos;
             if (connectingVector.magnitude >= ManipulationMode.DISTANCETHRESHOLD)
@@ -94,7 +166,7 @@ public class SDOFManipulation : MonoBehaviour
                 {
                     isRotating = true;
 
-                    Transform handleAxis = m_Interactable.transform.parent;
+                    Transform handleAxis = m_Handle.parent;
                     float axisRightDotCV = Vector3.Dot(connectingVector.normalized, handleAxis.right.normalized);
                     float axisForwardDotCV = Vector3.Dot(connectingVector.normalized, handleAxis.forward.normalized);
 
@@ -109,21 +181,20 @@ public class SDOFManipulation : MonoBehaviour
         }
 
         if (isTranslating)
-            Translate();
+            TranslateManipulator();
 
         if (isRotating)
-            Rotate();
+            RotateManipulator();
 
-        //if (!m_PlanningRobot.isPlanning)
         m_ROSPublisher.PublishMoveArm();
     }
 
-    private void Translate()
+    private void TranslateManipulator()
     {
         Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_InitPos;
         Vector3 projectedConnectingVector = Vector3.Project(connectingVector, m_InitDir);
 
-        if (m_Trigger.GetState(m_OtherHand.handType))
+        if (m_isScaling)
             projectedConnectingVector *= ManipulationMode.SCALINGFACTOR;
 
         Vector3 movement = m_InitPos + projectedConnectingVector - m_InitDir - m_Manipulator.transform.position;
@@ -139,10 +210,10 @@ public class SDOFManipulation : MonoBehaviour
     {
         Transform focusObjectPose = m_InteractableObjects.m_FocusObject.transform;
 
-        Plane focObjXYPlane = new Plane(focusObjectPose.forward, focusObjectPose.position);
-        Plane focObjXZPlane = new Plane(focusObjectPose.up, focusObjectPose.position);
-        Plane focObjYZPlane = new Plane(focusObjectPose.right, focusObjectPose.position);
-        Ray direction = new Ray(m_InitPos, m_InitDir);
+        Plane focObjXYPlane = new(focusObjectPose.forward, focusObjectPose.position);
+        Plane focObjXZPlane = new(focusObjectPose.up, focusObjectPose.position);
+        Plane focObjYZPlane = new(focusObjectPose.right, focusObjectPose.position);
+        Ray direction = new(m_InitPos, m_InitDir);
         float intersection = 0.0f;
 
         Vector3 connectingVector = position - focusObjectPose.position;
@@ -166,24 +237,26 @@ public class SDOFManipulation : MonoBehaviour
         return position;
     }
 
-    private void Rotate()
+    private void RotateManipulator()
     {
-        Vector3 currentVector = m_Interactable.transform.position - m_Manipulator.transform.position;
-        float currentAngle = Vector3.SignedAngle(m_InitDir, currentVector, m_PlaneNormal);
+        //Vector3 currentVector = m_Handle.position - m_Manipulator.transform.position;
+        float previousAngle = Vector3.SignedAngle(m_InitDir, m_PreviousDir, m_PlaneNormal);
 
         Vector3 connectingVector = m_InteractingHand.objectAttachmentPoint.position - m_Manipulator.transform.position;
         Vector3 targetVector = Vector3.ProjectOnPlane(connectingVector, m_PlaneNormal);
         float targetAngle = Vector3.SignedAngle(m_InitDir, targetVector, m_PlaneNormal);
 
-        if (m_Trigger.GetState(m_OtherHand.handType))
+        if (m_isScaling)
             targetAngle *= ManipulationMode.SCALINGFACTOR;
         else
             targetAngle = RotationSnapping(targetVector);
 
-        float movement = targetAngle - currentAngle;
+        float movement = targetAngle - previousAngle;
 
         Quaternion rotation = Quaternion.AngleAxis(movement, m_PlaneNormal) * m_Manipulator.transform.rotation;
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(m_Manipulator.transform.position, rotation);
+
+        m_PreviousDir = Quaternion.AngleAxis(movement, m_PlaneNormal) * m_PreviousDir;
     }
 
     private float RotationSnapping(Vector3 targetVector)
@@ -210,7 +283,7 @@ public class SDOFManipulation : MonoBehaviour
             float angle = Vector3.Angle(m_Manipulator.transform.right, connectingVector);
             if (angle < 90.0f)
             {
-                Vector3 currentVector = m_Interactable.transform.position - m_Manipulator.transform.position;
+                Vector3 currentVector = m_Handle.position - m_Manipulator.transform.position;
                 float dotProd = Vector3.Dot(m_Manipulator.transform.right.normalized, currentVector.normalized);
                 if (Mathf.Abs(dotProd) < 0.5f)
                 {
@@ -252,20 +325,6 @@ public class SDOFManipulation : MonoBehaviour
         }
 
         return Vector3.SignedAngle(m_InitDir, targetVector, m_PlaneNormal);
-    }
-
-    private void TriggerReleased()
-    {
-        m_Interactable = null;
-        m_InteractingHand = null;
-        isInteracting = false;
-        isTranslating = false;
-        isRotating = false;
-
-        //if (m_PlanningRobot.isPlanning)
-        //    m_PlanningRobot.RequestTrajectory();
-        //else
-            m_ROSPublisher.PublishMoveArm();
     }
 
     public void Flash(bool value)

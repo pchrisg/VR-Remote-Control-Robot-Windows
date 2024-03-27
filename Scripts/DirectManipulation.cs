@@ -20,15 +20,6 @@ public class DirectManipulation : MonoBehaviour
     private Vector3 m_PreviousPosition = new();
     private Quaternion m_PreviousRotation = new();
 
-    private Transform m_Robotiq = null;
-    private Transform m_ManipulatorPose = null;
-
-    private float m_TotalDistance = 0.0f;
-    private float m_PreviousDistance = 0.0f;
-
-    private float m_TotalAngle = 0.0f;
-    private float m_PreviousAngle = 0.0f;
-
     private Vector3 m_InitPos = new();
     private GameObject m_GhostObject = null;
     private bool m_isInteracting = false;
@@ -53,14 +44,11 @@ public class DirectManipulation : MonoBehaviour
         m_Grip.AddOnStateDownListener(GripGrabbed, m_LeftHand.handType);
         m_Grip.AddOnStateUpListener(GripReleased, m_RightHand.handType);
         m_Grip.AddOnStateUpListener(GripReleased, m_LeftHand.handType);
-
-        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
-        m_ManipulatorPose = gameObject.transform.Find("Pose");
     }
 
     private void Update()
     {
-        if (m_isInteracting)
+        if (m_isInteracting && m_ActivationHand != null)
             MoveManipulator();
     }
 
@@ -92,11 +80,6 @@ public class DirectManipulation : MonoBehaviour
 
                 m_GhostObject = new GameObject("GhostObject");
                 m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
-
-                m_TotalDistance = 0.0f;
-                m_PreviousDistance = Vector3.Distance(m_Robotiq.position, m_ManipulatorPose.position);
-                m_TotalAngle = 0.0f;
-                m_PreviousAngle = Quaternion.Angle(m_Robotiq.rotation, m_ManipulatorPose.rotation);
             }
         }
     }
@@ -109,7 +92,6 @@ public class DirectManipulation : MonoBehaviour
             {
                 m_ActivationHand = null;
                 Destroy(m_GhostObject);
-                //m_ROSPublisher.PublishMoveArm();
             }
 
             if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
@@ -179,41 +161,8 @@ public class DirectManipulation : MonoBehaviour
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
         m_ROSPublisher.PublishMoveArm();
 
-        StopRobot(position, rotation);
-
         m_PreviousPosition = m_InteractingHand.transform.position;
         m_PreviousRotation = m_InteractingHand.transform.rotation;
-    }
-
-    private void StopRobot(Vector3 position, Quaternion rotation)
-    {
-        float distance = Vector3.Distance(m_Robotiq.position, m_ManipulatorPose.position);
-        float deltaDistance = distance - m_PreviousDistance;
-        if (deltaDistance > 0)
-        {
-            m_TotalDistance += deltaDistance;
-            if (m_TotalDistance > ManipulationMode.DISTANCETHRESHOLD)
-                m_ROSPublisher.PublishStopArm();
-        }
-        else
-            m_TotalDistance = 0.0f;
-
-        float angle = Quaternion.Angle(m_Robotiq.rotation, m_ManipulatorPose.rotation);
-        float deltaAngle = angle - m_PreviousAngle;
-        if (deltaAngle > 0)
-        {
-            m_TotalAngle += deltaAngle;
-            if (m_TotalAngle > ManipulationMode.ANGLETHRESHOLD)
-            {
-                m_ROSPublisher.PublishStopArm();
-                print("stop");
-            }
-        }
-        else
-            m_TotalAngle = 0.0f;
-
-        m_PreviousDistance = Vector3.Distance(m_Robotiq.position, position + transform.TransformVector(m_ManipulatorPose.localPosition));
-        m_PreviousAngle = Quaternion.Angle(m_Robotiq.rotation, rotation * m_ManipulatorPose.localRotation);
     }
 
     private Vector3 PositionSnapping()

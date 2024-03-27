@@ -310,8 +310,8 @@ ArticulationBody:
   m_SwingZ: 2
   m_Twist: 1
   m_XDrive:
-    lowerLimit: -180
-    upperLimit: -30
+    lowerLimit: -360
+    upperLimit: 360
     stiffness: 0
     damping: 0
     forceLimit: 150
@@ -3764,6 +3764,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52d28c0afbb909a4db2fa085f68d3524, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_MotionClip: {fileID: 8300000, guid: a9f17655e65caef41bdeead5a5c80490, type: 3}
 --- !u!1 &398298108
 GameObject:
   m_ObjectHideFlags: 0
@@ -8069,8 +8070,8 @@ ArticulationBody:
   m_SwingZ: 2
   m_Twist: 1
   m_XDrive:
-    lowerLimit: 0
-    upperLimit: 180
+    lowerLimit: -360
+    upperLimit: 360
     stiffness: 0
     damping: 0
     forceLimit: 28
@@ -8311,8 +8312,8 @@ ArticulationBody:
   m_SwingZ: 2
   m_Twist: 1
   m_XDrive:
-    lowerLimit: -180
-    upperLimit: 0
+    lowerLimit: -360
+    upperLimit: 360
     stiffness: 0
     damping: 0
     forceLimit: 28
@@ -8984,7 +8985,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f547a0e058f278d42ad662595a9ce6f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_MotionClip: {fileID: 8300000, guid: a9f17655e65caef41bdeead5a5c80490, type: 3}
   m_RobotState: 
 --- !u!1 &904790811
 GameObject:
@@ -9250,7 +9250,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Attach: {fileID: 8300000, guid: fc0019bd3c91f034eb4d4979494f7d52, type: 3}
   m_Detach: {fileID: 8300000, guid: cc5a5933d71a57f43b5333a85281644b, type: 3}
-  isGripping: 0
+  m_isGripping: 0
 --- !u!114 &933266411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12116,8 +12116,8 @@ ArticulationBody:
   m_SwingZ: 2
   m_Twist: 1
   m_XDrive:
-    lowerLimit: -150
-    upperLimit: 0
+    lowerLimit: -360
+    upperLimit: 360
     stiffness: 0
     damping: 0
     forceLimit: 150
@@ -18035,7 +18035,7 @@ MonoBehaviour:
   m_Table: {fileID: 237820305}
   m_Glassbox: {fileID: 492438394}
   m_Objects: {fileID: 1711905459}
-  m_Technique: 2
+  m_Technique: 3
   m_ParticipantNumber: Test
   m_ResetRobotPose: 0
   m_SetupTutorial: 0
@@ -23570,6 +23570,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3450792794298027426, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
+      propertyPath: m_RootOrder
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 6851220348665403662, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8077766977138207378, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
       propertyPath: m_Name
       value: Obstacle
@@ -23638,6 +23646,10 @@ PrefabInstance:
     - target: {fileID: 6797417679177612033, guid: 1cdacb63a20c1d043bed0eee6cac7193, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7651491918016874334, guid: 1cdacb63a20c1d043bed0eee6cac7193, type: 3}
+      propertyPath: m_RootOrder
+      value: 11
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1cdacb63a20c1d043bed0eee6cac7193, type: 3}
@@ -26747,7 +26759,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 639713963423195960}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -26757,7 +26769,7 @@ Transform:
   - {fileID: 8478902748112235967}
   m_Father: {fileID: 933266415}
   m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!114 &7659439181079122306
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26782,9 +26794,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be0986be5958022469b7711c002e7f23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isInteracting: 0
-  m_InteractingHand: {fileID: 0}
-  m_Interactable: {fileID: 0}
 --- !u!108 &7792582912413356171
 Light:
   m_ObjectHideFlags: 0

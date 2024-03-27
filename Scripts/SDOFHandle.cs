@@ -10,8 +10,8 @@ public class SDOFHandle : MonoBehaviour
 
     private Coroutine m_Flashing = null;
     private Material m_HandleMat = null;
-    private Color m_DefaultColor = new Color();
-    private Color m_FlashingColor = new Color(1.0f, 1.0f, 0.0f, 0.4f);
+    private Color m_DefaultColor = new();
+    private Color m_FlashingColor = new(1.0f, 1.0f, 0.0f, 0.4f);
 
     private void Awake()
     {
@@ -23,29 +23,24 @@ public class SDOFHandle : MonoBehaviour
 
     private void OnHandHoverBegin(Hand hand)
     {
-        if(!m_SDOFManipulation.isInteracting)
-        {
-            m_SDOFManipulation.m_InteractingHand = hand;
-            m_SDOFManipulation.m_Interactable = gameObject.GetComponent<Interactable>();
-        }
+        m_SDOFManipulation.SetHoveringHand(hand, gameObject.transform);
     }
 
     private void HandHoverUpdate(Hand hand)
     {
-        if (!m_SDOFManipulation.isInteracting)
-        {
-            m_SDOFManipulation.m_InteractingHand = hand;
-            m_SDOFManipulation.m_Interactable = gameObject.GetComponent<Interactable>();
-        }
+        m_SDOFManipulation.SetHoveringHand(hand, gameObject.transform);
+    }
+
+    private void OnHandHoverEnd(Hand hand)
+    {
+        m_SDOFManipulation.SetHoveringHand(null, null);
     }
 
     public void Flash(bool value)
     {
         if (value)
-        {
-            if (m_Flashing == null)
-                m_Flashing = StartCoroutine(Flashing());
-        }
+            m_Flashing ??= StartCoroutine(Flashing());
+
         else
         {
             if (m_Flashing != null)
@@ -58,14 +53,10 @@ public class SDOFHandle : MonoBehaviour
     {
         while (true)
         {
-            if (m_SDOFManipulation.isInteracting)
-                m_HandleMat.color = m_DefaultColor;
-            else
-            {
-                m_HandleMat.color = m_FlashingColor;
-                yield return new WaitForSeconds(1.0f);
-                m_HandleMat.color = m_DefaultColor;
-            }
+            m_HandleMat.color = m_FlashingColor;
+            yield return new WaitForSeconds(1.0f);
+            m_HandleMat.color = m_DefaultColor;
+
             yield return new WaitForSeconds(1.0f);
         }
     }
