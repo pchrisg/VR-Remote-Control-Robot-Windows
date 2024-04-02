@@ -11,13 +11,15 @@ public class Barrel : MonoBehaviour
     private Material m_OriginalMat = null;
     private Material m_HighlightMat = null;
 
-    public bool m_ResetPosition = false;
-    public bool m_isMoving = false;
+    [SerializeField] private bool m_ResetPosition = false;
+    private bool m_isMoving = false;
+    private bool m_isInBounds = false;
 
     private void Awake()
     {
         m_RobotColliders = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
 
+        m_OriginalMat = gameObject.GetComponent<Renderer>().material;
         m_HighlightMat = new(gameObject.GetComponent<Renderer>().material) {color = new(1.0f, 1.0f, 0.0f, 1.0f)};
     }
 
@@ -29,12 +31,12 @@ public class Barrel : MonoBehaviour
             ResetPosition();
         }
 
-        if (!m_isMoving && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) > 0.001f)
+        if (!m_isMoving && (Vector3.Distance(gameObject.transform.position, m_PreviousPosition) > 0.002f || m_RobotPartsColliding > 0))
             m_isMoving = true;
 
         if (m_isMoving)
         {
-            if (Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f && m_RobotPartsColliding == 0)
+            if (Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.002f && m_RobotPartsColliding == 0)
             {
                 m_isMoving = false;
 
@@ -46,6 +48,12 @@ public class Barrel : MonoBehaviour
             else
                 m_PreviousPosition = gameObject.transform.position;
         }
+
+        //if (!m_isMoving && (gameObject.GetComponent<CollisionHandling>() != null && !gameObject.GetComponent<CollisionHandling>().IsFocusObject()) &&
+        //   ((m_isInBounds && gameObject.GetComponent<Renderer>().material != m_HighlightMat) || (!m_isInBounds && gameObject.GetComponent<Renderer>().material != m_OriginalMat)))
+        //{
+        //    ChangeMat();
+        //}
     }
 
     private void OnTriggerEnter(Collider other)
@@ -66,7 +74,7 @@ public class Barrel : MonoBehaviour
         }
     }
 
-    private void ResetPosition()
+    public void ResetPosition()
     {
         gameObject.transform.SetPositionAndRotation(m_StartingPosition, Quaternion.Euler(0.0f, 0.0f, 0.0f));
         m_PreviousPosition = gameObject.transform.position;
@@ -78,14 +86,21 @@ public class Barrel : MonoBehaviour
         ResetPosition();
     }
 
-    public void Highlight(bool value)
+    //private void ChangeMat()
+    //{
+    //    if (m_isInBounds)
+    //        gameObject.GetComponent<Renderer>().material = m_HighlightMat;
+    //    else
+    //        gameObject.GetComponent<Renderer>().material = m_OriginalMat;
+    //}
+
+    public bool IsMoving()
     {
-        if (value)
-        {
-            m_OriginalMat = gameObject.GetComponent<Renderer>().material;
-            gameObject.GetComponent<Renderer>().material = m_HighlightMat;
-        }
-        else
-            gameObject.GetComponent<Renderer>().material = m_OriginalMat;
+        return m_isMoving;
+    }
+
+    public void IsInBounds(bool value)
+    {
+        m_isInBounds = value;
     }
 }

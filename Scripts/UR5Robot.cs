@@ -9,6 +9,8 @@ public class UR5Robot : MonoBehaviour
 
     private AudioSource m_AudioSource = null;
     private Transform m_Robotiq = null;
+    private Manipulator m_Manipulator = null;
+    private ResultSubscriber m_ResultSubscriber = null;
 
     private Vector3 m_PreviousPosition = new();
     private bool m_isMoving = false;
@@ -17,14 +19,16 @@ public class UR5Robot : MonoBehaviour
     private void Awake()
     {
         m_AudioSource = gameObject.GetComponent<AudioSource>();
-
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
+        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_ResultSubscriber = GameObject.FindGameObjectWithTag("ROS").GetComponent<ResultSubscriber>();
+
         m_PreviousPosition = m_Robotiq.position;
     }
 
     private void Update()
     {
-        if (!m_isMoving && Vector3.Distance(m_Robotiq.position, m_PreviousPosition) > 0.00001f)
+        if (!m_isMoving && Vector3.Distance(m_Robotiq.position, m_PreviousPosition) > 0.001f)
             m_isMoving = true;
 
         if (m_isMoving)
@@ -34,13 +38,19 @@ public class UR5Robot : MonoBehaviour
                 if (m_AudioSource.clip != m_MotionClip)
                     m_AudioSource.clip = m_MotionClip;
 
+                if (!m_ResultSubscriber.isPlanExecuted)
+                {
+                    m_ResultSubscriber.isPlanExecuted = true;
+                    m_Manipulator.Colliding(false);
+                }
+
                 m_AudioSource.Play();
             }
 
-            if (Vector3.Distance(m_Robotiq.position, m_PreviousPosition) < 0.00001f)
+            if (Vector3.Distance(m_Robotiq.position, m_PreviousPosition) < 0.001f)
             {
                 m_isMoving = false;
-                m_ElapsedTime = 0.05f;
+                m_ElapsedTime = 0.1f;
             }
             else
                 m_PreviousPosition = m_Robotiq.position;

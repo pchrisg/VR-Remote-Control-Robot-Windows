@@ -104,7 +104,10 @@ public class Manipulator : MonoBehaviour
 
     public void ShowManipulator(bool value)
     {
-        m_Indicator.Show(value);
+        if (m_ManipulationMode.mode == ManipulationModes.Mode.SIMPLEDIRECT)
+            m_Indicator.Show(false);
+        else
+            m_Indicator.Show(value);
 
         if (value)
             m_ManipulatorMat.color = m_DefaultColor;

@@ -15,7 +15,7 @@ public class InteractableObject : MonoBehaviour
 
     private bool m_isMoving = false;
 
-    private readonly float modifier = 0.005f;
+    private readonly float modifier = 0.01f;
 
     private void Awake()
     {
@@ -26,12 +26,6 @@ public class InteractableObject : MonoBehaviour
 
     private void Update()
     {
-        if (!m_isMoving && gameObject.GetComponent<CollisionHandling>().m_isAttached)
-        {
-            m_isMoving = true;
-            RemoveInteractableObject();
-        }
-
         if (m_isMoving)
         {
             if (!gameObject.GetComponent<CollisionHandling>().m_isAttached && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
@@ -150,5 +144,14 @@ public class InteractableObject : MonoBehaviour
     public void RemoveInteractableObject()
     {
         m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionObjectMsg);
+    }
+
+    public void IsMoving()
+    {
+        if(!m_isMoving)
+        {
+            m_isMoving = true;
+            RemoveInteractableObject();
+        }
     }
 }

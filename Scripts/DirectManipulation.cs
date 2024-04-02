@@ -8,6 +8,7 @@ public class DirectManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
@@ -23,12 +24,15 @@ public class DirectManipulation : MonoBehaviour
     private Vector3 m_InitPos = new();
     private GameObject m_GhostObject = null;
     private bool m_isInteracting = false;
+    private bool m_isScaling = false;
+    private bool m_isSnapping = false;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
@@ -112,7 +116,17 @@ public class DirectManipulation : MonoBehaviour
             if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
             {
                 if (m_GhostObject != null)
+                {
+                    m_isScaling = true;
                     m_InitPos = m_GhostObject.transform.position;
+                    m_ExperimentManager.RecordModifier("SCALING", true);
+                }
+            }
+
+            if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
+            {
+                m_isSnapping = true;
+                m_ExperimentManager.RecordModifier("SNAPPING", true);
             }
         }
     }
@@ -124,7 +138,17 @@ public class DirectManipulation : MonoBehaviour
             if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
             {
                 if (m_GhostObject != null)
+                {
+                    m_isScaling = false;
                     m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
+                    m_ExperimentManager.RecordModifier("scaling", false);
+                }
+            }
+
+            if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
+            {
+                m_isSnapping = false;
+                m_ExperimentManager.RecordModifier("snapping", false);
             }
         }
     }
@@ -140,7 +164,7 @@ public class DirectManipulation : MonoBehaviour
         Vector3 position = m_GhostObject.transform.position;
         Quaternion rotation = m_GhostObject.transform.rotation;
 
-        if (m_Grip.GetState(m_ActivationHand.handType))
+        if (m_isScaling)
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
             position = m_InitPos + connectingVector * ManipulationMode.SCALINGFACTOR;
@@ -150,11 +174,11 @@ public class DirectManipulation : MonoBehaviour
         {
             if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
             {
-                position = PositionSnapping();
-                rotation = m_InteractableObjects.LookAtFocusObject(position, m_GhostObject.transform);
+                position = PositionSnapping(m_InteractableObjects.m_FocusObject.transform);
+                rotation = LookAtFocusObject(position, m_InteractableObjects.m_FocusObject.transform);
             }
 
-            if (rotation == m_GhostObject.transform.rotation)
+            else if (m_isSnapping)
                 rotation = RotationSnapping();
         }
 
@@ -165,25 +189,77 @@ public class DirectManipulation : MonoBehaviour
         m_PreviousRotation = m_InteractingHand.transform.rotation;
     }
 
-    private Vector3 PositionSnapping()
+    private Vector3 PositionSnapping(Transform focusObject)
     {
-        Transform focusObject = m_InteractableObjects.m_FocusObject.transform;
         Vector3 connectingVector = m_GhostObject.transform.position - focusObject.position;
 
-        float snappingThreshold = ManipulationMode.ANGLETHRESHOLD;
         float angle = Vector3.Angle(connectingVector, focusObject.up);
-        if (angle < snappingThreshold)
-            return focusObject.position + Vector3.Project(connectingVector, focusObject.up);
+        if (angle < ManipulationMode.ANGLETHRESHOLD)
+            return m_GhostObject.transform.position = focusObject.position + Vector3.Project(connectingVector, focusObject.up);
 
         angle = Vector3.Angle(connectingVector, focusObject.right);
-        if (angle < snappingThreshold || 180.0f - angle < snappingThreshold)
-            return focusObject.position + Vector3.Project(connectingVector, focusObject.right);
+        if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+            return m_GhostObject.transform.position = focusObject.position + Vector3.Project(connectingVector, focusObject.right);
 
         angle = Vector3.Angle(connectingVector, focusObject.forward);
-        if (angle < snappingThreshold || 180.0f - angle < snappingThreshold)
-            return focusObject.position + Vector3.Project(connectingVector, focusObject.forward);
+        if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
+            return m_GhostObject.transform.position = focusObject.position + Vector3.Project(connectingVector, focusObject.forward);
 
         return m_GhostObject.transform.position;
+    }
+
+    public Quaternion LookAtFocusObject(Vector3 position, Transform focusObject)
+    {
+        Vector3 right = position - focusObject.position;
+        Vector3 up;
+        Vector3 forward;
+
+        // manipulator above focus object
+        float angle = Vector3.Angle(right, focusObject.up);
+        if (angle < ManipulationMode.ANGLETHRESHOLD)
+        {
+            right = Vector3.Project(m_GhostObject.transform.right, focusObject.up);
+            up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, focusObject.up);
+            forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        }
+
+        // manipulator to the right/left of focus object
+        angle = Vector3.Angle(right, focusObject.right);
+        if (angle < 0.1f || 180.0f - angle < 0.1f)
+        {
+            up = Vector3.Project(m_GhostObject.transform.up, focusObject.up);
+            forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        }
+
+        // manipulator infront/behind focus object
+        angle = Vector3.Angle(right, focusObject.transform.forward);
+        if (angle < 0.1f || 180.0f - angle < 0.1f)
+        {
+            up = Vector3.Project(m_GhostObject.transform.up, focusObject.transform.up);
+            forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        }
+
+        // manipulator facing focus object
+        //angle = Vector3.Angle(m_GhostObject.transform.right, right);
+        //if (angle < ManipulationMode.ANGLETHRESHOLD)
+        //{
+        //    up = Vector3.Cross(m_GhostObject.transform.forward, right);
+        //    angle = Vector3.Angle(up, Vector3.up);
+        //    up = angle <= 90 ? Vector3.up : -Vector3.up;
+
+        //    forward = Vector3.Cross(right.normalized, up.normalized);
+        //    up = Vector3.Cross(forward.normalized, right.normalized);
+
+        //    return Quaternion.LookRotation(forward, up);
+        //}
+
+        return m_GhostObject.transform.rotation;
     }
 
     private Quaternion RotationSnapping()
@@ -197,16 +273,20 @@ public class DirectManipulation : MonoBehaviour
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
             Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 
-            return Quaternion.LookRotation(forward, up);
+            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
         }
         if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
         {
-            // snap to xz plane
-            Vector3 forward = Vector3.ProjectOnPlane(m_GhostObject.transform.forward, Vector3.up);
-            angle = Vector3.Angle(m_GhostObject.transform.up, Vector3.up);
-            Vector3 up = angle <= 90 ? Vector3.up : -Vector3.up;
+            Vector3 right = Vector3.ProjectOnPlane(m_GhostObject.transform.right, Vector3.up);
+            Vector3 up = Vector3.Cross(m_GhostObject.transform.forward.normalized, right.normalized);
 
-            return Quaternion.LookRotation(forward, up);
+            angle = Vector3.Angle(up, Vector3.up);
+            if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+                up = angle <= 90 ? Vector3.up : -Vector3.up;
+
+            Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+
+            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
         }
 
         return m_GhostObject.transform.rotation;

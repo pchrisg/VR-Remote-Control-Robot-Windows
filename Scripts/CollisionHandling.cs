@@ -6,7 +6,6 @@ public class CollisionHandling : MonoBehaviour
     //Scripts
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
-    private InteractableObjects m_InteractableObjects = null;
 
     //Properties
     public bool m_isAttachable = false;
@@ -42,7 +41,6 @@ public class CollisionHandling : MonoBehaviour
     {
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
-        m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
         m_ManipulatorColliders = m_Manipulator.transform.Find("palm").GetComponentsInChildren<Collider>();
         GameObject robotiq = GameObject.FindGameObjectWithTag("Robotiq");
@@ -120,16 +118,15 @@ public class CollisionHandling : MonoBehaviour
             {
                 m_isAttached = true;
                 m_GripperControl.PlayAttachSound();
-                m_Manipulator.Colliding(false);
 
-                if (m_isFocusObject)
-                    m_InteractableObjects.SetFocusObject();
+                if (!m_isFocusObject)
+                    gameObject.GetComponent<InteractableObject>().IsMoving();
 
                 SetMaterial();
             }
         }
 
-        if (!m_isAttached && !m_isColliding)
+        if (!m_isAttachable && !m_isColliding)
         {
             if (m_ManipulatorTouching > 0)
             {
@@ -201,14 +198,11 @@ public class CollisionHandling : MonoBehaviour
                 m_isAttached = false;
                 m_GripperControl.PlayDetachSound();
 
-                if (m_isFocusObject)
-                    m_InteractableObjects.SetFocusObject(gameObject);
-
                 SetMaterial();
             }
         }
 
-        if (!m_isAttached && m_isColliding)
+        if (m_isColliding)
         {
             if (m_ManipulatorTouching == 0)
             {
@@ -232,14 +226,14 @@ public class CollisionHandling : MonoBehaviour
                 mat = m_CollidingMat;
         }
 
+        if (m_isFocusObject)
+            mat = m_FocusObjectMat;
+
         if (m_isColliding)
             mat = m_CollidingMat;
 
         if (m_isAttached)
             mat = m_AttachedMat;
-
-        if (m_isFocusObject)
-            mat = m_FocusObjectMat;
 
         if (gameObject.GetComponent<Renderer>() != null)
             gameObject.GetComponent<Renderer>().material = mat;
@@ -282,10 +276,15 @@ public class CollisionHandling : MonoBehaviour
         SetMaterial();
     }
 
-    public void SetAsFocusObject(bool isFocusObject)
+    public void IsFocusObject(bool isFocusObject)
     {
         m_isFocusObject = isFocusObject;
 
         SetMaterial();
+    }
+
+    public bool IsFocusObject()
+    {
+        return m_isFocusObject;
     }
 }

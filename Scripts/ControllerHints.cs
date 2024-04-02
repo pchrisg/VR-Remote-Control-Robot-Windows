@@ -76,7 +76,7 @@ public class ControllerHints : MonoBehaviour
         }
     }
 
-    public HandStatus handStatus = new HandStatus(false);
+    public HandStatus handStatus = new(false);
 
     private void Awake()
     {

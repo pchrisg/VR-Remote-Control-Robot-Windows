@@ -8,7 +8,7 @@ public class ResultSubscriber : MonoBehaviour
     private readonly string m_FeedbackTopic = "/move_group/feedback";
 
     private Manipulator m_Manipulator = null;
-    private bool isPlanExecuted = true;
+    public bool isPlanExecuted = true;
 
     private readonly string NotExecuted = "No motion plan found. No execution attempted.";
 
@@ -41,14 +41,6 @@ public class ResultSubscriber : MonoBehaviour
             {
                 m_Manipulator.Colliding(true);
                 isPlanExecuted = false;
-            }
-        }
-        else
-        {
-            if (message.status.text != NotExecuted && !isPlanExecuted)
-            {
-                m_Manipulator.Colliding(false);
-                isPlanExecuted = true;
             }
         }
     }

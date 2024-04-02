@@ -35,8 +35,8 @@ public class InteractableObjectCreator : MonoBehaviour
                     RemoveInteractableObject(other);
             }
 
-            else if (m_Grip.GetState(m_Hand.handType) && other.GetComponent<CollisionHandling>() != null && other.GetComponent<CollisionHandling>().m_isAttachable)
-                SetFocusObject(other);
+            else if (!m_ManipulationMode.IsInteracting() && m_Grip.GetState(m_Hand.handType) && other.GetComponent<CollisionHandling>() != null && other.GetComponent<CollisionHandling>().m_isAttachable)
+                m_InteractableObjects.SetFocusObject(other);
         }
     }
 
@@ -79,17 +79,7 @@ public class InteractableObjectCreator : MonoBehaviour
 
     private void AddInteractableObject(Collider other)
     {
-        //bool isAttachable = false;
-        //if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-        //    isAttachable = true;
-
         m_InteractableObjects.AddInteractableObject(other);
-
-        //other.AddComponent<CollisionHandling>();
-        //other.GetComponent<CollisionHandling>().SetupCollisionHandling(isAttachable);
-
-        //other.AddComponent<InteractableObject>();
-        //other.GetComponent<InteractableObject>().AddInteractableObject(isAttachable, other);
     }
 
     private void RemoveInteractableObject(Collider other)
@@ -101,30 +91,5 @@ public class InteractableObjectCreator : MonoBehaviour
             return;
 
         m_InteractableObjects.RemoveInteractableObject(other);
-
-        //Destroy(other.GetComponent<CollisionHandling>());
-
-        //if (other.GetComponent<InteractableObject>() != null)
-        //{
-        //    other.GetComponent<InteractableObject>().RemoveInteractableObject();
-        //    Destroy(other.GetComponent<InteractableObject>());
-        //}
-    }
-
-    private void SetFocusObject(Collider other)
-    {
-        m_InteractableObjects.SetFocusObject(other);
-
-        //if (m_InteractableObjects.m_FocusObject == null)
-        //{
-        //    m_InteractableObjects.SetFocusObject(other.gameObject);
-        //    other.GetComponent<CollisionHandling>().SetAsFocusObject(true);
-        //}
-
-        //else if (m_InteractableObjects.m_FocusObject == other.gameObject)
-        //{
-        //    m_InteractableObjects.SetFocusObject(null);
-        //    other.GetComponent<CollisionHandling>().SetAsFocusObject(false);
-        //}
     }
 }

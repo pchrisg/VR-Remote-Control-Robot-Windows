@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using ManipulationModes;
+using Valve.VR.InteractionSystem;
 
 public class ExperimentManager : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class ExperimentManager : MonoBehaviour
     public Mode m_Technique = Mode.IDLE;
 
     [Header("Participant")]
+    [SerializeField] private bool m_ResetHeight = false;
     [SerializeField] private string m_ParticipantNumber = string.Empty;
 
     [Header("Robot Control")]
@@ -52,7 +54,7 @@ public class ExperimentManager : MonoBehaviour
 
     //Control
     private bool m_TutorialActive = false;
-    public bool m_TaskActive = false;
+    private bool m_TaskActive = false;
     private bool m_Running = false;
 
     // File Path
@@ -69,9 +71,12 @@ public class ExperimentManager : MonoBehaviour
     private float m_TimeInColObj = 0.0f;
     private float m_TimeInAttObj = 0.0f;
 
-    // Number of Grabs
+    // Interactions
     private bool m_IsInteracting = false;
     private int m_InteractionCount = 0;
+    // Scaling and Snapping
+    private int m_ScalingCount = 0;
+    private int m_SnappingCount = 0;
     private readonly List<string> m_InteractionDescriptions = new();
 
     // Errors
@@ -103,6 +108,13 @@ public class ExperimentManager : MonoBehaviour
 
     private void Update()
     {
+        // Reset Player Height
+        if (m_ResetHeight)
+        {
+            m_ResetHeight = false;
+            ResetHeight();
+        }
+
         // Reset Robot Pose
         if (m_ResetRobotPose)
         {
@@ -244,6 +256,15 @@ public class ExperimentManager : MonoBehaviour
         }
     }
 
+    private void ResetHeight()
+    {
+        float cameraHeight = GameObject.FindGameObjectWithTag("MainCamera").transform.localPosition.y;
+
+        float heightDiff = cameraHeight - 1.68f;
+
+        Player.instance.transform.position = new(0.0f, -0.972f - heightDiff, 0.0f);
+    }
+
     private void ResetRobotPose()
     {
         StartCoroutine(ResetRobotPoseRoutine());
@@ -252,6 +273,7 @@ public class ExperimentManager : MonoBehaviour
     private IEnumerator ResetRobotPoseRoutine()
     {
         yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count == 0);
+        yield return new WaitForSeconds(1.0f);
 
         m_Table.SetActive(false);
         m_Glassbox.SetActive(false);
@@ -271,6 +293,45 @@ public class ExperimentManager : MonoBehaviour
         m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
     }
 
+    public void RecordCollision(string description)
+    {
+        if (m_Running)
+        {
+            m_CollisionsCount++;
+            m_ErrorDescriptions.Add(m_ParticipantNumber + "," + m_Technique.ToString() + "," + m_Timer.SplitTime().ToString() + "," + description);
+        }
+    }
+
+    public void RecordBarrelTime(int barrelNumber)
+    {
+        if (barrelNumber == 1 && m_Barrel1Time == 0.0f)
+            m_Barrel1Time = m_Timer.SplitTime();
+        else if (barrelNumber == 2 && m_Barrel2Time == 0.0f)
+            m_Barrel2Time = m_Timer.SplitTime();
+        else if (barrelNumber == 3 && m_Barrel3Time == 0.0f)
+            m_Barrel3Time = m_Timer.SplitTime();
+        else if (barrelNumber == 4 && m_Barrel4Time == 0.0f)
+            m_Barrel4Time = m_Timer.SplitTime();
+        else if (barrelNumber == 5 && m_Barrel5Time == 0.0f)
+            m_Barrel5Time = m_Timer.SplitTime();
+
+        print("saved time " + barrelNumber);
+    }
+
+    public void RecordModifier(string modifier, bool value)
+    {
+        if (value)
+        {
+            if (modifier == "SCALING")
+                m_ScalingCount++;
+
+            if (modifier == "SNAPPING")
+                m_SnappingCount++;
+        }
+
+        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "," + modifier + "\n");
+    }
+
     private void ClearData()
     {
         // Times
@@ -286,6 +347,8 @@ public class ExperimentManager : MonoBehaviour
         // Number of Grabs
         m_IsInteracting = false;
         m_InteractionCount = 0;
+        m_SnappingCount = 0;
+        m_ScalingCount = 0;
         m_InteractionDescriptions.Clear();
 
         // Errors
@@ -306,7 +369,7 @@ public class ExperimentManager : MonoBehaviour
         // Create first file
         var sr = File.CreateText(path);
 
-        //participant number, technique, barrel1, barrel2, barrel3, barrel4, barrel5, totaltime, number of interactions, number of collisions, attachable time, collision time, direct time
+        //participant number, technique, barrel1, barrel2, barrel3, barrel4, barrel5, totaltime, number of interactions, number of collisions, number of scaling, number of snapping, attachable time, collision time, direct time
         string dataCSV = m_ParticipantNumber +
                 "," + m_Technique.ToString() +
                 "," + m_Barrel1Time.ToString();
@@ -354,9 +417,13 @@ public class ExperimentManager : MonoBehaviour
         dataCSV += "," + m_InteractionCount.ToString() +
                 "," + m_CollisionsCount.ToString();
 
+        if (m_Technique != Mode.SIMPLEDIRECT)
+            dataCSV += "," + m_ScalingCount.ToString();
+
         if (m_Technique == Mode.DIRECT)
         {
-            dataCSV += "," + m_TimeInAttObj.ToString() +
+            dataCSV += "," + m_SnappingCount.ToString() +
+                    "," + m_TimeInAttObj.ToString() +
                     "," + m_TimeInColObj.ToString() +
                     "," + m_TimeInDirMan.ToString();
         }
@@ -378,7 +445,7 @@ public class ExperimentManager : MonoBehaviour
         //Application.OpenURL(path);
 
         //change path for grab descriptions
-        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Technique.ToString() + "INTERACTION.csv";
+        path = m_FilePathName + "Descriptions\\" + m_ParticipantNumber + m_Technique.ToString() + "INTERACTIONS.csv";
 
         if (File.Exists(path))
             File.Delete(path);
@@ -386,7 +453,7 @@ public class ExperimentManager : MonoBehaviour
         // Create second file
         sr = File.CreateText(path);
 
-        //participant number, technique
+        //participant number, technique, time, value
         dataCSV = string.Empty;
 
         foreach (var grab in m_InteractionDescriptions)
@@ -417,7 +484,7 @@ public class ExperimentManager : MonoBehaviour
         // Create third file
         sr = File.CreateText(path);
 
-        //collision descriptions
+        //participant number, technique, time, description
         dataCSV = string.Empty;
 
         foreach (var collision in m_ErrorDescriptions)
@@ -436,32 +503,7 @@ public class ExperimentManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
     }
-
-    public void SplitTime(int barrelNumber)
-    {
-        if (barrelNumber == 1 && m_Barrel1Time == 0.0f)
-            m_Barrel1Time = m_Timer.SplitTime();
-        else if (barrelNumber == 2 && m_Barrel2Time == 0.0f)
-            m_Barrel2Time = m_Timer.SplitTime();
-        else if (barrelNumber == 3 && m_Barrel3Time == 0.0f)
-            m_Barrel3Time = m_Timer.SplitTime();
-        else if (barrelNumber == 4 && m_Barrel4Time == 0.0f)
-            m_Barrel4Time = m_Timer.SplitTime();
-        else if (barrelNumber == 5 && m_Barrel5Time == 0.0f)
-            m_Barrel5Time = m_Timer.SplitTime();
-
-        print("saved time " + barrelNumber);
-    }
-
-    public void RecordCollision(string description)
-    {
-        if (m_Running)
-        {
-            m_CollisionsCount++;
-            m_ErrorDescriptions.Add(m_ParticipantNumber + "," + m_Technique.ToString() + "," + m_Timer.SplitTime().ToString() + "," + description);
-        }
-    }
-
+    
     public void SaveData()
     {
         if (m_Running)

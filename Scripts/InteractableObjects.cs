@@ -88,6 +88,7 @@ public class InteractableObjects : MonoBehaviour
 
     public void AddInteractableObject(Collider collider)
     {
+        print("yea");
         bool isAttachable = false;
         if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
             isAttachable = true;
@@ -130,96 +131,15 @@ public class InteractableObjects : MonoBehaviour
         if (m_FocusObject == null)
         {
             m_FocusObject = collider.gameObject;
-            m_FocusObject.GetComponent<CollisionHandling>().SetAsFocusObject(true);
+            m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(true);
+            m_FocusObject.GetComponent<InteractableObject>().RemoveInteractableObject();
         }
 
         else if (m_FocusObject == collider.gameObject)
         {
-            m_FocusObject.GetComponent<CollisionHandling>().SetAsFocusObject(false);
+            m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(false);
+            m_FocusObject.GetComponent<InteractableObject>().AddInteractableObject();
             m_FocusObject = null;
         }
-    }
-
-    public void SetFocusObject(GameObject focusObject = null)
-    {
-        m_FocusObject = focusObject;
-    }
-
-    public Quaternion LookAtFocusObject(Vector3 position, Transform initPose, Vector3 connectingVector = new())
-    {
-        if (m_FocusObject == null)
-            return initPose.rotation;
-
-        Vector3 right = position - m_FocusObject.transform.position;
-        Vector3 up;
-        Vector3 forward;
-
-        // manipulator above focus object
-        float angle = Vector3.Angle(right, m_FocusObject.transform.up);
-        if (angle < 0.1f)
-        {
-            right = Vector3.Project(initPose.right, m_FocusObject.transform.up);
-            up = Vector3.ProjectOnPlane(initPose.up, m_FocusObject.transform.up);
-            forward = Vector3.Cross(right.normalized, up.normalized);
-
-            return Quaternion.LookRotation(forward, up);
-        }
-
-        // manipulator to the right/left of focus object
-        angle = Vector3.Angle(right, m_FocusObject.transform.right);
-        if (angle < 0.1f || 180.0f - angle < 0.1f)
-        {
-            up = Vector3.Project(initPose.up, m_FocusObject.transform.up);
-            forward = Vector3.Cross(right.normalized, up.normalized);
-
-            return Quaternion.LookRotation(forward, up);
-        }
-
-        // manipulator infront/behind focus object
-        angle = Vector3.Angle(right, m_FocusObject.transform.forward);
-        if (angle < 0.1f || 180.0f - angle < 0.1f)
-        {
-            up = Vector3.Project(initPose.up, m_FocusObject.transform.up);
-            forward = Vector3.Cross(right.normalized, up.normalized);
-
-            return Quaternion.LookRotation(forward, up);
-        }
-
-        // manipulator facing focus object
-        //if (m_ManipulationMode.mode == Mode.DIRECT)
-        //{
-        //    angle = Vector3.Angle(initPose.right, right);
-        //    if (angle < ManipulationMode.ANGLETHRESHOLD)
-        //    {
-        //        up = Vector3.Cross(initPose.forward, right);
-        //        angle = Vector3.Angle(up, Vector3.up);
-        //        up = angle <= 90 ? Vector3.up : -Vector3.up;
-
-        //        forward = Vector3.Cross(right.normalized, up.normalized);
-        //        up = Vector3.Cross(forward.normalized, right.normalized);
-
-        //        return Quaternion.LookRotation(forward, up);
-        //    }
-        //}
-
-        else if (connectingVector != Vector3.zero)
-        {
-            right = position - m_FocusObject.transform.position;
-
-            angle = Vector3.Angle(connectingVector, right);
-            if (angle < ManipulationMode.ANGLETHRESHOLD || 180.0f - angle < ManipulationMode.ANGLETHRESHOLD)
-            {
-                up = Vector3.Cross(initPose.forward, right);
-                angle = Vector3.Angle(up, Vector3.up);
-                up = angle <= 90 ? Vector3.up : -Vector3.up;
-
-                forward = Vector3.Cross(right.normalized, up.normalized);
-                up = Vector3.Cross(forward.normalized, right.normalized);
-
-                return Quaternion.LookRotation(forward, up);
-            }
-        }
-
-        return initPose.rotation;
     }
 }
