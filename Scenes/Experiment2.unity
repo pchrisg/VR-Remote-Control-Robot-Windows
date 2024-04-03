@@ -9251,7 +9251,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Attach: {fileID: 8300000, guid: fc0019bd3c91f034eb4d4979494f7d52, type: 3}
   m_Detach: {fileID: 8300000, guid: cc5a5933d71a57f43b5333a85281644b, type: 3}
-  m_isGripping: 0
 --- !u!114 &933266411
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18036,7 +18035,7 @@ MonoBehaviour:
   m_Table: {fileID: 237820305}
   m_Glassbox: {fileID: 492438394}
   m_Objects: {fileID: 1711905459}
-  m_Technique: 2
+  m_Technique: 1
   m_ResetHeight: 0
   m_ParticipantNumber: Test
   m_ResetRobotPose: 0

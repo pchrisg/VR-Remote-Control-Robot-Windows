@@ -1,6 +1,7 @@
 using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using ActionFeedbackUnity = RosMessageTypes.Moveit.MoveGroupActionFeedbackMsg;
+using Unity.VisualScripting;
 
 public class ResultSubscriber : MonoBehaviour
 {
@@ -41,6 +42,11 @@ public class ResultSubscriber : MonoBehaviour
             {
                 m_Manipulator.Colliding(true);
                 isPlanExecuted = false;
+            }
+            else if (!isPlanExecuted)
+            {
+                m_Manipulator.Colliding(false);
+                isPlanExecuted = true;
             }
         }
     }

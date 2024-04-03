@@ -141,14 +141,14 @@ public class DirectManipulation : MonoBehaviour
                 {
                     m_isScaling = false;
                     m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
-                    m_ExperimentManager.RecordModifier("scaling", false);
+                    m_ExperimentManager.RecordModifier("SCALING", false);
                 }
             }
 
             if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
             {
                 m_isSnapping = false;
-                m_ExperimentManager.RecordModifier("snapping", false);
+                m_ExperimentManager.RecordModifier("SNAPPING", false);
             }
         }
     }

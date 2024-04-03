@@ -41,7 +41,7 @@ public class UR5Robot : MonoBehaviour
                 if (!m_ResultSubscriber.isPlanExecuted)
                 {
                     m_ResultSubscriber.isPlanExecuted = true;
-                    m_Manipulator.Colliding(false);
+                    //m_Manipulator.Colliding(false);
                 }
 
                 m_AudioSource.Play();
