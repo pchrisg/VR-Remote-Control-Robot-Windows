@@ -38,11 +38,11 @@ public class UR5Robot : MonoBehaviour
                 if (m_AudioSource.clip != m_MotionClip)
                     m_AudioSource.clip = m_MotionClip;
 
-                if (!m_ResultSubscriber.isPlanExecuted)
-                {
-                    m_ResultSubscriber.isPlanExecuted = true;
-                    //m_Manipulator.Colliding(false);
-                }
+                //if (!m_ResultSubscriber.isPlanExecuted)
+                //{
+                //    m_ResultSubscriber.isPlanExecuted = true;
+                //    //m_Manipulator.Colliding(false);
+                //}
 
                 m_AudioSource.Play();
             }

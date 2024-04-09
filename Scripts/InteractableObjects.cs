@@ -15,6 +15,7 @@ public class InteractableObjects : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private Manipulator m_Manipulator = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private static readonly string[] m_FingerNames = {
         "HandColliderRight(Clone)/fingers/finger_index_2_r",
@@ -37,6 +38,7 @@ public class InteractableObjects : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
     }
 
     private void Start()
@@ -133,12 +135,14 @@ public class InteractableObjects : MonoBehaviour
             m_FocusObject = collider.gameObject;
             m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(true);
             m_FocusObject.GetComponent<InteractableObject>().RemoveInteractableObject();
+            m_ExperimentManager.RecordFocusObject(m_FocusObject.name, true);
         }
 
         else if (m_FocusObject == collider.gameObject)
         {
             m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(false);
             m_FocusObject.GetComponent<InteractableObject>().AddInteractableObject();
+            m_ExperimentManager.RecordFocusObject(m_FocusObject.name, false);
             m_FocusObject = null;
         }
     }

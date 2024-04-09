@@ -116,38 +116,32 @@ public class Tutorial : MonoBehaviour
 
         if (stage == Stage.SIMPLEDIRECT || stage == Stage.DIRECT)
         {
-            if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(Direct());
+            m_ActiveCoroutine ??= StartCoroutine(Direct());
         }
 
         if (stage == Stage.SDOF)
         {
-            if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(SDOF());
+            m_ActiveCoroutine ??= StartCoroutine(SDOF());
         }
 
         if (stage == Stage.RAIL)
         {
-            if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(Rail());
+            m_ActiveCoroutine ??= StartCoroutine(Rail());
         }
 
         if (stage == Stage.RAILCREATOR)
         {
-            if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(RailCreator());
+            m_ActiveCoroutine ??= StartCoroutine(RailCreator());
         }
 
         if (stage == Stage.COLOBJCREATOR)
         {
-            if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(CollisionObject());
+            m_ActiveCoroutine ??= StartCoroutine(CollisionObject());
         }
 
         if (stage == Stage.ATTOBJCREATOR)
         {
-            if (m_ActiveCoroutine == null)
-                m_ActiveCoroutine = StartCoroutine(AttachableObject());
+            m_ActiveCoroutine ??= StartCoroutine(AttachableObject());
         }
 
         if (stage == Stage.PRACTICE)
@@ -933,7 +927,7 @@ public class Tutorial : MonoBehaviour
             {
                 active = true;
 
-                Vector3 position = new Vector3(Random.Range(-0.5f, 0.1f), 0.05f, Random.Range(-0.5f, 0.5f));
+                Vector3 position = new(Random.Range(-0.5f, 0.1f), 0.05f, Random.Range(-0.5f, 0.5f));
                 Quaternion rotation = Quaternion.Euler(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
                 cube.transform.SetPositionAndRotation(position, rotation);
 
@@ -956,7 +950,7 @@ public class Tutorial : MonoBehaviour
             GameObject obstacle = Instantiate(m_Obstacle);
             obstacle.transform.SetParent(m_Objects.transform);
 
-            Vector3 position = new Vector3(Random.Range(-0.5f, 0.1f), 0.45f, Random.Range(-0.5f, 0.5f));
+            Vector3 position = new(Random.Range(-0.5f, 0.1f), 0.45f, Random.Range(-0.5f, 0.5f));
             Quaternion rotation = Quaternion.Euler(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
 
             obstacle.transform.SetPositionAndRotation(position, rotation);

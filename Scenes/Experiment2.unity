@@ -8985,7 +8985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f547a0e058f278d42ad662595a9ce6f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPlanExecuted: 1
+  m_isPlanExecuted: 1
   m_RobotState: 
 --- !u!1 &904790811
 GameObject:
@@ -18035,7 +18035,7 @@ MonoBehaviour:
   m_Table: {fileID: 237820305}
   m_Glassbox: {fileID: 492438394}
   m_Objects: {fileID: 1711905459}
-  m_Technique: 1
+  m_Technique: 2
   m_ResetHeight: 0
   m_ParticipantNumber: Test
   m_ResetRobotPose: 0

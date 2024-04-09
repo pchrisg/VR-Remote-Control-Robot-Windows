@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class StackingTask : MonoBehaviour
@@ -14,6 +15,7 @@ public class StackingTask : MonoBehaviour
 
     private GameObject m_ObjectsContainer = null;
     private readonly List<Transform> m_Barrels = new();
+    private readonly List<string> m_PlacedBarrels = new();
 
     private GameObject m_Target = null;
     private readonly Vector2 m_TargetPos = new(0.0f, -0.45f);
@@ -83,12 +85,18 @@ public class StackingTask : MonoBehaviour
                 {
                     count++;
                     barrel.GetComponent<Barrel>().IsInBounds(true);
+                    if (!m_PlacedBarrels.Contains(barrel.gameObject.name))
+                        m_PlacedBarrels.Add(barrel.gameObject.name);
                 }
                 else
+                {
                     barrel.GetComponent<Barrel>().IsInBounds(false);
+                    if (m_PlacedBarrels.Contains(barrel.gameObject.name))
+                        m_PlacedBarrels.Remove(barrel.gameObject.name);
+                }
             }
 
-            m_ExperimentManager.RecordBarrelTime(count);
+            m_ExperimentManager.RecordBarrelTime(count, m_PlacedBarrels.Last());
 
             if (count == 5)
                 m_Timer = 3.0f;

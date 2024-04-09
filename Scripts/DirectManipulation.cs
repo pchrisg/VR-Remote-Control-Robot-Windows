@@ -174,8 +174,11 @@ public class DirectManipulation : MonoBehaviour
         {
             if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
             {
-                position = PositionSnapping(m_InteractableObjects.m_FocusObject.transform);
-                rotation = LookAtFocusObject(position, m_InteractableObjects.m_FocusObject.transform);
+                if (m_isSnapping)
+                {
+                    position = PositionSnapping(m_InteractableObjects.m_FocusObject.transform);
+                    rotation = LookAtFocusObject(position, m_InteractableObjects.m_FocusObject.transform);
+                }
             }
 
             else if (m_isSnapping)
@@ -208,7 +211,7 @@ public class DirectManipulation : MonoBehaviour
         return m_GhostObject.transform.position;
     }
 
-    public Quaternion LookAtFocusObject(Vector3 position, Transform focusObject)
+    private Quaternion LookAtFocusObject(Vector3 position, Transform focusObject)
     {
         Vector3 right = position - focusObject.position;
         Vector3 up;
@@ -218,46 +221,41 @@ public class DirectManipulation : MonoBehaviour
         float angle = Vector3.Angle(right, focusObject.up);
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
-            right = Vector3.Project(m_GhostObject.transform.right, focusObject.up);
             up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, focusObject.up);
-            forward = Vector3.Cross(right.normalized, up.normalized);
+            forward = Vector3.Cross(focusObject.up.normalized, up.normalized);
 
             return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
         }
 
-        // manipulator to the right/left of focus object
-        angle = Vector3.Angle(right, focusObject.right);
-        if (angle < 0.1f || 180.0f - angle < 0.1f)
-        {
-            up = Vector3.Project(m_GhostObject.transform.up, focusObject.up);
-            forward = Vector3.Cross(right.normalized, up.normalized);
+        //// manipulator to the right/left of focus object
+        //angle = Vector3.Angle(right, focusObject.right);
+        //if (angle < 0.1f || 180.0f - angle < 0.1f)
+        //{
+        //    up = Vector3.Project(m_GhostObject.transform.up, focusObject.up);
+        //    forward = Vector3.Cross(right.normalized, up.normalized);
 
-            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
+        //    return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        //}
 
-        // manipulator infront/behind focus object
-        angle = Vector3.Angle(right, focusObject.transform.forward);
-        if (angle < 0.1f || 180.0f - angle < 0.1f)
-        {
-            up = Vector3.Project(m_GhostObject.transform.up, focusObject.transform.up);
-            forward = Vector3.Cross(right.normalized, up.normalized);
+        //// manipulator infront/behind focus object
+        //angle = Vector3.Angle(right, focusObject.transform.forward);
+        //if (angle < 0.1f || 180.0f - angle < 0.1f)
+        //{
+        //    up = Vector3.Project(m_GhostObject.transform.up, focusObject.transform.up);
+        //    forward = Vector3.Cross(right.normalized, up.normalized);
 
-            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
+        //    return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        //}
 
         // manipulator facing focus object
-        //angle = Vector3.Angle(m_GhostObject.transform.right, right);
-        //if (angle < ManipulationMode.ANGLETHRESHOLD)
-        //{
-        //    up = Vector3.Cross(m_GhostObject.transform.forward, right);
-        //    angle = Vector3.Angle(up, Vector3.up);
-        //    up = angle <= 90 ? Vector3.up : -Vector3.up;
+        angle = Vector3.Angle(m_GhostObject.transform.right, right);
+        if (angle < ManipulationMode.ANGLETHRESHOLD)
+        {
+            up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, right);
+            forward = Vector3.Cross(right.normalized, up.normalized);
 
-        //    forward = Vector3.Cross(right.normalized, up.normalized);
-        //    up = Vector3.Cross(forward.normalized, right.normalized);
-
-        //    return Quaternion.LookRotation(forward, up);
-        //}
+            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        }
 
         return m_GhostObject.transform.rotation;
     }

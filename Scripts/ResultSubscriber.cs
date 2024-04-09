@@ -1,17 +1,20 @@
 using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using ActionFeedbackUnity = RosMessageTypes.Moveit.MoveGroupActionFeedbackMsg;
+using RosMessageTypes.Std;
 using Unity.VisualScripting;
+using System.Runtime.CompilerServices;
 
 public class ResultSubscriber : MonoBehaviour
 {
     private ROSConnection m_Ros = null;
     private readonly string m_FeedbackTopic = "/move_group/feedback";
+    private readonly string m_PlanSuccessTopic = "chris_plan_success";
 
     private Manipulator m_Manipulator = null;
-    public bool isPlanExecuted = true;
+    public bool m_isPlanExecuted = true;
 
-    private readonly string NotExecuted = "No motion plan found. No execution attempted.";
+    //private readonly string NotExecuted = "No motion plan found. No execution attempted.";
 
     [HideInInspector] public string m_RobotState = "";
 
@@ -25,6 +28,7 @@ public class ResultSubscriber : MonoBehaviour
     private void Start()
     {
         m_Ros.Subscribe<ActionFeedbackUnity>(m_FeedbackTopic, CheckResult);
+        m_Ros.Subscribe<BoolMsg>(m_PlanSuccessTopic, PlanResult);
     }
 
     private void OnDestroy()
@@ -36,18 +40,32 @@ public class ResultSubscriber : MonoBehaviour
     {
         m_RobotState = message.feedback.state;
 
-        if (message.feedback.state == "IDLE")
+        //if (message.feedback.state == "IDLE")
+        //{
+        //    if (message.status.text == NotExecuted && m_isPlanExecuted)
+        //    {
+                
+        //    }
+        //    else if (!m_isPlanExecuted)
+        //    {
+        //        m_Manipulator.Colliding(false);
+        //        m_isPlanExecuted = true;
+        //    }
+        //}
+    }
+
+    private void PlanResult(BoolMsg message)
+    {
+        if (!message.data && m_isPlanExecuted && m_RobotState == "IDLE")
         {
-            if (message.status.text == NotExecuted && isPlanExecuted)
-            {
-                m_Manipulator.Colliding(true);
-                isPlanExecuted = false;
-            }
-            else if (!isPlanExecuted)
-            {
-                m_Manipulator.Colliding(false);
-                isPlanExecuted = true;
-            }
+            m_Manipulator.Colliding(true);
+            m_isPlanExecuted = false;
+        }
+
+        else if (message.data && !m_isPlanExecuted)
+        {
+            m_Manipulator.Colliding(false);
+            m_isPlanExecuted = true;
         }
     }
 }
