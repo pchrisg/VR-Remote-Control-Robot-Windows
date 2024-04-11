@@ -15,7 +15,7 @@ public class InteractableObject : MonoBehaviour
 
     private bool m_isMoving = false;
 
-    private readonly float modifier = 0.01f;
+    private readonly float modifier = 0.005f; //5mm
 
     private void Awake()
     {

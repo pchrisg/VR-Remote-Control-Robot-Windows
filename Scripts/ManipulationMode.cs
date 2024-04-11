@@ -87,12 +87,15 @@ public class ManipulationMode : MonoBehaviour
                     ToggleDirect();
                 }
             }
+
+            m_Manipulator.ResetPositionAndRotation();
         }
     }
 
     public void IsInteracting(bool isInteracting)
     {
         m_isInteracting = isInteracting;
+        m_ExperimentManager.RecordInteraction(m_isInteracting);
     }
 
     public bool IsInteracting()

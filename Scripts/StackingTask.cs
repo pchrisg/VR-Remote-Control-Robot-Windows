@@ -18,7 +18,6 @@ public class StackingTask : MonoBehaviour
     private readonly List<string> m_PlacedBarrels = new();
 
     private GameObject m_Target = null;
-    private readonly Vector2 m_TargetPos = new(0.0f, -0.45f);
     private bool m_isWithinBounds = false;
 
     private float m_Timer = 0.0f;
@@ -53,52 +52,31 @@ public class StackingTask : MonoBehaviour
 
         if(movingBarrel != null)
         {
-            if (Vector2.Distance(m_TargetPos, new(movingBarrel.position.x, movingBarrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
-            {
-                if(!m_isWithinBounds)
-                {
-                    m_isWithinBounds = true;
-                    m_Target.GetComponent<Target>().WithinBounds();
-                }
-            }
-            else
-            {
-                if (m_isWithinBounds)
-                    m_isWithinBounds = false;
-
-                if (Vector2.Distance(m_TargetPos, new(movingBarrel.position.x, movingBarrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD * 2)
-                    m_Target.GetComponent<Target>().CloseToBounds();
-
-                else
-                    m_Target.GetComponent<Target>().FarFromBounds();
-            }
+            m_isWithinBounds = m_Target.GetComponent<Target>().CheckDistance(movingBarrel);
         }
         else if (m_isWithinBounds)
         {
             m_isWithinBounds = false;
-            m_Target.GetComponent<Target>().FarFromBounds();
+            m_Target.GetComponent<Target>().CheckDistance(null);
 
-            int count = 0;
             foreach (Transform barrel in m_Barrels)
             {
-                if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
+                if (m_Target.GetComponent<Target>().IsInBounds(barrel))
                 {
-                    count++;
-                    barrel.GetComponent<Barrel>().IsInBounds(true);
                     if (!m_PlacedBarrels.Contains(barrel.gameObject.name))
                         m_PlacedBarrels.Add(barrel.gameObject.name);
                 }
                 else
                 {
-                    barrel.GetComponent<Barrel>().IsInBounds(false);
                     if (m_PlacedBarrels.Contains(barrel.gameObject.name))
                         m_PlacedBarrels.Remove(barrel.gameObject.name);
                 }
             }
 
-            m_ExperimentManager.RecordBarrelTime(count, m_PlacedBarrels.Last());
+            m_ExperimentManager.RecordBarrelTime(m_PlacedBarrels.Count(), m_PlacedBarrels.Last());
 
-            if (count == 5)
+            print("Placed barrel count: " + m_PlacedBarrels.Count());
+            if (m_PlacedBarrels.Count() == 5)
                 m_Timer = 3.0f;
         }
 
@@ -108,14 +86,9 @@ public class StackingTask : MonoBehaviour
 
             if(m_Timer <= 0)
             {
-                int count = 0;
-                foreach (Transform barrel in m_Barrels)
-                {
-                    if (Vector2.Distance(m_TargetPos, new(barrel.position.x, barrel.position.z)) < ManipulationMode.DISTANCETHRESHOLD)
-                        count++;
-                }
-
-                if (count == 5)
+                m_Timer = 0.0f;
+                print("After timer count: " + m_PlacedBarrels.Count());
+                if (m_PlacedBarrels.Count() == 5)
                     m_ExperimentManager.SaveData();
             }
         }
@@ -124,39 +97,38 @@ public class StackingTask : MonoBehaviour
     private void SetupTask()
     {
         //Target
-        GameObject target = Instantiate(m_TargetPrefab);
-        target.transform.position = new Vector3(m_TargetPos.x, 0.5f, m_TargetPos.y);
-        target.transform.SetParent(m_ObjectsContainer.transform);
-        m_Target = target;
+        m_Target = Instantiate(m_TargetPrefab);
+        m_Target.transform.SetParent(m_ObjectsContainer.transform);
+        m_Target.GetComponent<Target>().SetPostion(new Vector3(0.0f, 0.5f, -0.45f));
 
         //Barrels
         GameObject barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_1";
-        barrel.GetComponent<Barrel>().SetStartingPosition(new(-0.5f, 0.058f, -0.5f));
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.5f, 0.058f, -0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_2";
-        barrel.GetComponent<Barrel>().SetStartingPosition(new(-0.44f, 0.058f, 0.4f));
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.44f, 0.058f, 0.4f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_3";
-        barrel.GetComponent<Barrel>().SetStartingPosition(new(0.5f, 0.058f, -0.5f));
+        barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, -0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_4";
-        barrel.GetComponent<Barrel>().SetStartingPosition(new(0.067f, 0.058f, 0.5f));
+        barrel.GetComponent<Barrel>().SetPosition(new(0.067f, 0.058f, 0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_5";
-        barrel.GetComponent<Barrel>().SetStartingPosition(new(0.5f, 0.058f, 0.5f));
+        barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, 0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
@@ -236,10 +208,13 @@ public class StackingTask : MonoBehaviour
         }
 
         m_Barrels.Clear();
+        m_PlacedBarrels.Clear();
     }
 
     public void ResetTask()
     {
+        m_PlacedBarrels.Clear();
+
         foreach (var barrel in m_Barrels)
             barrel.GetComponent<Barrel>().ResetPosition();
     }

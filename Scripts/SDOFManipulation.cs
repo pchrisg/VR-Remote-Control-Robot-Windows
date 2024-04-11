@@ -30,7 +30,6 @@ public class SDOFManipulation : MonoBehaviour
     private Vector3 m_PreviousDir = new();
 
     private bool m_isInteracting = false;
-    private bool m_isGripping = false;
     private bool m_isScaling = false;
 
     private void Awake()
@@ -58,7 +57,7 @@ public class SDOFManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting && m_InteractingHand != null)
+        if (m_isInteracting && m_InteractingHand != null && m_ExperimentManager.IsRunning())
             MoveManipulator();
     }
 
@@ -80,29 +79,23 @@ public class SDOFManipulation : MonoBehaviour
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.SDOF)
+        if (m_ManipulationMode.mode == Mode.SDOF && m_ExperimentManager.IsRunning())
         {
-            if (m_HoveringHand == null)
-                m_isGripping = true;
-
-            else
+            if (!m_isInteracting && m_InteractingHand == null && m_HoveringHand != null && fromSource == m_HoveringHand.handType)
             {
-                if (!m_isGripping && !m_isInteracting && m_InteractingHand == null && fromSource == m_HoveringHand.handType)
-                {
-                    m_isInteracting = true;
-                    m_ManipulationMode.IsInteracting(m_isInteracting);
+                m_isInteracting = true;
+                m_ManipulationMode.IsInteracting(m_isInteracting);
 
-                    if (fromSource == m_LeftHand.handType)
-                        m_InteractingHand = m_LeftHand;
+                if (fromSource == m_LeftHand.handType)
+                    m_InteractingHand = m_LeftHand;
 
-                    else
-                        m_InteractingHand = m_RightHand;
+                else
+                    m_InteractingHand = m_RightHand;
 
-                    m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
-                    m_InitPos = m_Handle.position;
-                    m_InitDir = m_InitPos - m_Manipulator.transform.position;
-                    m_PreviousDir = m_InitDir;
-                }
+                m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
+                m_InitPos = m_Handle.position;
+                m_InitDir = m_InitPos - m_Manipulator.transform.position;
+                m_PreviousDir = m_InitDir;
             }
         }
     }
@@ -116,7 +109,6 @@ public class SDOFManipulation : MonoBehaviour
 
             if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
             {
-                m_isGripping = false;
                 m_isInteracting = false;
                 m_ManipulationMode.IsInteracting(m_isInteracting);
 
@@ -212,37 +204,6 @@ public class SDOFManipulation : MonoBehaviour
 
         m_Manipulator.GetComponent<ArticulationBody>().TeleportRoot(position, m_Manipulator.transform.rotation);
     }
-
-    //private Vector3 PositionSnapping(Vector3 position)
-    //{
-    //    Transform focusObjectPose = m_InteractableObjects.m_FocusObject.transform;
-
-    //    Plane focObjXYPlane = new(focusObjectPose.forward, focusObjectPose.position);
-    //    Plane focObjXZPlane = new(focusObjectPose.up, focusObjectPose.position);
-    //    Plane focObjYZPlane = new(focusObjectPose.right, focusObjectPose.position);
-    //    Ray direction = new(m_InitPos, m_InitDir);
-    //    float intersection = 0.0f;
-
-    //    Vector3 connectingVector = position - focusObjectPose.position;
-
-    //    float angleToFocObjX = Vector3.Angle(connectingVector, focusObjectPose.right);
-    //    float angleToFocObjY = Vector3.Angle(connectingVector, focusObjectPose.up);
-    //    float angleToFocObjZ = Vector3.Angle(connectingVector, focusObjectPose.forward);
-
-    //    if (Mathf.Abs(90.0f - angleToFocObjX) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjX) > 0.1f)
-    //        focObjYZPlane.Raycast(direction, out intersection);
-
-    //    if (Mathf.Abs(90.0f - angleToFocObjY) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjY) > 0.1f)
-    //        focObjXZPlane.Raycast(direction, out intersection);
-
-    //    if (Mathf.Abs(90.0f - angleToFocObjZ) < ManipulationMode.ANGLETHRESHOLD && Mathf.Abs(90.0f - angleToFocObjZ) > 0.1f)
-    //        focObjXYPlane.Raycast(direction, out intersection);
-
-    //    if (intersection != 0.0f)
-    //        position = direction.GetPoint(intersection);
-        
-    //    return position;
-    //}
 
     private void RotateManipulator()
     {

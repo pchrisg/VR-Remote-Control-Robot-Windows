@@ -46,7 +46,7 @@ public class Manipulator : MonoBehaviour
 
     private void Update()
     {
-        if (m_ManipulationMode.mode != ManipulationModes.Mode.SIMPLEDIRECT)
+        if (m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT)
             CheckSnapping();
     }
 
@@ -104,7 +104,7 @@ public class Manipulator : MonoBehaviour
 
     public void ShowManipulator(bool value)
     {
-        if (m_ManipulationMode.mode == ManipulationModes.Mode.SIMPLEDIRECT)
+        if (m_ManipulationMode.mode != ManipulationModes.Mode.DIRECT)
             m_Indicator.Show(false);
         else
             m_Indicator.Show(value);

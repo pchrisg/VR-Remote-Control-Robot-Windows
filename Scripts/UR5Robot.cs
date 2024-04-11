@@ -9,8 +9,6 @@ public class UR5Robot : MonoBehaviour
 
     private AudioSource m_AudioSource = null;
     private Transform m_Robotiq = null;
-    private Manipulator m_Manipulator = null;
-    private ResultSubscriber m_ResultSubscriber = null;
 
     private Vector3 m_PreviousPosition = new();
     private bool m_isMoving = false;
@@ -20,8 +18,6 @@ public class UR5Robot : MonoBehaviour
     {
         m_AudioSource = gameObject.GetComponent<AudioSource>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
-        m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
-        m_ResultSubscriber = GameObject.FindGameObjectWithTag("ROS").GetComponent<ResultSubscriber>();
 
         m_PreviousPosition = m_Robotiq.position;
     }
@@ -37,12 +33,6 @@ public class UR5Robot : MonoBehaviour
             {
                 if (m_AudioSource.clip != m_MotionClip)
                     m_AudioSource.clip = m_MotionClip;
-
-                //if (!m_ResultSubscriber.isPlanExecuted)
-                //{
-                //    m_ResultSubscriber.isPlanExecuted = true;
-                //    //m_Manipulator.Colliding(false);
-                //}
 
                 m_AudioSource.Play();
             }
@@ -66,5 +56,10 @@ public class UR5Robot : MonoBehaviour
                     m_AudioSource.Stop();
             }
         }
+    }
+
+    public bool IsMoving()
+    {
+        return m_isMoving;
     }
 }

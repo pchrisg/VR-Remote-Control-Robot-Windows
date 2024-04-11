@@ -43,7 +43,7 @@ public class Timer : MonoBehaviour
         }
     }
 
-    private void ResetTimer()
+    public void ResetTimer()
     {
         m_Running = false;
         m_TimeExhausted = false;
@@ -54,10 +54,7 @@ public class Timer : MonoBehaviour
 
     public void StartTimer(float timeLimit = 0.0f)
     {
-        ResetTimer();
-
         m_TimeLimit = timeLimit;
-
         m_Running = true;
     }
 
@@ -74,7 +71,7 @@ public class Timer : MonoBehaviour
             m_TimeElapsed = m_TimeLimit;
         }
 
-        m_Text.text = "Stopped";
+        m_Text.text = "Stop";
         m_Running = false;
     }
 

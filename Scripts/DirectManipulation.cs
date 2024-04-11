@@ -52,13 +52,13 @@ public class DirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting && m_ActivationHand != null)
+        if (m_isInteracting && m_ActivationHand != null && m_ExperimentManager.IsRunning())
             MoveManipulator();
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.DIRECT && m_ExperimentManager.IsRunning())
         {
             if (!m_isInteracting && m_ActivationHand == null)
             {
@@ -267,26 +267,35 @@ public class DirectManipulation : MonoBehaviour
         if (angle < ManipulationMode.ANGLETHRESHOLD)
         {
             //snap to y axis
-            Vector3 right = Vector3.Project(m_GhostObject.transform.right, Vector3.up);
             Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
-            Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+            Vector3 forward = Vector3.Cross(Vector3.up, up.normalized);
 
             return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
         }
-        if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
-        {
-            Vector3 right = Vector3.ProjectOnPlane(m_GhostObject.transform.right, Vector3.up);
-            Vector3 up = Vector3.Cross(m_GhostObject.transform.forward.normalized, right.normalized);
+        //if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+        //{
+        //    Vector3 right = Vector3.ProjectOnPlane(m_GhostObject.transform.right, Vector3.up);
+        //    Vector3 up = Vector3.Cross(m_GhostObject.transform.forward.normalized, right.normalized);
 
-            angle = Vector3.Angle(up, Vector3.up);
-            if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
-                up = angle <= 90 ? Vector3.up : -Vector3.up;
+        //    angle = Vector3.Angle(up, Vector3.up);
+        //    if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
+        //        up = angle <= 90 ? Vector3.up : -Vector3.up;
 
-            Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
+        //    Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
 
-            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
+        //    return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        //}
 
         return m_GhostObject.transform.rotation;
+    }
+
+    public Hand ActivationHand()
+    {
+        return m_ActivationHand;
+    }
+
+    public Hand InteractingHand()
+    {
+        return m_InteractingHand;
     }
 }

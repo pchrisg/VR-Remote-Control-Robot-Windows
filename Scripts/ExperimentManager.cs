@@ -32,27 +32,29 @@ public class ExperimentManager : MonoBehaviour
     [Header("Start/Stop")]
     [SerializeField] private bool m_Start = false;
 
+    [Header("Tutorial Control")]
+    public bool m_Continue = false;
+
     [Header("Status")]
     [SerializeField] private string m_Active = string.Empty;
     [SerializeField] private string m_Status = string.Empty;
 
-    //Scripts
+    // Scripts
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
     private Timer m_Timer = null;
 
-    //Tutorial
+    // Tutorial
     private Tutorial m_Tutorial = null;
 
     // Experiment
     private StackingTask m_Task = null;
 
-    //Settings
-    [HideInInspector] public const float ERRORTHRESHOLD = 0.05f; //5cm
+    // Settings
     private readonly float m_TimeLimit = 600.0f;
 
-    //Control
+    // Control
     private bool m_TutorialActive = false;
     private bool m_TaskActive = false;
     private bool m_Running = false;
@@ -75,7 +77,6 @@ public class ExperimentManager : MonoBehaviour
     private float m_TimeInAttObj = 0.0f;
 
     // Interactions
-    private bool m_IsInteracting = false;
     private int m_InteractionCount = 0;
     // Scaling and Snapping
     private int m_ScalingCount = 0;
@@ -139,7 +140,6 @@ public class ExperimentManager : MonoBehaviour
                 if (!m_TutorialActive)
                 {
                     m_InteractableObjects.RemoveAllInteractableObjects();
-                    ResetRobotPose();
 
                     m_Task.Setup(false);
                     m_TaskActive = false;
@@ -160,7 +160,6 @@ public class ExperimentManager : MonoBehaviour
                 if (!m_TaskActive)
                 {
                     m_InteractableObjects.RemoveAllInteractableObjects();
-                    ResetRobotPose();
 
                     m_Tutorial.Setup(false);
                     m_TutorialActive = false;
@@ -181,7 +180,6 @@ public class ExperimentManager : MonoBehaviour
                 if (m_TutorialActive || m_TaskActive)
                 {
                     m_InteractableObjects.RemoveAllInteractableObjects();
-                    ResetRobotPose();
 
                     if (m_TutorialActive)
                         m_Tutorial.ResetTutorial();
@@ -200,6 +198,7 @@ public class ExperimentManager : MonoBehaviour
                 {
                     m_Running = true;
                     m_Status = "Running";
+                    m_Timer.ResetTimer();
 
                     if (m_TutorialActive)
                         m_Tutorial.stage = TutorialStages.Stage.START;
@@ -211,7 +210,7 @@ public class ExperimentManager : MonoBehaviour
         }
 
         // if tutorial or experiment are running
-        else if (m_Running)
+        else
         {
             // if tutorial stopped
             if (m_TutorialActive && !m_Start)
@@ -225,7 +224,10 @@ public class ExperimentManager : MonoBehaviour
             {
                 // if time exhausted
                 if (m_Timer.TimeExhausted())
+                {
+                    print("Time's up!");
                     SaveData();
+                }
 
                 // if experiment stopped
                 if (!m_Start)
@@ -235,27 +237,16 @@ public class ExperimentManager : MonoBehaviour
                     m_Timer.StopTimer();
                 }
 
-                if (m_IsInteracting != m_ManipulationMode.IsInteracting())
-                {
-                    m_IsInteracting = !m_IsInteracting;
-                    RecordInteraction(m_IsInteracting);
-
-                    if (m_IsInteracting)
-                    {
-                        if (m_InteractionCount == 0)
-                            m_Timer.StartTimer(m_TimeLimit);
-
-                        m_InteractionCount++;
-                    }
-                }
-
                 // Data Gathering
-                if (m_ManipulationMode.mode == Mode.DIRECT)
-                    m_TimeInDirMan += Time.deltaTime;
-                if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
-                    m_TimeInColObj += Time.deltaTime;
-                if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-                    m_TimeInAttObj += Time.deltaTime;
+                if (m_Timer.SplitTime() != 0.0f)
+                {
+                    if (m_ManipulationMode.mode == Mode.DIRECT)
+                        m_TimeInDirMan += Time.deltaTime;
+                    if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
+                        m_TimeInColObj += Time.deltaTime;
+                    if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+                        m_TimeInAttObj += Time.deltaTime;
+                }
             }
         }
     }
@@ -293,9 +284,45 @@ public class ExperimentManager : MonoBehaviour
         m_Objects.SetActive(true);
     }
 
-    private void RecordInteraction(bool value)
+    private void ClearData()
     {
-        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
+        // Times
+        m_PlacedBarrels.Clear();
+        m_TimeInDirMan = 0.0f;
+        m_TimeInColObj = 0.0f;
+        m_TimeInAttObj = 0.0f;
+
+        // Interactions
+        m_InteractionCount = 0;
+        m_SnappingCount = 0;
+        m_ScalingCount = 0;
+        m_FocusObjectCount = 0;
+        m_InteractionDescriptions.Clear();
+
+        // Errors
+        m_CollisionsCount = 0;
+        m_ErrorDescriptions.Clear();
+    }
+
+    public bool IsRunning()
+    {
+        return m_Running;
+    }
+
+    public void RecordInteraction(bool value)
+    {
+        if (m_TaskActive && m_Running)
+        {
+            if (value)
+            {
+                if (m_InteractionCount == 0)
+                    m_Timer.StartTimer(m_TimeLimit);
+
+                m_InteractionCount++;
+            }
+
+            m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "\n");
+        }
     }
 
     public void RecordCollision(string description)
@@ -309,61 +336,73 @@ public class ExperimentManager : MonoBehaviour
 
     public void RecordBarrelTime(int count, string name)
     {
-        if (count > m_PlacedBarrels.Count)
+        if (m_Running)
         {
-            PlacedBarrel barrel = new()
+            if (count > m_PlacedBarrels.Count)
             {
-                time = m_Timer.SplitTime(),
-                name = name
-            };
+                PlacedBarrel barrel = new()
+                {
+                    time = m_Timer.SplitTime(),
+                    name = name
+                };
 
-            m_PlacedBarrels.Add(barrel);
+                m_PlacedBarrels.Add(barrel);
+            }
+
+            print(count + " barrel(s) placed. This barrel: " + name);
         }
-
-        print("saved time " + count + " " + name);
     }
 
     public void RecordModifier(string modifier, bool value)
     {
-        if (value)
+        if (m_Running)
         {
-            if (modifier == "SCALING")
-                m_ScalingCount++;
+            if (value)
+            {
+                if (modifier == "SCALING")
+                    m_ScalingCount++;
 
-            if (modifier == "SNAPPING")
-                m_SnappingCount++;
+                if (modifier == "SNAPPING")
+                    m_SnappingCount++;
+            }
+
+            m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "," + modifier + "\n");
         }
-
-        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "," + modifier + "\n");
     }
 
     public void RecordFocusObject(string barrel, bool value)
     {
-        if (value)
-            m_FocusObjectCount++;
+        if (m_Running)
+        {
+            if (value)
+                m_FocusObjectCount++;
 
-        m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "," + "FOCUS," + barrel + "\n");
+            m_InteractionDescriptions.Add(m_ParticipantNumber + "," + m_ManipulationMode.mode.ToString() + "," + m_Timer.SplitTime().ToString() + "," + value.ToString() + "," + "FOCUS," + barrel + "\n");
+        }
     }
 
-    private void ClearData()
+    public void SaveData()
     {
-        // Times
-        m_PlacedBarrels.Clear();
-        m_TimeInDirMan = 0.0f;
-        m_TimeInColObj = 0.0f;
-        m_TimeInAttObj = 0.0f;
+        if (m_Running)
+        {
+            m_Timer.StopTimer();
 
-        // Interactions
-        m_IsInteracting = false;
-        m_InteractionCount = 0;
-        m_SnappingCount = 0;
-        m_ScalingCount = 0;
-        m_FocusObjectCount = 0;
-        m_InteractionDescriptions.Clear();
+            m_InteractableObjects.RemoveAllInteractableObjects();
+            ResetRobotPose();
 
-        // Errors
-        m_CollisionsCount = 0;
-        m_ErrorDescriptions.Clear();
+            m_Start = false;
+            m_Running = false;
+            m_TaskActive = false;
+            m_Task.Setup(false);
+
+            m_Active = "None";
+            m_Status = "Finished";
+
+            if (m_Timer.TimeExhausted() && m_PlacedBarrels.Count == 5)
+                m_PlacedBarrels.RemoveAt(4);
+
+            StartCoroutine(WriteToFileRoutine());
+        }
     }
 
     private IEnumerator WriteToFileRoutine()
@@ -490,29 +529,5 @@ public class ExperimentManager : MonoBehaviour
         print("Data saved to file: " + path);
 
         yield return new WaitForSeconds(0.5f);
-    }
-    
-    public void SaveData()
-    {
-        if (m_Running)
-        {
-            m_Timer.StopTimer();
-
-            m_InteractableObjects.RemoveAllInteractableObjects();
-            ResetRobotPose();
-
-            m_Start = false;
-            m_Running = false;
-            m_TaskActive = false;
-            m_Task.Setup(false);
-
-            m_Active = "None";
-            m_Status = "Finished";
-
-            if (m_Timer.TimeExhausted() && m_PlacedBarrels.Count == 5)
-                m_PlacedBarrels.RemoveAt(4);
-
-            StartCoroutine(WriteToFileRoutine());
-        }
     }
 }

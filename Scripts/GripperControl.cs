@@ -29,7 +29,6 @@ public class GripperControl : MonoBehaviour
 
     private bool m_isInteracting = false;
     private bool m_isGripping = false;
-    private bool m_isReleasing = true;
     private bool m_isLocked = false;
 
     private void Awake()
@@ -53,7 +52,10 @@ public class GripperControl : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting && m_ActivationHand != null && (m_isGripping || m_isReleasing))
+        if (m_SDOFManipulation.IsInteracting())
+            m_ActivationHand = null;
+
+        if (m_isInteracting && m_ActivationHand != null)
             MoveGripper();
     }
 
@@ -76,42 +78,23 @@ public class GripperControl : MonoBehaviour
                     m_InteractingHand = m_LeftHand;
                 }
             }
-            
+
             if (m_ActivationHand != null)
             {
                 if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
                 {
                     if (m_isGripping)
                     {
-                        m_PreviousGrasp = 0.0f;
+                        m_isLocked = true;
                         m_isGripping = false;
-                        m_isReleasing = true;
                     }
                     else
                     {
-                        m_isLocked = true;
+                        m_PreviousGrasp = 0.0f;
                         m_isGripping = true;
-                        m_isReleasing = false;
                     }
                 }
             }
-
-
-            //if (!m_isGripping && m_ActivationHand == null)
-            //{
-            //    m_isGripping = true;
-
-            //    if (fromSource == m_LeftHand.handType)
-            //    {
-            //        m_ActivationHand = m_LeftHand;
-            //        m_InteractingHand = m_RightHand;
-            //    }
-            //    else
-            //    {
-            //        m_ActivationHand = m_RightHand;
-            //        m_InteractingHand = m_LeftHand;
-            //    }
-            //}
         }
     }
 
@@ -124,7 +107,10 @@ public class GripperControl : MonoBehaviour
             MoveGripper();
 
         if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+        {
             m_isInteracting = false;
+            m_InteractingHand = null;
+        }
     }
 
     private void MoveGripper()
@@ -134,9 +120,10 @@ public class GripperControl : MonoBehaviour
         if (m_TargetGrasp == 0.0f)
         {
             if (m_isGripping)
-                m_TargetGrasp = m_MaxGrasp;
+                m_TargetGrasp = m_PreviousGrasp;
         }
 
+        // Closing
         if (m_isGripping)
         {
             if (m_TargetGrasp < m_PreviousGrasp)
@@ -144,15 +131,15 @@ public class GripperControl : MonoBehaviour
             else
                 m_PreviousGrasp = m_TargetGrasp;
         }
-
-        if (m_isReleasing)
+        // Openning
+        else
         {
             if (m_isLocked)
             {
-                if (m_TargetGrasp == m_MaxGrasp)
+                if (m_TargetGrasp == m_PreviousGrasp)
                     m_isLocked = false;
                 else
-                    m_TargetGrasp = m_MaxGrasp;
+                    m_TargetGrasp = m_PreviousGrasp;
             }
         }
 
@@ -163,16 +150,6 @@ public class GripperControl : MonoBehaviour
         };
 
         m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
-
-        //m_TargetGrasp = m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrasp;
-
-        //Robotiq3FGripperRobotOutputMsg outputMessage = new()
-        //{
-        //    rACT = 1,
-        //    rPRA = (byte)(m_TargetGrasp)
-        //};
-
-        //m_ROSPublisher.PublishRobotiqSqueeze(outputMessage);
     }
 
     public void PlayAttachSound()

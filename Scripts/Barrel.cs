@@ -8,19 +8,12 @@ public class Barrel : MonoBehaviour
     private Collider[] m_RobotColliders = null;
     private int m_RobotPartsColliding = 0;
 
-    private Material m_OriginalMat = null;
-    private Material m_HighlightMat = null;
-
     [SerializeField] private bool m_ResetPosition = false;
     private bool m_isMoving = false;
-    private bool m_isInBounds = false;
 
     private void Awake()
     {
         m_RobotColliders = GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<Collider>();
-
-        m_OriginalMat = gameObject.GetComponent<Renderer>().material;
-        m_HighlightMat = new(gameObject.GetComponent<Renderer>().material) {color = new(1.0f, 1.0f, 0.0f, 1.0f)};
     }
 
     private void Update()
@@ -41,7 +34,7 @@ public class Barrel : MonoBehaviour
                 m_isMoving = false;
 
                 float angle = Vector3.Angle(gameObject.transform.up, Vector3.up);
-                if (angle > 45)
+                if (angle > 30.0f)
                     gameObject.transform.SetPositionAndRotation(new(gameObject.transform.position.x, 0.058f, gameObject.transform.position.z), Quaternion.Euler(0.0f, 0.0f, 0.0f));
             }
 
@@ -80,27 +73,14 @@ public class Barrel : MonoBehaviour
         m_PreviousPosition = gameObject.transform.position;
     }
 
-    public void SetStartingPosition(Vector3 position)
+    public void SetPosition(Vector3 position)
     {
         m_StartingPosition = position;
         ResetPosition();
     }
 
-    //private void ChangeMat()
-    //{
-    //    if (m_isInBounds)
-    //        gameObject.GetComponent<Renderer>().material = m_HighlightMat;
-    //    else
-    //        gameObject.GetComponent<Renderer>().material = m_OriginalMat;
-    //}
-
     public bool IsMoving()
     {
         return m_isMoving;
-    }
-
-    public void IsInBounds(bool value)
-    {
-        m_isInBounds = value;
     }
 }

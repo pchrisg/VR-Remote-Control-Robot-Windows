@@ -2,8 +2,6 @@ using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using ActionFeedbackUnity = RosMessageTypes.Moveit.MoveGroupActionFeedbackMsg;
 using RosMessageTypes.Std;
-using Unity.VisualScripting;
-using System.Runtime.CompilerServices;
 
 public class ResultSubscriber : MonoBehaviour
 {
@@ -13,8 +11,6 @@ public class ResultSubscriber : MonoBehaviour
 
     private Manipulator m_Manipulator = null;
     public bool m_isPlanExecuted = true;
-
-    //private readonly string NotExecuted = "No motion plan found. No execution attempted.";
 
     [HideInInspector] public string m_RobotState = "";
 
@@ -34,35 +30,23 @@ public class ResultSubscriber : MonoBehaviour
     private void OnDestroy()
     {
         m_Ros.Unsubscribe(m_FeedbackTopic);
+        m_Ros.Unsubscribe(m_PlanSuccessTopic);
     }
 
     private void CheckResult(ActionFeedbackUnity message)
     {
         m_RobotState = message.feedback.state;
-
-        //if (message.feedback.state == "IDLE")
-        //{
-        //    if (message.status.text == NotExecuted && m_isPlanExecuted)
-        //    {
-                
-        //    }
-        //    else if (!m_isPlanExecuted)
-        //    {
-        //        m_Manipulator.Colliding(false);
-        //        m_isPlanExecuted = true;
-        //    }
-        //}
     }
 
     private void PlanResult(BoolMsg message)
     {
-        if (!message.data && m_isPlanExecuted && m_RobotState == "IDLE")
+        if (!message.data && m_isPlanExecuted)
         {
             m_Manipulator.Colliding(true);
             m_isPlanExecuted = false;
         }
 
-        else if (message.data && !m_isPlanExecuted)
+        if (message.data && !m_isPlanExecuted)
         {
             m_Manipulator.Colliding(false);
             m_isPlanExecuted = true;

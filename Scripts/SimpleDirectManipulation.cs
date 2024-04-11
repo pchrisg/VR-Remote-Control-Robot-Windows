@@ -7,6 +7,7 @@ public class SimpleDirectManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -26,6 +27,7 @@ public class SimpleDirectManipulation : MonoBehaviour
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
@@ -39,13 +41,13 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting && m_ActivationHand != null)
+        if (m_isInteracting && m_ActivationHand != null && m_ExperimentManager.IsRunning())
             MoveManipulator();
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT && m_ExperimentManager.IsRunning())
         {
             if (!m_isInteracting && m_ActivationHand == null)
             {
@@ -109,5 +111,15 @@ public class SimpleDirectManipulation : MonoBehaviour
 
         m_PreviousPosition = m_InteractingHand.transform.position;
         m_PreviousRotation = m_InteractingHand.transform.rotation;
+    }
+
+    public Hand ActivationHand()
+    {
+        return m_ActivationHand;
+    }
+
+    public Hand InteractingHand()
+    {
+        return m_InteractingHand;
     }
 }

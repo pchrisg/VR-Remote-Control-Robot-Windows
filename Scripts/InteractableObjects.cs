@@ -63,6 +63,13 @@ public class InteractableObjects : MonoBehaviour
         return m_Id - 1;
     }
 
+    public void RemoveAllInteractableObjects()
+    {
+        m_FocusObject = null;
+
+        StartCoroutine(RemoveAllInteractableObjectsRoutine());
+    }
+
     private IEnumerator RemoveAllInteractableObjectsRoutine()
     {
         while (m_InteractableObjects.Count > 0)
@@ -121,11 +128,6 @@ public class InteractableObjects : MonoBehaviour
                 break;
             }
         }
-    }
-
-    public void RemoveAllInteractableObjects()
-    {
-        StartCoroutine(RemoveAllInteractableObjectsRoutine());
     }
 
     public void SetFocusObject(Collider collider)
