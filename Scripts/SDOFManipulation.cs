@@ -14,6 +14,7 @@ public class SDOFManipulation : MonoBehaviour
     private Hand m_LeftHand = null;
     private Hand m_HoveringHand = null;
     private Hand m_InteractingHand = null;
+    private Hand m_OtherHand = null;
 
     private Transform m_Handle = null;
 
@@ -87,10 +88,15 @@ public class SDOFManipulation : MonoBehaviour
                 m_ManipulationMode.IsInteracting(m_isInteracting);
 
                 if (fromSource == m_LeftHand.handType)
+                {
                     m_InteractingHand = m_LeftHand;
-
+                    m_OtherHand = m_RightHand;
+                }
                 else
+                {
                     m_InteractingHand = m_RightHand;
+                    m_OtherHand = m_LeftHand;
+                }
 
                 m_InitHandPos = m_InteractingHand.objectAttachmentPoint.position;
                 m_InitPos = m_Handle.position;
@@ -131,7 +137,7 @@ public class SDOFManipulation : MonoBehaviour
                 m_ExperimentManager.RecordModifier("SCALING", true);
             }
 
-            else if (m_InteractingHand != null && fromSource != m_InteractingHand.handType)
+            else if (m_OtherHand != null && fromSource == m_OtherHand.handType)
             {
                 m_isScaling = true;
                 m_InitPos = m_Handle.position;
@@ -301,5 +307,15 @@ public class SDOFManipulation : MonoBehaviour
         {
             handle.Flash(value);
         }
+    }
+
+    public Hand InteractingHand()
+    {
+        return m_InteractingHand;
+    }
+
+    public Hand OtherHand()
+    {
+        return m_OtherHand;
     }
 }

@@ -217,6 +217,7 @@ public class ExperimentManager : MonoBehaviour
             {
                 m_Running = false;
                 m_Status = "Stopped";
+                m_Tutorial.ResetTutorial();
             }
 
             // if experiment
@@ -235,6 +236,7 @@ public class ExperimentManager : MonoBehaviour
                     m_Running = false;
                     m_Status = "Stopped";
                     m_Timer.StopTimer();
+                    m_Task.ResetTask();
                 }
 
                 // Data Gathering

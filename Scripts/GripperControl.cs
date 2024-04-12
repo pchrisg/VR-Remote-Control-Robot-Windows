@@ -136,7 +136,7 @@ public class GripperControl : MonoBehaviour
         {
             if (m_isLocked)
             {
-                if (m_TargetGrasp == m_PreviousGrasp)
+                if (m_TargetGrasp >= m_PreviousGrasp)
                     m_isLocked = false;
                 else
                     m_TargetGrasp = m_PreviousGrasp;

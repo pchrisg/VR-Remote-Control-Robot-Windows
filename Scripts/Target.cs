@@ -53,7 +53,7 @@ public class Target : MonoBehaviour
         m_Material.color = m_FarFromBounds;
     }
 
-    public void SetPostion(Vector3 position)
+    public void SetPosition(Vector3 position)
     {
         gameObject.transform.position = position;
         m_Position = new(position.x, position.z);

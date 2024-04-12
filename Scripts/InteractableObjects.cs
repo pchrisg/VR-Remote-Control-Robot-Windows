@@ -65,8 +65,6 @@ public class InteractableObjects : MonoBehaviour
 
     public void RemoveAllInteractableObjects()
     {
-        m_FocusObject = null;
-
         StartCoroutine(RemoveAllInteractableObjectsRoutine());
     }
 
@@ -81,6 +79,9 @@ public class InteractableObjects : MonoBehaviour
 
     private void RemoveInteractableObject(IObject iObj)
     {
+        if (m_FocusObject != null && m_FocusObject == iObj.gameObj)
+            m_FocusObject = null;
+
         Destroy(iObj.gameObj.GetComponent<CollisionHandling>());
         iObj.gameObj.GetComponent<InteractableObject>().RemoveInteractableObject();
         Destroy(iObj.gameObj.GetComponent<InteractableObject>());

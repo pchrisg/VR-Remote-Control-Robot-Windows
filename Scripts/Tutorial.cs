@@ -49,7 +49,6 @@ public class Tutorial : MonoBehaviour
 
     // Game Objects
     private GameObject m_Objects = null;
-    private GameObject m_Robotiq = null;
 
     // Hands
     private Hand m_LeftHand = null;
@@ -60,7 +59,6 @@ public class Tutorial : MonoBehaviour
     private readonly float m_TimeLimit = 300.0f;
 
     private Coroutine m_ActiveCoroutine = null;
-    private Coroutine m_PracObsCoroutine = null;
     private readonly List<Text> m_Text = new();
     private readonly List<SpriteRenderer> m_SpriteRenderers = new();
     private AudioSource m_AudioSource = null;
@@ -79,7 +77,6 @@ public class Tutorial : MonoBehaviour
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
         m_Objects = gameObject.transform.parent.GetComponent<ExperimentManager>().m_Objects;
-        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
         
         m_LeftHand = Player.instance.leftHand;
         m_RightHand = Player.instance.rightHand;
@@ -98,18 +95,16 @@ public class Tutorial : MonoBehaviour
 
     private void OnDisable()
     {
-        DestroyAllObjects();
         stage = Stage.WAIT;
-        
-        if(m_ActiveCoroutine != null)
-            StopCoroutine(m_ActiveCoroutine);
+        ChangeText("Instructions");
+        ChangeSprite(null);
 
-        //if(m_Manipulator != null)
-        //    m_Manipulator.Flash(false);
+        if (m_ActiveCoroutine != null)
+            StopCoroutine(m_ActiveCoroutine);
 
         m_ActiveCoroutine = null;
 
-        m_Timer.StopTimer();
+        StartCoroutine(DestroyAllObjects());
     }
 
     private void Update()
@@ -119,7 +114,7 @@ public class Tutorial : MonoBehaviour
             if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
                 stage = Stage.SIMPLEDIRECT;
             if (m_ManipulationMode.mode == Mode.DIRECT)
-                stage = Stage.DIRECT;
+                stage = Stage.PRACTICE;
             if (m_ManipulationMode.mode == Mode.SDOF)
                 stage = Stage.SDOF;
         }
@@ -133,22 +128,19 @@ public class Tutorial : MonoBehaviour
         if (stage == Stage.SDOF)
             m_ActiveCoroutine ??= StartCoroutine(SDOF());
 
-        //if (stage == Stage.PRACTICE)
-        //{
-        //    if (m_ActiveCoroutine == null)
-        //    {
-        //        m_ActiveCoroutine = StartCoroutine(Practice());
-        //        m_PracObsCoroutine = StartCoroutine(PracticeObstacle());
-        //    }
-                
-        //    else if (m_Timer.TimeExhausted())
-        //    {
-        //        StopCoroutine(m_ActiveCoroutine);
-        //        StopCoroutine(m_PracObsCoroutine);
-        //        DestroyAllObjects();
-        //        stage = Stage.WAIT;
-        //    }
-        //}
+        if (stage == Stage.PRACTICE)
+        {
+            m_ActiveCoroutine ??= StartCoroutine(Practice());
+
+            if (m_Timer.TimeExhausted() || m_ExperimentManager.m_Continue)
+            {
+                m_Timer.StopTimer();
+                m_ExperimentManager.m_Continue = false;
+
+                ResetTutorial();
+            }
+        }
+            
     }
 
     public void Setup(bool value)
@@ -159,7 +151,15 @@ public class Tutorial : MonoBehaviour
     public void ResetTutorial()
     {
         stage = Stage.WAIT;
-        DestroyAllObjects();
+        ChangeText("Instructions");
+        ChangeSprite(null);
+
+        if (m_ActiveCoroutine != null)
+            StopCoroutine(m_ActiveCoroutine);
+
+        m_ActiveCoroutine = null;
+
+        StartCoroutine(DestroyAllObjects());
     }
 
     private void ChangeText(string instruction)
@@ -177,7 +177,7 @@ public class Tutorial : MonoBehaviour
     private IEnumerator SimpleDirect()
     {
         //#######################
-        string text = "Move the Robot\n\n" +
+        string text = "Simple Direct Manipulation\n\n" +
                       "To move the robot with this technique, you need both hands\n" +
                       "Pull the trigger button with your less dominant hand. This activates control\n\n";
         ChangeText(text);
@@ -200,15 +200,15 @@ public class Tutorial : MonoBehaviour
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        GameObject ghost = Instantiate(m_GhostManipulator);
-        ghost.transform.SetParent(m_Objects.transform);
-        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
-
         //#######################
         text = "Task\n\n" +
                "Place the manipulator on the target";
         ChangeText(text);
         m_AudioSource.Play();
+
+        GameObject ghost = Instantiate(m_GhostManipulator);
+        ghost.transform.SetParent(m_Objects.transform);
+        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
@@ -252,7 +252,7 @@ public class Tutorial : MonoBehaviour
 
         GameObject barrel = Instantiate(m_Barrel);
         barrel.transform.SetParent(m_Objects.transform);
-        barrel.GetComponent<Barrel>().SetPosition(new(-0.4f, 0.05f, -0.4f));
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.4f, 0.058f, -0.4f));
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
@@ -262,9 +262,14 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
+        GameObject obstacle = Instantiate(m_Obstacle);
+        obstacle.transform.SetParent(m_Objects.transform);
+        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.15f, -0.422f), Quaternion.Euler(new(0.0f, 90.0f, 0.0f)));
+        obstacle.transform.localScale = new(0.3f, 0.3f, 0.025f);
+
         GameObject target = Instantiate(m_Target);
         target.transform.SetParent(m_Objects.transform);
-        target.GetComponent<Target>().SetPostion(new(0.4f, 0.5f, -0.4f));
+        target.GetComponent<Target>().SetPosition(new(0.4f, 0.5f, -0.4f));
         target.GetComponent<Target>().CheckDistance(barrel.transform);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
@@ -272,8 +277,9 @@ public class Tutorial : MonoBehaviour
 
         Destroy(target);
         Destroy(barrel);
+        Destroy(obstacle);
         
-        stage = Stage.WAIT;
+        stage = Stage.PRACTICE;
 
         m_ActiveCoroutine = null;
     }
@@ -281,7 +287,7 @@ public class Tutorial : MonoBehaviour
     private IEnumerator Direct()
     {
         //#######################
-        string text = "Move the Robot\n\n" +
+        string text = "Constrained Direct Manipulation\n\n" +
                       "To move the robot with this technique, you need both hands\n" +
                       "Pull the trigger button with your less dominant hand. This activates control\n\n";
         ChangeText(text);
@@ -304,15 +310,15 @@ public class Tutorial : MonoBehaviour
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        GameObject ghost = Instantiate(m_GhostManipulator);
-        ghost.transform.SetParent(m_Objects.transform);
-        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
-
         //#######################
         text = "Task\n\n" +
                "Place the manipulator on the target";
         ChangeText(text);
         m_AudioSource.Play();
+
+        GameObject ghost = Instantiate(m_GhostManipulator);
+        ghost.transform.SetParent(m_Objects.transform);
+        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
@@ -483,7 +489,7 @@ public class Tutorial : MonoBehaviour
 
         GameObject barrel = Instantiate(m_Barrel);
         barrel.transform.SetParent(m_Objects.transform);
-        barrel.GetComponent<Barrel>().SetPosition(new(-0.4f, 0.05f, -0.4f));
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.4f, 0.058f, -0.4f));
 
         text = "Attachable Objects\n\n" +
                "Start by selecting the attachable objects tool\n\n" +
@@ -592,7 +598,7 @@ public class Tutorial : MonoBehaviour
 
         GameObject target = Instantiate(m_Target);
         target.transform.SetParent(m_Objects.transform);
-        target.GetComponent<Target>().SetPostion(new Vector3(0.4f, 0.5f, -0.4f));
+        target.GetComponent<Target>().SetPosition(new Vector3(0.4f, 0.5f, -0.4f));
         target.GetComponent<Target>().CheckDistance(barrel.transform);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
@@ -606,25 +612,25 @@ public class Tutorial : MonoBehaviour
         Destroy(barrel);
         Destroy(obstacle);
 
-        stage = Stage.WAIT;
+        stage = Stage.PRACTICE;
 
         m_ActiveCoroutine = null;
     }
 
     private IEnumerator SDOF()
     {
-        m_ControllerHints.ShowTrackpadHint(true);
-        string text = "Select SDOF Manipulation\n\n" +
-                      "Touch the trackpad and select Separated Defree of Freedom Manipulation";
+        //#######################
+        string text = "Separated Degrees of Freedom Manipulation\n\n" +
+                      "To move the robot with this technique, you interact with the balls at the ends of the displayed axes";
         ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.SDOF);
-
-        m_ControllerHints.ShowTrackpadHint(false);
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         text = "Separated Degrees of Freedom\n\n" +
-                      "Reach out and grab one of the Handles";
+               "Reach out with either hand and hover one of the balls (handles)\n\n" +
+               "While hovering, pull the trigger button to grab the handle";
         ChangeText(text);
         m_AudioSource.Play();
 
@@ -632,66 +638,126 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
         m_SDOF.Flash(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
-
-        text = "Separated Degrees of Freedom Translation\n\n" +
-                      "While grabbing the Handle, move your hand towards or away from the manipulator" +
-                      "\n\nScaled Movement\n\n" +
-                      "While moving the Handle, grab the other trigger";
-        m_AudioSource.Play();
-
-        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.trigger && m_ControllerHints.handStatus.right.trigger);
-
-        text = "Separated Degrees of Freedom\n\n" +
-                      "Release the triggers";
-        m_AudioSource.Play();
-
-        yield return new WaitUntil(() => !m_ControllerHints.handStatus.left.trigger && !m_ControllerHints.handStatus.right.trigger);
-
-        text = "Separated Degrees of Freedom Rotation\n\n" +
-                      "Grab a handle and move your hand towards a handle of a different colour\n\n" +
-                      "When rotating, the axes snap to the world coordinate system" +
-                      "\n\nScaled Movement\n\n" +
-                      "While moving the Handle, grab the other trigger";
-        m_AudioSource.Play();
-        
-        yield return new WaitUntil(() => m_ControllerHints.handStatus.left.trigger && m_ControllerHints.handStatus.right.trigger);
+        yield return new WaitUntil(() => m_SDOF.InteractingHand() != null);
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
         m_SDOF.Flash(false);
 
-        GameObject cube = Instantiate(m_Barrel);
-        cube.transform.SetParent(m_Objects.transform);
-        cube.transform.SetPositionAndRotation(new Vector3(-0.4f, 0.05f, -0.4f), Quaternion.Euler(new Vector3(0.0f, 120.0f, 0.0f)));
-
-        GameObject x = Instantiate(m_Target);
-        x.transform.SetParent(m_Objects.transform);
-        x.transform.position = new Vector3(0.4f, 0.0001f, -0.4f);
-
-        text = "Place the cube on the X\n\n" +
-                      "Separated Degrees of Freedom Translation\n" +
-                      "While grabbing the Handle, move your hand towards or away from the manipulator\n\n" +
-                      "Separated Degrees of Freedom Rotation\n" +
-                      "While grabbing the Handle, move your hand towards a handle of a different colour\n\n" +
-                      "Scaled Movement\n" +
-                      "While moving the Handle, grab the other trigger";
+        text = "Translation\n" +
+               "While grabbing the Handle, move your hand towards or away from the manipulator to translate it in that direction\n\n" +
+               "Rotation\n" +
+               "While grabbing the Handle, move your hand around the manipulator to rotate it in that direction";
+        ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
-        text = "Deselect SDOF Manipulation\n\n" +
-                      "Touch the trackpad and deselect SDOF manipulation";
+        //#######################
+        text = "Task\n\n" +
+               "Place the manipulator on the target";
+        ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+        GameObject ghost = Instantiate(m_GhostManipulator);
+        ghost.transform.SetParent(m_Objects.transform);
+        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
 
-        m_ControllerHints.ShowTrackpadHint(false);
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
-        GameObject.Destroy(cube);
-        GameObject.Destroy(x);
+        Destroy(ghost);
 
-        stage = Stage.WAIT;
+        //#######################
+        text = "Gripper Control\n\n" +
+               "To control the gripper, first make sure that you aren\'t hovering any of the handles\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        text += "Now grab one of the triggers to activate gripping and squeeze the other to open and close the gripper";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+
+        //#######################
+        text = "Scaling\n" +
+               "First start by grabbing a handle\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_SDOF.Flash(true);
+
+        yield return new WaitUntil(() => m_SDOF.InteractingHand() != null);
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_SDOF.Flash(false);
+
+        text += "Now squeeze the grip button of the other controller to activate scaling";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_SDOF.InteractingHand(), true);
+        m_ControllerHints.ShowGripHint(m_SDOF.OtherHand(), true);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_ControllerHints.ShowGripHint(m_RightHand, false);
+        m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+        //#######################
+        text = "Task\n\n" +
+               "Pick up the barrel";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        GameObject barrel = Instantiate(m_Barrel);
+        barrel.transform.SetParent(m_Objects.transform);
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.4f, 0.058f, -0.4f));
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        text = "Task\n\n" +
+               "Place the barrel on the X";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        GameObject obstacle = Instantiate(m_Obstacle);
+        obstacle.transform.SetParent(m_Objects.transform);
+        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.15f, -0.422f), Quaternion.Euler(new(0.0f, 90.0f, 0.0f)));
+        obstacle.transform.localScale = new(0.3f, 0.3f, 0.025f);
+
+        GameObject target = Instantiate(m_Target);
+        target.transform.SetParent(m_Objects.transform);
+        target.GetComponent<Target>().SetPosition(new(0.4f, 0.5f, -0.4f));
+        target.GetComponent<Target>().CheckDistance(barrel.transform);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        Destroy(target);
+        Destroy(barrel);
+        Destroy(obstacle);
+
+        stage = Stage.PRACTICE;
 
         m_ActiveCoroutine = null;
     }
@@ -699,76 +765,67 @@ public class Tutorial : MonoBehaviour
     private IEnumerator Practice()
     {
         string text = "Practice\n\n" +
-                      "Place the cube on the X as many times as you can\n\n" +
+                      "Place the barrel on the X as many times as you can\n\n" +
                       "Take this time to practice what you just learnt";
+        ChangeText(text);
         m_AudioSource.Play();
 
         m_Timer.StartTimer(m_TimeLimit);
 
-        GameObject cube = Instantiate(m_Barrel);
-        cube.transform.SetParent(m_Objects.transform);
-        GameObject x = Instantiate(m_Target);
-        x.transform.SetParent(m_Objects.transform);
-        bool active = false;
+        GameObject barrel = Instantiate(m_Barrel);
+        barrel.transform.SetParent(m_Objects.transform);
+
+        GameObject target = Instantiate(m_Target);
+        target.transform.SetParent(m_Objects.transform);
+        target.GetComponent<Target>().CheckDistance(barrel.transform);
+
+        List<GameObject> obstacles = new();
+        for (var i = 0; i < 4; i++)
+        {
+            GameObject obstacle = Instantiate(m_Obstacle);
+            obstacle.transform.SetParent(m_Objects.transform);
+            obstacles.Add(obstacle);
+        }
+        obstacles[0].transform.position = new(0.0f, 0.0f, -0.4f);
+        obstacles[1].transform.position = new(0.0f, 0.0f, 0.4f);
+        obstacles[2].transform.position = new(-0.4f, 0.0f, 0.0f);
+        obstacles[3].transform.position = new(0.4f, 0.0f, 0.0f);
 
         while (true)
         {
-            if(!active)
+            for(var i = 0; i < 4; i++)
             {
-                active = true;
+                obstacles[i].transform.localScale = new(0.3f, Random.Range(0.3f, 1.0f), 0.025f);
+                obstacles[i].transform.SetPositionAndRotation(new(obstacles[i].transform.position.x, obstacles[i].transform.localScale.y/2.0f, obstacles[i].transform.position.z),
+                                                              Quaternion.Euler(new(0.0f, Random.value * 360.0f, 0.0f)));
+            }
 
-                Vector3 position = new(Random.Range(-0.5f, 0.1f), 0.05f, Random.Range(-0.5f, 0.5f));
-                Quaternion rotation = Quaternion.Euler(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
-                cube.transform.SetPositionAndRotation(position, rotation);
+            int rand = Random.Range(0, 2);
+            barrel.GetComponent<Barrel>().SetPosition(new(Random.Range(-0.5f, -0.22f), 0.058f, rand == 0 ? Random.Range(-0.5f, -0.22f) : Random.Range(0.22f, 0.5f)));
 
-                position = new Vector3(Random.Range(0.1f, 0.5f), 0.0001f, Random.Range(-0.5f, 0.5f));
-                x.transform.position = position;
+            rand = Random.Range(0, 2);
+            target.GetComponent<Target>().SetPosition(new(Random.Range(0.22f, 0.5f), 0.5f, rand == 0 ? Random.Range(-0.5f, -0.22f) : Random.Range(0.22f, 0.5f)));
 
-                yield return new WaitUntil(() => CheckVec2Distance(cube, x) && cube.GetComponent<ExperimentObject>().isMoving == false);
+            yield return new WaitUntil(() => !barrel.GetComponent<Barrel>().IsMoving() && target.GetComponent<Target>().IsInBounds(barrel.transform));
 
-                active = false;
+            if (m_ManipulationMode.mode == Mode.DIRECT)
+            {
+                m_InteractableObjects.RemoveAllInteractableObjects();
+                yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count == 0);
             }
 
             yield return new WaitForSeconds(1.0f);
         }
     }
 
-    private IEnumerator PracticeObstacle()
+    private IEnumerator DestroyAllObjects()
     {
-        while (true)
+        if (m_ManipulationMode.mode == Mode.DIRECT)
         {
-            GameObject obstacle = Instantiate(m_Obstacle);
-            obstacle.transform.SetParent(m_Objects.transform);
-
-            Vector3 position = new(Random.Range(-0.5f, 0.1f), 0.45f, Random.Range(-0.5f, 0.5f));
-            Quaternion rotation = Quaternion.Euler(new Vector3(0.0f, Random.value * 360.0f, 0.0f));
-
-            obstacle.transform.SetPositionAndRotation(position, rotation);
-
-            yield return new WaitUntil(() => obstacle == null);
-
-            Destroy(obstacle);
+            m_InteractableObjects.RemoveAllInteractableObjects();
+            yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count == 0);
         }
-    }
 
-    private bool CheckVec2Distance(GameObject first, GameObject second)
-    {
-        //if (Vector2.Distance(new Vector2(first.transform.position.x, first.transform.position.z), new Vector2(second.transform.position.x, second.transform.position.z)) < ExperimentManager.ERRORTHRESHOLD)
-        //    return true;
-        //else
-            return false;
-    }
-
-    private bool CheckRotation(GameObject first, GameObject second)
-    {
-        if (Quaternion.Angle(first.transform.rotation, second.transform.rotation) < ManipulationMode.ANGLETHRESHOLD)
-            return true;
-        else
-            return false;
-    }
-
-    private void DestroyAllObjects()
-    {
         if (m_Objects != null && m_Objects.transform.childCount > 0)
         {
             for (var i = m_Objects.transform.childCount - 1; i >= 0; i--)
