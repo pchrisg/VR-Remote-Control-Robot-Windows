@@ -114,7 +114,7 @@ public class Tutorial : MonoBehaviour
             if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
                 stage = Stage.SIMPLEDIRECT;
             if (m_ManipulationMode.mode == Mode.DIRECT)
-                stage = Stage.PRACTICE;
+                stage = Stage.DIRECT;
             if (m_ManipulationMode.mode == Mode.SDOF)
                 stage = Stage.SDOF;
         }
@@ -786,18 +786,18 @@ public class Tutorial : MonoBehaviour
             obstacle.transform.SetParent(m_Objects.transform);
             obstacles.Add(obstacle);
         }
-        obstacles[0].transform.position = new(0.0f, 0.0f, -0.4f);
-        obstacles[1].transform.position = new(0.0f, 0.0f, 0.4f);
-        obstacles[2].transform.position = new(-0.4f, 0.0f, 0.0f);
-        obstacles[3].transform.position = new(0.4f, 0.0f, 0.0f);
+        obstacles[0].transform.position = new(0.0f, 0.0f, -0.45f);
+        obstacles[1].transform.position = new(0.0f, 0.0f, 0.45f);
+        obstacles[2].transform.position = new(-0.45f, 0.0f, 0.0f);
+        obstacles[3].transform.position = new(0.45f, 0.0f, 0.0f);
 
         while (true)
         {
             for(var i = 0; i < 4; i++)
             {
-                obstacles[i].transform.localScale = new(0.3f, Random.Range(0.3f, 1.0f), 0.025f);
+                obstacles[i].transform.localScale = new(0.3f, Random.Range(0.25f, 1.0f), 0.025f);
                 obstacles[i].transform.SetPositionAndRotation(new(obstacles[i].transform.position.x, obstacles[i].transform.localScale.y/2.0f, obstacles[i].transform.position.z),
-                                                              Quaternion.Euler(new(0.0f, Random.value * 360.0f, 0.0f)));
+                                                              Quaternion.Euler(new(0.0f, Random.value * 180.0f, 0.0f)));
             }
 
             int rand = Random.Range(0, 2);
