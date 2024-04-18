@@ -39,7 +39,7 @@ public class Tutorial : MonoBehaviour
 
     private ManipulationMode m_ManipulationMode = null;
     private SimpleDirectManipulation m_SimpleDirect = null;
-    private DirectManipulation m_Direct = null;
+    private ConstrainedDirectManipulation m_Direct = null;
     private SDOFManipulation m_SDOF = null;
 
     private Manipulator m_Manipulator = null;
@@ -69,7 +69,7 @@ public class Tutorial : MonoBehaviour
 
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_SimpleDirect = m_Manipulator.GetComponent<SimpleDirectManipulation>();
-        m_Direct = m_Manipulator.GetComponent<DirectManipulation>();
+        m_Direct = m_Manipulator.GetComponent<ConstrainedDirectManipulation>();
         m_SDOF = m_Manipulator.transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
 
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
@@ -113,7 +113,7 @@ public class Tutorial : MonoBehaviour
         {
             if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
                 stage = Stage.SIMPLEDIRECT;
-            if (m_ManipulationMode.mode == Mode.DIRECT)
+            if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
                 stage = Stage.DIRECT;
             if (m_ManipulationMode.mode == Mode.SDOF)
                 stage = Stage.SDOF;
@@ -186,7 +186,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_SimpleDirect.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_SimpleDirect.ActivationHand() != null);
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
@@ -221,7 +221,7 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_SimpleDirect.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_SimpleDirect.ActivationHand() != null);
 
         text = "Gripper Control\n\n" +
                "Now grab the other trigger to close the gripper";
@@ -296,7 +296,7 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
@@ -331,7 +331,7 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
 
         text = "Gripper Control\n\n" +
                "Now grab the other trigger to close the gripper";
@@ -361,7 +361,7 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
 
         text = "Scaling\n\n" +
                "Now squeeze the grip button on that same controller to activate scaling\n\n" +
@@ -369,8 +369,8 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        m_ControllerHints.ShowTriggerHint(m_Direct.ActivationHand(), true);
-        m_ControllerHints.ShowGripHint(m_Direct.ActivationHand(), true);
+        //m_ControllerHints.ShowTriggerHint(m_Direct.ActivationHand(), true);
+        //m_ControllerHints.ShowGripHint(m_Direct.ActivationHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
@@ -387,7 +387,7 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
 
         text = "Snapping\n\n" +
                "Now squeeze the grip button on the other controller and make sure the manipulator is pointing downwards\n\n" +
@@ -395,7 +395,7 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        m_ControllerHints.ShowTriggerHint(m_Direct.ActivationHand(), true);
+        //m_ControllerHints.ShowTriggerHint(m_Direct.ActivationHand(), true);
         m_ControllerHints.ShowGripHint(m_Direct.InteractingHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
@@ -467,7 +467,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTrackpadHint(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT);
 
         m_ControllerHints.ShowTrackpadHint(false);
 
@@ -529,7 +529,7 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTrackpadHint(true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.DIRECT);
+        yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT);
 
         m_ControllerHints.ShowTrackpadHint(false);
 
@@ -580,7 +580,7 @@ public class Tutorial : MonoBehaviour
         ChangeText(text);
         m_AudioSource.Play();
 
-        yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
 
         m_ControllerHints.ShowGripHint(m_Direct.InteractingHand(), true);
 
@@ -712,7 +712,7 @@ public class Tutorial : MonoBehaviour
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTriggerHint(m_SDOF.InteractingHand(), true);
-        m_ControllerHints.ShowGripHint(m_SDOF.OtherHand(), true);
+        //m_ControllerHints.ShowGripHint(m_SDOF.OtherHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
@@ -786,16 +786,18 @@ public class Tutorial : MonoBehaviour
             obstacle.transform.SetParent(m_Objects.transform);
             obstacles.Add(obstacle);
         }
-        obstacles[0].transform.position = new(0.0f, 0.0f, -0.45f);
-        obstacles[1].transform.position = new(0.0f, 0.0f, 0.45f);
-        obstacles[2].transform.position = new(-0.45f, 0.0f, 0.0f);
-        obstacles[3].transform.position = new(0.45f, 0.0f, 0.0f);
+        obstacles[0].transform.position = new(-0.45f, 0.0f, 0.0f);
+        obstacles[1].transform.position = new(0.0f, 0.0f, -0.45f);
+        obstacles[2].transform.position = new(0.45f, 0.0f, 0.0f);
+
+        obstacles[3].transform.SetPositionAndRotation(new(0.0f, 0.5f, 0.4f), Quaternion.Euler(new(0.0f, 90.0f, 0.0f)));
+        obstacles[3].transform.localScale = new(0.3f, 1.0f, 0.025f);
 
         while (true)
         {
-            for(var i = 0; i < 4; i++)
+            for(var i = 0; i < 3; i++)
             {
-                obstacles[i].transform.localScale = new(0.3f, Random.Range(0.25f, 1.0f), 0.025f);
+                obstacles[i].transform.localScale = new(Random.Range(0.15f, 0.25f), Random.Range(0.25f, 1.0f), 0.025f);
                 obstacles[i].transform.SetPositionAndRotation(new(obstacles[i].transform.position.x, obstacles[i].transform.localScale.y/2.0f, obstacles[i].transform.position.z),
                                                               Quaternion.Euler(new(0.0f, Random.value * 180.0f, 0.0f)));
             }
@@ -808,7 +810,7 @@ public class Tutorial : MonoBehaviour
 
             yield return new WaitUntil(() => !barrel.GetComponent<Barrel>().IsMoving() && target.GetComponent<Target>().IsInBounds(barrel.transform));
 
-            if (m_ManipulationMode.mode == Mode.DIRECT)
+            if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
             {
                 m_InteractableObjects.RemoveAllInteractableObjects();
                 yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count == 0);
@@ -820,7 +822,7 @@ public class Tutorial : MonoBehaviour
 
     private IEnumerator DestroyAllObjects()
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
         {
             m_InteractableObjects.RemoveAllInteractableObjects();
             yield return new WaitUntil(() => m_InteractableObjects.m_InteractableObjects.Count == 0);

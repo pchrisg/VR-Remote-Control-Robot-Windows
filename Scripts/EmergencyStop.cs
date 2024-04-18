@@ -18,11 +18,8 @@ public class EmergencyStop : MonoBehaviour
     private AudioSource m_AudioSource = null;
 
     private Renderer[] m_Renderers = null;
-    private Material m_OriginalMat1 = null;
-    private Material m_OriginalMat2 = null;
-
-    //For Experiment1
-    private Material m_AppearanceMat = null;
+    private readonly Material[] m_OriginalMat = { null, null };
+    private readonly Material[] m_TransparentMat = { null, null };
 
     float m_CollisionTime = 0.0f;
 
@@ -34,12 +31,18 @@ public class EmergencyStop : MonoBehaviour
 
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
 
-        m_OriginalMat1 = gameObject.transform.Find("Visuals").GetComponentInChildren<Renderer>().material;
+        m_OriginalMat[0] = gameObject.transform.Find("Visuals").GetComponentInChildren<Renderer>().material;
+        m_TransparentMat[0] = new Material(m_CollidingMat);
+        m_TransparentMat[0].color = new(m_OriginalMat[0].color.r, m_OriginalMat[0].color.g, m_OriginalMat[0].color.b, 0.3f);
 
         foreach (var renderer in m_Renderers)
         {
             if (renderer.materials.Count() > 1)
-                m_OriginalMat2 = renderer.materials[1];
+            {
+                m_OriginalMat[1] = renderer.materials[1];
+                m_TransparentMat[1] = new Material(m_CollidingMat);
+                m_TransparentMat[1].color = new(m_OriginalMat[1].color.r, m_OriginalMat[1].color.g, m_OriginalMat[1].color.b, 0.3f);
+            }
         }
     }
 
@@ -48,23 +51,15 @@ public class EmergencyStop : MonoBehaviour
         if (!other.CompareTag("Attachable"))
         {
             m_CollisionTime = Time.time;
-            string description = gameObject.name + ",collided with," + other.transform.parent.gameObject.name + "\n";
+            string description = gameObject.name + ",collided with," + other.name + "\n";
 
             if (m_ExperimentManager != null)
                 m_ExperimentManager.RecordCollision(description);
-            
-            print(Time.time.ToString() + "Enter - " + description);
 
-            foreach (Renderer renderer in m_Renderers)
-            {
-                if (renderer.materials.Count() == 1)
-                    renderer.material = m_CollidingMat;
-                else
-                {
-                    Material[] mats = { m_CollidingMat, m_CollidingMat };
-                    renderer.materials = mats;
-                }
-            }
+            print(Time.time.ToString() + " Enter - " + description);
+
+            Material[] colidingMat = { m_CollidingMat, m_CollidingMat };
+            SetColor(colidingMat);
 
             m_AudioSource.clip = m_CollisionClip;
             m_AudioSource.Play();
@@ -77,12 +72,10 @@ public class EmergencyStop : MonoBehaviour
     {
         if (!other.CompareTag("Attachable"))
         {
-            if (Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime * 2.0f)
+            if (!m_ROSPublisher.IsLocked() && Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime * 2.0f)
             {
                 m_CollisionTime = Time.time;
-                print(Time.time.ToString() + "Stay - " + gameObject.name + " collided with " + other.transform.parent.gameObject.name);
-
-                m_ROSPublisher.PublishEmergencyStop();
+                print(Time.time.ToString() + " Stay - " + gameObject.name + " collided with " + other.name);
             }
         }
     }
@@ -90,40 +83,34 @@ public class EmergencyStop : MonoBehaviour
     private void OnTriggerExit(Collider other)
     {
         if (!other.CompareTag("Attachable"))
-            ResetColor();
+            SetColor(m_OriginalMat);
     }
 
-    public void ChangeAppearance(Material newMaterial = null)
+    public void ChangeAppearance(int material)
     {
-        m_AppearanceMat = newMaterial;
+        switch (material)
+        {
+            case 1:
+                SetColor(m_OriginalMat);
+                break;
 
-        ResetColor();
+            case 2:
+                SetColor(m_TransparentMat);
+                break;
+
+            default:
+                break;
+        }
     }
 
-    public void ResetColor()
+    private void SetColor(Material[] material)
     {
         foreach (Renderer renderer in m_Renderers)
         {
-            if (m_AppearanceMat != null)
-            {
-                if (renderer.materials.Count() == 1)
-                    renderer.material = m_AppearanceMat;
-                else
-                {
-                    Material[] mats = { m_AppearanceMat, m_AppearanceMat };
-                    renderer.materials = mats;
-                }
-            }
+            if (renderer.materials.Count() == 1)
+                renderer.material = material[0];
             else
-            {
-                if (renderer.materials.Count() == 1)
-                    renderer.material = m_OriginalMat1;
-                else
-                {
-                    Material[] mats = { m_OriginalMat1, m_OriginalMat2 };
-                    renderer.materials = mats;
-                }
-            }
+                renderer.materials = material;
         }
     }
 }

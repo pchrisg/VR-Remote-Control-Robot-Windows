@@ -3,6 +3,8 @@ using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationModes;
 
+[RequireComponent(typeof(Interactable))]
+
 public class SimpleDirectManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
@@ -11,15 +13,12 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
+    private Interactable m_Interactable = null;
     private bool m_isInteracting = false;
 
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
-    private Hand m_ActivationHand = null;
     private Hand m_InteractingHand = null;
-
-    private Vector3 m_PreviousPosition = new();
-    private Quaternion m_PreviousRotation = new();
 
     private GameObject m_GhostObject = null;
 
@@ -32,6 +31,8 @@ public class SimpleDirectManipulation : MonoBehaviour
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
 
+        m_Interactable = GetComponent<Interactable>();
+
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_RightHand.handType);
         m_Trigger.AddOnStateDownListener(TriggerGrabbed, m_LeftHand.handType);
@@ -41,38 +42,31 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting && m_ActivationHand != null && m_ExperimentManager.IsRunning())
+        if (m_isInteracting)// && m_ExperimentManager.IsRunning())
             MoveManipulator();
+    }
+
+    private void OnHandHoverBegin(Hand hand)
+    {
+        if (!m_isInteracting)
+            m_InteractingHand = hand;
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT && m_ExperimentManager.IsRunning())
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)// && m_ExperimentManager.IsRunning())
         {
-            if (!m_isInteracting && m_ActivationHand == null)
+            if (!m_isInteracting && m_InteractingHand != null && fromSource == m_InteractingHand.handType && m_InteractingHand.IsStillHovering(m_Interactable))
             {
                 m_isInteracting = true;
                 m_ManipulationMode.IsInteracting(m_isInteracting);
 
-                if (fromSource == m_LeftHand.handType)
-                {
-                    m_ActivationHand = m_LeftHand;
-                    m_InteractingHand = m_RightHand;
-                }
-                else
-                {
-                    m_ActivationHand = m_RightHand;
-                    m_InteractingHand = m_LeftHand;
-                }
-
-                m_PreviousPosition = m_InteractingHand.transform.position;
-                m_PreviousRotation = m_InteractingHand.transform.rotation;
+                m_GhostObject = new GameObject("GhostObject");
+                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
+                m_GhostObject.transform.SetParent(m_InteractingHand.transform);
 
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
-
-                m_GhostObject = new GameObject("GhostObject");
-                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
             }
         }
     }
@@ -81,16 +75,12 @@ public class SimpleDirectManipulation : MonoBehaviour
     {
         if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
         {
-            if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
-            {
-                m_ActivationHand = null;
-                Destroy(m_GhostObject);
-            }
-
-            if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+            if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
             {
                 m_isInteracting = false;
                 m_ManipulationMode.IsInteracting(m_isInteracting);
+
+                Destroy(m_GhostObject);
 
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
@@ -100,22 +90,8 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void MoveManipulator()
     {
-        Vector3 fromToPosition = m_InteractingHand.transform.position - m_PreviousPosition;
-        Quaternion fromToRotation = m_InteractingHand.transform.rotation * Quaternion.Inverse(m_PreviousRotation);
-
-        m_GhostObject.transform.position += fromToPosition;
-        m_GhostObject.transform.rotation = fromToRotation * m_GhostObject.transform.rotation;
-
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, m_GhostObject.transform.rotation);
         m_ROSPublisher.PublishMoveArm();
-
-        m_PreviousPosition = m_InteractingHand.transform.position;
-        m_PreviousRotation = m_InteractingHand.transform.rotation;
-    }
-
-    public Hand ActivationHand()
-    {
-        return m_ActivationHand;
     }
 
     public Hand InteractingHand()

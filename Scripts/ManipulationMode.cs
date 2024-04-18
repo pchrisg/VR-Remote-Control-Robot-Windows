@@ -1,5 +1,7 @@
 using UnityEngine;
 using ManipulationModes;
+using Valve.VR.InteractionSystem;
+using Unity.VisualScripting;
 
 namespace ManipulationModes
 {
@@ -7,7 +9,7 @@ namespace ManipulationModes
     {
         IDLE,
         SIMPLEDIRECT,
-        DIRECT,
+        CONSTRAINEDDIRECT,
         SDOF,
         RAIL,
         RAILCREATOR,
@@ -21,10 +23,8 @@ public class ManipulationMode : MonoBehaviour
     [Header("Technique")]
     public Mode mode = Mode.IDLE;
 
-    [Header("Scene Objects")]
-    [SerializeField] private SDOFWidget m_SDOFWidget = null;
-
     private Manipulator m_Manipulator = null;
+    private SDOFManipulation m_SDOFManipulation = null;
     private InteractableObjects m_InteractableObjects = null;
     private ExperimentManager m_ExperimentManager = null;
 
@@ -37,6 +37,7 @@ public class ManipulationMode : MonoBehaviour
     private void Awake()
     {
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
+        m_SDOFManipulation = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
     }
@@ -49,19 +50,19 @@ public class ManipulationMode : MonoBehaviour
             {
                 if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
                     mode = Mode.SIMPLEDIRECT;
-                else if (m_ExperimentManager.m_Technique == Mode.DIRECT)
+                else if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
                     ToggleDirect();
                 else if (m_ExperimentManager.m_Technique == Mode.SDOF)
                     ToggleSDOF();
             }
             else if (mode == Mode.SIMPLEDIRECT)
             {
-                if (m_ExperimentManager.m_Technique == Mode.DIRECT)
+                if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
                     ToggleDirect();
                 else if (m_ExperimentManager.m_Technique == Mode.SDOF)
                     ToggleSDOF();
             }
-            else if (mode == Mode.DIRECT)
+            else if (mode == Mode.CONSTRAINEDDIRECT)
             {
                 if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
                 {
@@ -81,7 +82,7 @@ public class ManipulationMode : MonoBehaviour
                     ToggleSDOF();
                     mode = Mode.SIMPLEDIRECT;
                 }
-                else if (m_ExperimentManager.m_Technique == Mode.DIRECT)
+                else if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
                 {
                     ToggleSDOF();
                     ToggleDirect();
@@ -106,9 +107,9 @@ public class ManipulationMode : MonoBehaviour
     public void ToggleDirect()
     {
         if (mode == Mode.IDLE || mode == Mode.SIMPLEDIRECT)
-            mode = Mode.DIRECT;
+            mode = Mode.CONSTRAINEDDIRECT;
 
-        else if (mode == Mode.DIRECT)
+        else if (mode == Mode.CONSTRAINEDDIRECT)
             mode = Mode.IDLE;
     }
     
@@ -117,20 +118,22 @@ public class ManipulationMode : MonoBehaviour
         if (mode == Mode.IDLE || mode == Mode.SIMPLEDIRECT)
         {
             m_Manipulator.ResetPositionAndRotation();
-            m_SDOFWidget.Show(true);
+            m_Manipulator.GetComponent<Interactable>().highlightOnHover = false;
+            m_SDOFManipulation.Show(true);
             mode = Mode.SDOF;
         }
         else if (mode == Mode.SDOF)
         {
             m_Manipulator.ResetPositionAndRotation();
-            m_SDOFWidget.Show(false);
+            m_Manipulator.GetComponent<Interactable>().highlightOnHover = true;
+            m_SDOFManipulation.Show(false);
             mode = Mode.IDLE;
         }
     }
 
     public void ToggleAttachableObjectCreator()
     {
-        if (mode == Mode.DIRECT)
+        if (mode == Mode.CONSTRAINEDDIRECT)
         {
             m_isInteracting = true;
             m_InteractableObjects.IsCreating(true);
@@ -141,13 +144,13 @@ public class ManipulationMode : MonoBehaviour
         {
             m_isInteracting = false;
             m_InteractableObjects.IsCreating(false);
-            mode = Mode.DIRECT;
+            mode = Mode.CONSTRAINEDDIRECT;
         }
     }
 
     public void ToggleCollisionObjectCreator()
     {
-        if (mode == Mode.DIRECT)
+        if (mode == Mode.CONSTRAINEDDIRECT)
         {
             m_isInteracting = true;
             m_InteractableObjects.IsCreating(true);
@@ -158,7 +161,7 @@ public class ManipulationMode : MonoBehaviour
         {
             m_isInteracting = false;
             m_InteractableObjects.IsCreating(false);
-            mode = Mode.DIRECT;
+            mode = Mode.CONSTRAINEDDIRECT;
         }
     }
 }

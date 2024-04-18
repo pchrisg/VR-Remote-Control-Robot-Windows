@@ -242,7 +242,7 @@ public class ExperimentManager : MonoBehaviour
                 // Data Gathering
                 if (m_Timer.SplitTime() != 0.0f)
                 {
-                    if (m_ManipulationMode.mode == Mode.DIRECT)
+                    if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
                         m_TimeInDirMan += Time.deltaTime;
                     if (m_ManipulationMode.mode == Mode.COLOBJCREATOR)
                         m_TimeInColObj += Time.deltaTime;
@@ -265,6 +265,9 @@ public class ExperimentManager : MonoBehaviour
     private void ResetRobotPose()
     {
         StartCoroutine(ResetRobotPoseRoutine());
+
+        foreach (EmergencyStop emergencyStop in GameObject.FindGameObjectWithTag("robot").GetComponentsInChildren<EmergencyStop>())
+            emergencyStop.ChangeAppearance(1);
     }
 
     private IEnumerator ResetRobotPoseRoutine()
@@ -450,7 +453,7 @@ public class ExperimentManager : MonoBehaviour
         if (m_Technique != Mode.SIMPLEDIRECT)
             dataCSV += "," + m_ScalingCount.ToString();
 
-        if (m_Technique == Mode.DIRECT)
+        if (m_Technique == Mode.CONSTRAINEDDIRECT)
             dataCSV += "," + m_SnappingCount.ToString() +
                        "," + m_FocusObjectCount.ToString() +
                        "," + m_TimeInColObj.ToString() +

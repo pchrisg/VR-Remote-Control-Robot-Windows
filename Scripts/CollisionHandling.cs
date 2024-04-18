@@ -131,7 +131,7 @@ public class CollisionHandling : MonoBehaviour
             if (m_ManipulatorTouching > 0)
             {
                 m_isColliding = true;
-                m_Manipulator.Colliding(true);
+                m_Manipulator.IsColliding(true);
 
                 SetMaterial();
             }
@@ -207,7 +207,7 @@ public class CollisionHandling : MonoBehaviour
             if (m_ManipulatorTouching == 0)
             {
                 m_isColliding = false;
-                m_Manipulator.Colliding(false);
+                m_Manipulator.IsColliding(false);
 
                 SetMaterial();
             }

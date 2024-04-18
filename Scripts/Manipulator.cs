@@ -14,14 +14,10 @@ public class Manipulator : MonoBehaviour
     private Transform m_Robotiq = null;
 
     //Colors
-    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 1.0f);
-    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 1.0f);
+    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 8.0f);
+    private Color m_ScalingColor = new(0.8f, 0.8f, 0.8f, 8.0f);
+    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 8.0f);
     private Color m_InvisColor = new(0.2f, 0.2f, 0.2f, 0.0f);
-    private Color m_Y_AxisColor = new(0.0f, 1.0f, 0.0f, 0.5f);
-    private Color m_XZ_PlaneColor = new(1.0f, 0.0f, 1.0f, 0.5f);
-    private Color m_FocusObjectColor = new(1.0f, 1.0f, 0.0f, 0.5f);
-
-    public bool isColliding = false;
 
     Coroutine activeCouroutine = null;
 
@@ -46,7 +42,7 @@ public class Manipulator : MonoBehaviour
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == ManipulationModes.Mode.DIRECT)
+        if (m_ManipulationMode.mode == ManipulationModes.Mode.CONSTRAINEDDIRECT)
             CheckSnapping();
     }
 
@@ -71,14 +67,11 @@ public class Manipulator : MonoBehaviour
 
     private void CheckSnapping()
     {
-        Color color = m_InvisColor;
+        m_Indicator.ChangeAppearance(1);
 
         float angle = Vector3.Angle(gameObject.transform.right.normalized, Vector3.up.normalized);
         if (angle < 0.1f)
-            color = m_Y_AxisColor;
-
-        if (Mathf.Abs(90.0f - angle) < 0.1f)
-            color = m_XZ_PlaneColor;
+            m_Indicator.ChangeAppearance(2);
 
         if (m_InteractableObjects.m_FocusObject != null && !m_InteractableObjects.m_FocusObject.GetComponent<CollisionHandling>().m_isAttached)
         {
@@ -86,25 +79,29 @@ public class Manipulator : MonoBehaviour
             angle = Vector3.Angle(gameObject.transform.right.normalized, connectingVector.normalized);
 
             if (angle < 0.1f)
-                color = m_FocusObjectColor;
+                m_Indicator.ChangeAppearance(3);
         }
-
-        m_Indicator.SetColour(color);
     }
 
-    public void Colliding(bool value)
+    public void IsColliding(bool value)
     {
-        isColliding = value;
-
-        if (isColliding)
+        if (value)
             m_ManipulatorMat.color = m_CollidingColor;
+        else
+            m_ManipulatorMat.color = m_DefaultColor;
+    }
+
+    public void IsScaling(bool value)
+    {
+        if (value)
+            m_ManipulatorMat.color = m_ScalingColor;
         else
             m_ManipulatorMat.color = m_DefaultColor;
     }
 
     public void ShowManipulator(bool value)
     {
-        if (m_ManipulationMode.mode != ManipulationModes.Mode.DIRECT)
+        if (m_ManipulationMode.mode != ManipulationModes.Mode.CONSTRAINEDDIRECT)
             m_Indicator.Show(false);
         else
             m_Indicator.Show(value);

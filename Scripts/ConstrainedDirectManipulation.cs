@@ -3,27 +3,29 @@ using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationModes;
 
-public class DirectManipulation : MonoBehaviour
+[RequireComponent(typeof(Interactable))]
+
+public class ConstrainedDirectManipulation : MonoBehaviour
 {
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
     private ExperimentManager m_ExperimentManager = null;
 
+    private SteamVR_Action_Boolean m_Trigger = null;
+    private SteamVR_Action_Boolean m_Grip = null;
+    private int m_GripCount = 0;
+    
+    private Interactable m_Interactable = null;
+    
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
-    private Hand m_ActivationHand = null;
     private Hand m_InteractingHand = null;
-
-    private SteamVR_Action_Boolean m_Grip = null;
-    private SteamVR_Action_Boolean m_Trigger = null;
-
-    private Vector3 m_PreviousPosition = new();
-    private Quaternion m_PreviousRotation = new();
+    private bool m_isInteracting = false;
 
     private Vector3 m_InitPos = new();
     private GameObject m_GhostObject = null;
-    private bool m_isInteracting = false;
+    
     private bool m_isScaling = false;
     private bool m_isSnapping = false;
 
@@ -33,6 +35,8 @@ public class DirectManipulation : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+
+        m_Interactable = GetComponent<Interactable>();
 
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
@@ -52,56 +56,45 @@ public class DirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting && m_ActivationHand != null && m_ExperimentManager.IsRunning())
+        if (m_isInteracting)// && m_ExperimentManager.IsRunning())
             MoveManipulator();
+    }
+
+    private void OnHandHoverBegin(Hand hand)
+    {
+        if (!m_isInteracting)
+            m_InteractingHand = hand;
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT && m_ExperimentManager.IsRunning())
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)// && m_ExperimentManager.IsRunning())
         {
-            if (!m_isInteracting && m_ActivationHand == null)
+            if (!m_isInteracting && m_InteractingHand != null && fromSource == m_InteractingHand.handType && m_InteractingHand.IsStillHovering(m_Interactable))
             {
                 m_isInteracting = true;
                 m_ManipulationMode.IsInteracting(m_isInteracting);
 
-                if (fromSource == m_LeftHand.handType)
-                {
-                    m_ActivationHand = m_LeftHand;
-                    m_InteractingHand = m_RightHand;
-                }
-                else
-                {
-                    m_ActivationHand = m_RightHand;
-                    m_InteractingHand = m_LeftHand;
-                }
-
-                m_PreviousPosition = m_InteractingHand.transform.position;
-                m_PreviousRotation = m_InteractingHand.transform.rotation;
+                m_GhostObject = new GameObject("GhostObject");
+                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
+                m_GhostObject.transform.SetParent(m_InteractingHand.transform);
 
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
-
-                m_GhostObject = new GameObject("GhostObject");
-                m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
             }
         }
     }
 
     private void TriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
         {
-            if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
-            {
-                m_ActivationHand = null;
-                Destroy(m_GhostObject);
-            }
-
-            if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
+            if (m_isInteracting && m_InteractingHand != null && fromSource == m_InteractingHand.handType)
             {
                 m_isInteracting = false;
                 m_ManipulationMode.IsInteracting(m_isInteracting);
+
+                Destroy(m_GhostObject);
 
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
@@ -111,56 +104,72 @@ public class DirectManipulation : MonoBehaviour
 
     private void GripGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
         {
-            if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
-            {
-                if (m_GhostObject != null)
-                {
-                    m_isScaling = true;
-                    m_InitPos = m_GhostObject.transform.position;
-                    m_ExperimentManager.RecordModifier("SCALING", true);
-                }
-            }
+            m_GripCount++;
 
-            if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
+            switch (m_GripCount)
             {
-                m_isSnapping = true;
-                m_ExperimentManager.RecordModifier("SNAPPING", true);
+                case 1:
+                    m_isSnapping = true;
+
+                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    break;
+
+                case 2:
+                    m_isScaling = true;
+                    m_InitPos = gameObject.transform.position;
+                    gameObject.GetComponent<Manipulator>().IsScaling(true);
+
+                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    break;
+
+                default:
+                    break;
             }
         }
     }
 
     private void GripReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
         {
-            if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
+            m_GripCount--;
+
+            switch (m_GripCount)
             {
-                if (m_GhostObject != null)
-                {
+                case 0:
+                    m_isSnapping = false;
+
+                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    break;
+
+                case 1:
                     m_isScaling = false;
-                    m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
-                    m_ExperimentManager.RecordModifier("SCALING", false);
-                }
+                    gameObject.GetComponent<Manipulator>().IsScaling(false);
+
+                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    break;
+
+                default:
+                    break;
             }
 
-            if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
+            if (m_isInteracting)
             {
-                m_isSnapping = false;
-                m_ExperimentManager.RecordModifier("SNAPPING", false);
+                m_isInteracting = false;
+                m_ManipulationMode.IsInteracting(m_isInteracting);
+
+                Destroy(m_GhostObject);
+
+                m_LeftHand.GetComponent<Hand>().Show();
+                m_RightHand.GetComponent<Hand>().Show();
             }
         }
     }
 
     private void MoveManipulator()
     {
-        Vector3 fromToPosition = m_InteractingHand.transform.position - m_PreviousPosition;
-        Quaternion fromToRotation = m_InteractingHand.transform.rotation * Quaternion.Inverse(m_PreviousRotation);
-
-        m_GhostObject.transform.position += fromToPosition;
-        m_GhostObject.transform.rotation = fromToRotation * m_GhostObject.transform.rotation;
-
         Vector3 position = m_GhostObject.transform.position;
         Quaternion rotation = m_GhostObject.transform.rotation;
 
@@ -187,9 +196,6 @@ public class DirectManipulation : MonoBehaviour
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
         m_ROSPublisher.PublishMoveArm();
-
-        m_PreviousPosition = m_InteractingHand.transform.position;
-        m_PreviousRotation = m_InteractingHand.transform.rotation;
     }
 
     private Vector3 PositionSnapping(Transform focusObject)
@@ -217,81 +223,36 @@ public class DirectManipulation : MonoBehaviour
         Vector3 up;
         Vector3 forward;
 
-        // manipulator above focus object
-        float angle = Vector3.Angle(right, focusObject.up);
-        if (angle < ManipulationMode.ANGLETHRESHOLD)
-        {
-            up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, focusObject.up);
-            forward = Vector3.Cross(focusObject.up.normalized, up.normalized);
-
-            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
-
-        //// manipulator to the right/left of focus object
-        //angle = Vector3.Angle(right, focusObject.right);
-        //if (angle < 0.1f || 180.0f - angle < 0.1f)
+        //// manipulator above focus object
+        //float angle = Vector3.Angle(right, focusObject.up);
+        //if (angle < ManipulationMode.ANGLETHRESHOLD)
         //{
-        //    up = Vector3.Project(m_GhostObject.transform.up, focusObject.up);
-        //    forward = Vector3.Cross(right.normalized, up.normalized);
-
-        //    return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        //}
-
-        //// manipulator infront/behind focus object
-        //angle = Vector3.Angle(right, focusObject.transform.forward);
-        //if (angle < 0.1f || 180.0f - angle < 0.1f)
-        //{
-        //    up = Vector3.Project(m_GhostObject.transform.up, focusObject.transform.up);
-        //    forward = Vector3.Cross(right.normalized, up.normalized);
+        //    up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, focusObject.up);
+        //    forward = Vector3.Cross(focusObject.up.normalized, up.normalized);
 
         //    return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
         //}
 
         // manipulator facing focus object
-        angle = Vector3.Angle(m_GhostObject.transform.right, right);
-        if (angle < ManipulationMode.ANGLETHRESHOLD)
-        {
+        //angle = Vector3.Angle(m_GhostObject.transform.right, right);
+        //if (angle < ManipulationMode.ANGLETHRESHOLD)
+        //{
             up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, right);
             forward = Vector3.Cross(right.normalized, up.normalized);
 
             return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
+        //}
 
-        return m_GhostObject.transform.rotation;
+        //return m_GhostObject.transform.rotation;
     }
 
     private Quaternion RotationSnapping()
     {
-        float angle = Vector3.Angle(m_GhostObject.transform.right, Vector3.up);
+        //snap to y axis
+        Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
+        Vector3 forward = Vector3.Cross(Vector3.up, up.normalized);
 
-        if (angle < ManipulationMode.ANGLETHRESHOLD)
-        {
-            //snap to y axis
-            Vector3 up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, Vector3.up);
-            Vector3 forward = Vector3.Cross(Vector3.up, up.normalized);
-
-            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        }
-        //if (Mathf.Abs(90.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
-        //{
-        //    Vector3 right = Vector3.ProjectOnPlane(m_GhostObject.transform.right, Vector3.up);
-        //    Vector3 up = Vector3.Cross(m_GhostObject.transform.forward.normalized, right.normalized);
-
-        //    angle = Vector3.Angle(up, Vector3.up);
-        //    if (angle < ManipulationMode.ANGLETHRESHOLD || Mathf.Abs(180.0f - angle) < ManipulationMode.ANGLETHRESHOLD)
-        //        up = angle <= 90 ? Vector3.up : -Vector3.up;
-
-        //    Vector3 forward = Vector3.Cross(right.normalized, up.normalized);
-
-        //    return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
-        //}
-
-        return m_GhostObject.transform.rotation;
-    }
-
-    public Hand ActivationHand()
-    {
-        return m_ActivationHand;
+        return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
     }
 
     public Hand InteractingHand()

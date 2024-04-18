@@ -129,7 +129,7 @@ public class PlanningRobot : MonoBehaviour
         StopAllCoroutines();
         m_DisplayPath = false;
         m_PlanRobMat.color = m_HideColor;
-        m_Manipulator.Colliding(false);
+        m_Manipulator.IsColliding(false);
 
         if (m_ManipulatorPoses.Any())
             m_ManipulatorPoses.Remove(m_ManipulatorPoses.Last());

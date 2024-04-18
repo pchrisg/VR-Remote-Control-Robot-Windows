@@ -109,25 +109,25 @@ public class StackingTask : MonoBehaviour
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_2";
-        barrel.GetComponent<Barrel>().SetPosition(new(-0.44f, 0.058f, 0.4f));
-        barrel.transform.SetParent(m_ObjectsContainer.transform);
-        m_Barrels.Add(barrel.transform);
-
-        barrel = Instantiate(m_BarrelPrefab);
-        barrel.name = "barrel_3";
         barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, -0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
-        barrel.name = "barrel_4";
+        barrel.name = "barrel_3";
         barrel.GetComponent<Barrel>().SetPosition(new(0.067f, 0.058f, 0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
-        barrel.name = "barrel_5";
+        barrel.name = "barrel_4";
         barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, 0.5f));
+        barrel.transform.SetParent(m_ObjectsContainer.transform);
+        m_Barrels.Add(barrel.transform);
+
+        barrel = Instantiate(m_BarrelPrefab);
+        barrel.name = "barrel_5";
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.44f, 0.058f, 0.4f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         m_Barrels.Add(barrel.transform);
 
@@ -146,8 +146,8 @@ public class StackingTask : MonoBehaviour
 
         obstacle = Instantiate(m_ObstaclePrefab);
         obstacle.name = "obstacle_3";
-        obstacle.transform.SetPositionAndRotation(new(-0.39f, 0.27f, 0.026f), Quaternion.Euler(0.0f, 113.16f, 0.0f));
-        obstacle.transform.localScale = new Vector3(0.3f, 0.54f, 0.025f);
+        obstacle.transform.SetPositionAndRotation(new(-0.39f, 0.26f, 0.026f), Quaternion.Euler(0.0f, 113.16f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.3f, 0.52f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
 
         obstacle = Instantiate(m_ObstaclePrefab);

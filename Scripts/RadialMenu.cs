@@ -29,14 +29,14 @@ public class RadialMenu : MonoBehaviour
 
     private ManipulationMode m_ManipulationMode = null;
 
-    private Mode m_MenuMode = Mode.DIRECT;
+    private Mode m_MenuMode = Mode.CONSTRAINEDDIRECT;
     private Vector2 m_TouchPosition = Vector2.zero;
     
     private RadialSection m_HighlightedSection = null;
 
-    private Color m_ShowColor = new Color(1.0f, 1.0f, 0.0f, 1.0f);
-    private Color m_HideColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-    private Color m_BlockColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+    private Color m_ShowColor = new(1.0f, 1.0f, 0.0f, 1.0f);
+    private Color m_HideColor = new(0.0f, 0.0f, 0.0f, 0.0f);
+    private Color m_BlockColor = new(1.0f, 1.0f, 1.0f, 1.0f);
 
 
     private readonly float degreeIncrement = 180.0f;
@@ -101,9 +101,9 @@ public class RadialMenu : MonoBehaviour
 
     private void SetSectionIcons()
     {
-        if (m_ManipulationMode.mode == Mode.DIRECT)
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
         {
-            m_MenuMode = Mode.DIRECT;
+            m_MenuMode = Mode.CONSTRAINEDDIRECT;
             m_ActiveSR.sprite = null;
 
             for (int i = 0; i < 2; i++)

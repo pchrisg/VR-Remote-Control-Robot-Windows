@@ -29,8 +29,9 @@ public class ROSPublisher : MonoBehaviour
 
     private ROSConnection m_Ros = null;
 
-    public float m_LockedTime = 1.0f;
-    public bool locked = false;
+    public float m_LockedTime = 2.0f;
+    private bool m_isLocked = false;
+    private Coroutine m_ActiveCoroutine = null;
 
     private void Awake()
     {
@@ -130,7 +131,7 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishMoveArm()
     {
-        if (!locked)
+        if (!m_isLocked)
         {
             var destination = new PoseMsg
             {
@@ -143,12 +144,12 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishEmergencyStop()
     {
-        //StartCoroutine(Lock());
+        m_ActiveCoroutine ??= StartCoroutine(Lock());
     }
 
     IEnumerator Lock()
     {
-        locked = true;
+        m_isLocked = true;
 
         BoolMsg msg = new()
         {
@@ -160,7 +161,14 @@ public class ROSPublisher : MonoBehaviour
         msg.data = false;
         m_Ros.Publish(m_EmergencyStopTopic, msg);
 
-        locked = false;
+        m_isLocked = false;
+
+        m_ActiveCoroutine = null;
+    }
+
+    public bool IsLocked()
+    {
+        return m_isLocked;
     }
 
     public void PublishAddCollisionObject(CollisionObjectMsg collisionObject)
@@ -175,6 +183,10 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishRobotiqSqueeze(Robotiq3FGripperRobotOutputMsg outputMessage)
     {
-        m_Ros.Publish(m_RoboticSqueezeTopic, outputMessage);
+        if(!m_isLocked)
+        {
+            m_Ros.Publish(m_RoboticSqueezeTopic, outputMessage);
+        }
+            
     }
 }

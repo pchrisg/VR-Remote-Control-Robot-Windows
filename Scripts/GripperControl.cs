@@ -13,33 +13,35 @@ public class GripperControl : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private AudioSource m_ManipulatorAudioSource = null;
     private ManipulationMode m_ManipulationMode = null;
+    private SimpleDirectManipulation m_SimpleDirectManipulation = null;
+    private ConstrainedDirectManipulation m_ConstrainedDirectManipulation = null;
     private SDOFManipulation m_SDOFManipulation = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
-    private SteamVR_Action_Single m_Squeeze = null;
 
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
-    private Hand m_ActivationHand = null;
     private Hand m_InteractingHand = null;
-    
+    private Hand m_GrippingHand = null;
+
     private readonly float m_MaxGrasp = 120.0f;
     private float m_TargetGrasp = 0.0f;
-    private float m_PreviousGrasp = 0.0f;
 
     private bool m_isInteracting = false;
     private bool m_isGripping = false;
-    private bool m_isLocked = false;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
-        m_SDOFManipulation = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
+
+        GameObject manipulator = GameObject.FindGameObjectWithTag("Manipulator");
+        m_SimpleDirectManipulation = manipulator.GetComponent<SimpleDirectManipulation>();
+        m_ConstrainedDirectManipulation = manipulator.GetComponent<ConstrainedDirectManipulation>();
+        m_SDOFManipulation = manipulator.transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
         m_ManipulatorAudioSource = gameObject.GetComponent<AudioSource>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
-        m_Squeeze = SteamVR_Input.GetAction<SteamVR_Action_Single>("SqueezeTrigger");
 
         m_LeftHand = Player.instance.leftHand;
         m_RightHand = Player.instance.rightHand;
@@ -52,96 +54,56 @@ public class GripperControl : MonoBehaviour
 
     private void Update()
     {
-        if (m_SDOFManipulation.IsInteracting())
-            m_ActivationHand = null;
-
-        if (m_isInteracting && m_ActivationHand != null)
+        if (m_isInteracting)
             MoveGripper();
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT || m_ManipulationMode.mode == Mode.DIRECT || (m_ManipulationMode.mode == Mode.SDOF && m_SDOFManipulation.GetHoveringHand() == null && !m_SDOFManipulation.IsInteracting()))
-        {
-            if (!m_isInteracting && m_ActivationHand == null)
-            {
-                m_isInteracting = true;
+        Hand interactingHand = null;
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
+            interactingHand = m_SimpleDirectManipulation.InteractingHand();
+            
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
+            interactingHand = m_ConstrainedDirectManipulation.InteractingHand();
 
-                if (fromSource == m_LeftHand.handType)
-                {
-                    m_ActivationHand = m_LeftHand;
-                    m_InteractingHand = m_RightHand;
-                }
+        if (m_ManipulationMode.mode == Mode.SDOF)
+            interactingHand = m_SDOFManipulation.InteractingHand();
+
+        if (interactingHand != null)
+        {
+            if (m_InteractingHand == null || m_InteractingHand != interactingHand)
+            {
+                m_InteractingHand = interactingHand;
+
+                if (m_InteractingHand == m_LeftHand)
+                    m_GrippingHand = m_RightHand;
                 else
-                {
-                    m_ActivationHand = m_RightHand;
-                    m_InteractingHand = m_LeftHand;
-                }
+                    m_GrippingHand = m_LeftHand;
             }
 
-            if (m_ActivationHand != null)
+            if (fromSource == m_GrippingHand.handType)
             {
-                if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
-                {
-                    if (m_isGripping)
-                    {
-                        m_isLocked = true;
-                        m_isGripping = false;
-                    }
-                    else
-                    {
-                        m_PreviousGrasp = 0.0f;
-                        m_isGripping = true;
-                    }
-                }
+                m_isInteracting = true;
+                m_isGripping = !m_isGripping;
             }
         }
     }
 
     private void TriggerReleased(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ActivationHand != null && fromSource == m_ActivationHand.handType)
-            m_ActivationHand = null;
-
-        if (m_InteractingHand != null && fromSource == m_InteractingHand.handType)
-            MoveGripper();
-
-        if (!m_Trigger.GetState(m_RightHand.handType) && !m_Trigger.GetState(m_LeftHand.handType))
-        {
+        if (m_GrippingHand != null && fromSource == m_GrippingHand.handType)
             m_isInteracting = false;
-            m_InteractingHand = null;
-        }
     }
 
     private void MoveGripper()
     {
-        m_TargetGrasp = m_Squeeze.GetAxis(m_InteractingHand.handType) * m_MaxGrasp;
-
-        if (m_TargetGrasp == 0.0f)
-        {
-            if (m_isGripping)
-                m_TargetGrasp = m_PreviousGrasp;
-        }
-
         // Closing
         if (m_isGripping)
-        {
-            if (m_TargetGrasp < m_PreviousGrasp)
-                m_TargetGrasp = m_PreviousGrasp;
-            else
-                m_PreviousGrasp = m_TargetGrasp;
-        }
+            m_TargetGrasp = m_MaxGrasp;
         // Openning
         else
-        {
-            if (m_isLocked)
-            {
-                if (m_TargetGrasp >= m_PreviousGrasp)
-                    m_isLocked = false;
-                else
-                    m_TargetGrasp = m_PreviousGrasp;
-            }
-        }
+            m_TargetGrasp = 0.0f;
 
         Robotiq3FGripperRobotOutputMsg outputMessage = new()
         {

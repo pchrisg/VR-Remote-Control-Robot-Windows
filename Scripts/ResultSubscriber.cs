@@ -42,13 +42,13 @@ public class ResultSubscriber : MonoBehaviour
     {
         if (!message.data && m_isPlanExecuted)
         {
-            m_Manipulator.Colliding(true);
+            m_Manipulator.IsColliding(true);
             m_isPlanExecuted = false;
         }
 
         if (message.data && !m_isPlanExecuted)
         {
-            m_Manipulator.Colliding(false);
+            m_Manipulator.IsColliding(false);
             m_isPlanExecuted = true;
         }
     }

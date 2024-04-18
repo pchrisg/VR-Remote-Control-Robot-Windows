@@ -12,9 +12,6 @@ public class RobotAppearance : MonoBehaviour
     [Header("Distance")]
     [SerializeField] private float m_ChangeDistance = 0.0f;
 
-    [Header("Materials")]
-    [SerializeField] private Material m_TransparentMat = null;
-
     private GameObject m_UR5 = null;
     private GameObject m_Robotiq = null;
     private Collider m_Player = null;
@@ -35,17 +32,17 @@ public class RobotAppearance : MonoBehaviour
         if (distance <= m_ChangeDistance && m_Appearance == Appearance.OPAQUE)
         {
             foreach (var joint in m_UR5.GetComponentsInChildren<EmergencyStop>())
-                joint.ChangeAppearance(m_TransparentMat);
+                joint.ChangeAppearance(2);
 
             foreach (var joint in m_Robotiq.GetComponentsInChildren<EmergencyStop>())
-                joint.ChangeAppearance();
+                joint.ChangeAppearance(1);
 
             m_Appearance = Appearance.TRANSPARENT;
         }
         else if (distance > m_ChangeDistance && m_Appearance == Appearance.TRANSPARENT)
         {
             foreach (var joint in m_UR5.GetComponentsInChildren<EmergencyStop>())
-                joint.ChangeAppearance();
+                joint.ChangeAppearance(1);
 
             m_Appearance = Appearance.OPAQUE;
         }

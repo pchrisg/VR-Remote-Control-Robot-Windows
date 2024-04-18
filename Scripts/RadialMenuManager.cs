@@ -34,14 +34,13 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Start()
     {
-        Invoke("SetRightHandAsParent", 0.5f);
+        Invoke(nameof(SetRightHandAsParent), 0.5f);
     }
 
     private void SetRightHandAsParent()
     {
         Hand rightHand = Player.instance.rightHand;
-        gameObject.transform.position = rightHand.transform.position;
-        gameObject.transform.rotation = rightHand.transform.rotation;
+        gameObject.transform.SetPositionAndRotation(rightHand.transform.position, rightHand.transform.rotation);
         gameObject.transform.SetParent(rightHand.transform);
     }
 
@@ -52,7 +51,7 @@ public class RadialMenuManager : MonoBehaviour
 
     private void Touch(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource, bool newState)
     {
-        if(m_ManipulationMode.mode == Mode.DIRECT ||
+        if(m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT ||
            m_ManipulationMode.mode == Mode.ATTOBJCREATOR ||
            m_ManipulationMode.mode == Mode.COLOBJCREATOR)
             radialMenu.Show(newState);
