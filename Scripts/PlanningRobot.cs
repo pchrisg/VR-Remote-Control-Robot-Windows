@@ -18,9 +18,9 @@ public class PlanningRobot : MonoBehaviour
     private Transform m_Robotiq = null;
     private Transform m_PlanRobotiq = null;
 
-    private List<RobotTrajectoryMsg> m_Trajectories = new List<RobotTrajectoryMsg>();
-    private List<Vector3> m_StartPoses = new List<Vector3>();
-    private List<Vector3> m_ManipulatorPoses = new List<Vector3>();
+    private readonly List<RobotTrajectoryMsg> m_Trajectories = new();
+    private readonly List<Vector3> m_StartPoses = new();
+    private readonly List<Vector3> m_ManipulatorPoses = new();
 
     private const int k_UR5NumJoints = 6;
     private ArticulationBody[] m_PlanRobJoints = null;
@@ -32,8 +32,8 @@ public class PlanningRobot : MonoBehaviour
 
     private bool m_DisplayPath = false;
 
-    private Color m_ShowColor = new Color(0.8f, 0.8f, 0.8f, 0.4f);
-    private Color m_HideColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+    private Color m_ShowColor = new(0.8f, 0.8f, 0.8f, 0.4f);
+    private Color m_HideColor = new(0.0f, 0.0f, 0.0f, 0.0f);
 
     [HideInInspector] public bool isPlanning = false;
 

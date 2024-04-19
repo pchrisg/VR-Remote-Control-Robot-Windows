@@ -21,6 +21,8 @@ public class Manipulator : MonoBehaviour
 
     Coroutine activeCouroutine = null;
 
+    private bool m_isScaling = false;
+
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
@@ -88,11 +90,18 @@ public class Manipulator : MonoBehaviour
         if (value)
             m_ManipulatorMat.color = m_CollidingColor;
         else
-            m_ManipulatorMat.color = m_DefaultColor;
+        {
+            if (m_isScaling)
+                m_ManipulatorMat.color = m_ScalingColor;
+            else
+                m_ManipulatorMat.color = m_DefaultColor;
+        }
     }
 
     public void IsScaling(bool value)
     {
+        m_isScaling = value;
+
         if (value)
             m_ManipulatorMat.color = m_ScalingColor;
         else

@@ -98,6 +98,8 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
+
+                m_ROSPublisher.PublishMoveArm();
             }
         }
     }
@@ -164,6 +166,8 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
+
+                m_ROSPublisher.PublishMoveArm();
             }
         }
     }
