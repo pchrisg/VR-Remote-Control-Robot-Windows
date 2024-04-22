@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class RobotAssistant : MonoBehaviour
@@ -8,8 +9,12 @@ public class RobotAssistant : MonoBehaviour
 
     public struct RobotLimits
     {
-        public float[] limits;
+        public float min;
+        public float max;
     }
+
+    [Header("Thresholds")]
+    [SerializeField] private float[] m_Thresholds = new float[6];
 
     [Header("Current Target")]
     [SerializeField] private float[] m_Targets = new float[6];
@@ -21,7 +26,6 @@ public class RobotAssistant : MonoBehaviour
     [SerializeField] private float[] m_Wrist1 = new float[2];
     [SerializeField] private float[] m_Wrist2 = new float[2];
     [SerializeField] private float[] m_Wrist3 = new float[2];
-    private readonly float m_Threshhold = 20.0f;
 
     private RobotLimits[] m_RobotLimits = new RobotLimits[6];
 
@@ -68,12 +72,18 @@ public class RobotAssistant : MonoBehaviour
             }
         }
 
-        m_RobotLimits[0].limits = m_ShoulderPan;
-        m_RobotLimits[1].limits = m_ShoulderLift;
-        m_RobotLimits[2].limits = m_ElbowJoint;
-        m_RobotLimits[3].limits = m_Wrist1;
-        m_RobotLimits[4].limits = m_Wrist2;
-        m_RobotLimits[5].limits = m_Wrist3;
+        m_RobotLimits[0].min = m_ShoulderPan[0];
+        m_RobotLimits[0].max = m_ShoulderPan[1];
+        m_RobotLimits[1].min = m_ShoulderLift[0];
+        m_RobotLimits[1].max = m_ShoulderLift[1];
+        m_RobotLimits[2].min = m_ElbowJoint[0];
+        m_RobotLimits[2].max = m_ElbowJoint[1];
+        m_RobotLimits[3].min = m_Wrist1[0];
+        m_RobotLimits[3].max = m_Wrist1[1];
+        m_RobotLimits[4].min = m_Wrist2[0];
+        m_RobotLimits[4].max = m_Wrist2[1];
+        m_RobotLimits[5].min = m_Wrist3[0];
+        m_RobotLimits[5].max = m_Wrist3[1];
     }
 
     private void Update()
@@ -88,11 +98,11 @@ public class RobotAssistant : MonoBehaviour
 
     private void GoToUR5()
     {
-        int jointHint = CheckLimits();
+        List<int> jointHints = CheckLimits();
 
         for (var joint = 0; joint < k_UR5NumJoints; joint++)
         {
-            if (jointHint == -1 || jointHint != joint)
+            if (!jointHints.Contains(joint))
             {
                 var joint1XDrive = m_PlanRobJoints[joint].xDrive;
                 joint1XDrive.target = m_Targets[joint];
@@ -108,84 +118,136 @@ public class RobotAssistant : MonoBehaviour
         }
     }
 
-    private int CheckLimits()
+    private List<int> CheckLimits()
     {
         for (var joint = 0; joint < k_UR5NumJoints; joint++)
             m_Targets[joint] = m_UR5Joints[joint].xDrive.target;
 
-        int jointHint = -1;
+        List<int> jointHints = new();
         for (var joint = 0; joint < k_UR5NumJoints; joint++)
         {
-            if (m_Targets[joint] - m_Threshhold < m_RobotLimits[joint].limits[0])
+            //float threshold = m_RobotLimits[joint].max - m_RobotLimits[joint].min;
+            //threshold /= 30.0f;
+
+            if (m_Targets[joint] - m_Thresholds[joint] < m_RobotLimits[joint].min)
             {
-                m_HintTargets[joint] = m_Targets[joint] + 30.0f;
-                jointHint = joint;
-                break;
+                m_HintTargets[joint] = m_Targets[joint] + (m_Thresholds[joint] * 6);
+                jointHints.Add(joint);
             }
 
-            else if (m_Targets[joint] + m_Threshhold > m_RobotLimits[joint].limits[1])
+            else if (m_Targets[joint] + m_Thresholds[joint] > m_RobotLimits[joint].max)
             {
-                m_HintTargets[joint] = m_Targets[joint] - 30.0f;
-                jointHint = joint;
-                break;
+                m_HintTargets[joint] = m_Targets[joint] - (m_Thresholds[joint] * 6);
+                jointHints.Add(joint);
+            }
+
+            else
+                m_HintTargets[joint] = m_Targets[joint];
+        }
+
+        // if manipulator behind base
+        if (m_Targets[1] >= -90)
+        {
+            float total = (m_Targets[1] + 180) * -1;
+            float sum = m_Targets[1] + m_Targets[2];
+            if (sum > total)
+            {
+                float difference = sum - total;
+
+                m_HintTargets[1] = m_Targets[1] - difference / 4;
+                total = (m_HintTargets[1] + 180) * -1;
+                sum = m_HintTargets[1] + m_Targets[2];
+                difference = sum - total;
+
+                m_HintTargets[2] = m_Targets[2] - difference;
+
+                if (!jointHints.Contains(1))
+                    jointHints.Add(1);
+                if (!jointHints.Contains(2))
+                    jointHints.Add(2);
             }
         }
 
-        if (jointHint != -1)
-            DisplayHint(true, jointHint);
-        else
-            DisplayHint(false);
+        // if shoulder lift or elbow hint
+        if (jointHints.Contains(1) || jointHints.Contains(2))
+        {
+            float sum = m_HintTargets[1] + m_HintTargets[2];
 
-        return jointHint;
+            m_HintTargets[3] = (270 - Mathf.Abs(sum)) * -1;
+
+            if (!jointHints.Contains(3))
+                jointHints.Add(3);
+        }
+
+        DisplayHint(jointHints);
+
+        return jointHints;
     }
 
-    private void DisplayHint(bool value, int joint = -1)
+    private void DisplayHint(List<int> jointHints)
     {
-        if (value)
+        if (jointHints.Count > 0)
         {
             m_DisplayHint = true;
-            m_ActiveCoroutine ??= StartCoroutine(DisplayHintCoroutine(joint));
+            m_ActiveCoroutine ??= StartCoroutine(DisplayHintCoroutine(jointHints));
         }
         else
         {
             m_DisplayHint = false;
-            m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.0f);
 
             if (m_ActiveCoroutine != null)
                 StopCoroutine(m_ActiveCoroutine);
 
             m_ActiveCoroutine = null;
+
+            m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.0f);
         }
     }
 
-    private IEnumerator DisplayHintCoroutine(int joint)
+    private IEnumerator DisplayHintCoroutine(List<int> jointHints)
     {
-        while (m_DisplayHint)
-        {
-            m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.4f);
-            yield return StartCoroutine(GoToTarget(joint, m_HintTargets[joint]));
+        m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.4f);
+        yield return StartCoroutine(GoToTarget(jointHints, m_HintTargets));
 
-            m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.0f);
+        yield return new WaitForSeconds(1.0f);
+
+        m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.0f);
+
+        for (var i = 0; i < jointHints.Count; i++)
+        {
+            int joint = jointHints[i];
             var joint1XDrive = m_PlanRobJoints[joint].xDrive;
             joint1XDrive.target = m_Targets[joint];
             m_PlanRobJoints[joint].xDrive = joint1XDrive;
-
-            yield return new WaitForSeconds(1.0f);
         }
+        
+        yield return new WaitForSeconds(0.5f);
+        m_ActiveCoroutine = null;
     }
 
-    private IEnumerator GoToTarget(int joint, float target)
+    private IEnumerator GoToTarget(List<int> jointHints, float[] targets)
     {
-        var joint1XDrive = m_PlanRobJoints[joint].xDrive;
-        float modifier = 0.5f;
-
-        if (joint1XDrive.target > target)
-            modifier *= -1;
-
-        while (m_DisplayHint && Mathf.Abs(joint1XDrive.target - target) > 1.0f)
+        bool reachedTargets = false;
+        while (m_DisplayHint && !reachedTargets)
         {
-            joint1XDrive.target += modifier;
-            m_PlanRobJoints[joint].xDrive = joint1XDrive;
+            reachedTargets = true;
+            for (var i = 0; i < jointHints.Count; i++)
+            {
+                int joint = jointHints[i];
+                var joint1XDrive = m_PlanRobJoints[joint].xDrive;
+
+                if (Mathf.Abs(joint1XDrive.target - targets[joint]) > 1.0f)
+                {
+                    reachedTargets = false;
+
+                    float modifier = 1.0f;
+                    if (joint1XDrive.target > targets[joint])
+                        modifier *= -1;
+
+                    joint1XDrive.target += modifier;
+                    m_PlanRobJoints[joint].xDrive = joint1XDrive;
+                }
+            }
 
             yield return null;
         }

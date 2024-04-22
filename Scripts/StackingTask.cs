@@ -176,7 +176,7 @@ public class StackingTask : MonoBehaviour
 
         obstacle = Instantiate(m_ObstaclePrefab);
         obstacle.name = "obstacle_9";
-        obstacle.transform.SetPositionAndRotation(new(0.486f, 0.5f, 0.117f), Quaternion.Euler(0.0f, -22.0f, 0.0f));
+        obstacle.transform.SetPositionAndRotation(new(0.478f, 0.5f, 0.069f), Quaternion.Euler(0.0f, -22.0f, 0.0f));
         obstacle.transform.localScale = new Vector3(0.3f, 1.0f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
 

@@ -28519,6 +28519,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_PlanRobMat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
+  m_Thresholds:
+  - 20
+  - 5
+  - 5
+  - 5
+  - 20
+  - 20
   m_Targets:
   - 0
   - 0
@@ -28533,11 +28540,11 @@ MonoBehaviour:
   - -180
   - -30
   m_ElbowJoint:
-  - -150
+  - -160
   - 0
   m_Wrist1:
   - -180
-  - -30
+  - 70
   m_Wrist2:
   - 0
   - 180

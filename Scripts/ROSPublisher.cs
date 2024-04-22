@@ -144,24 +144,27 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishEmergencyStop()
     {
-        m_ActiveCoroutine ??= StartCoroutine(Lock());
+        m_ActiveCoroutine ??= StartCoroutine(PublishEmergencyStopCoroutine());
     }
 
-    IEnumerator Lock()
+    IEnumerator PublishEmergencyStopCoroutine()
     {
         m_isLocked = true;
+        print("locked");
 
         BoolMsg msg = new()
         {
             data = true
         };
         m_Ros.Publish(m_EmergencyStopTopic, msg);
+
         yield return new WaitForSeconds(m_LockedTime);
 
         msg.data = false;
         m_Ros.Publish(m_EmergencyStopTopic, msg);
 
         m_isLocked = false;
+        print("unlocked");
 
         m_ActiveCoroutine = null;
     }
