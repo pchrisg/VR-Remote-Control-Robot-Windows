@@ -27,7 +27,7 @@ public class RobotAssistant : MonoBehaviour
     [SerializeField] private float[] m_Wrist2 = new float[2];
     [SerializeField] private float[] m_Wrist3 = new float[2];
 
-    private RobotLimits[] m_RobotLimits = new RobotLimits[6];
+    private readonly RobotLimits[] m_RobotLimits = new RobotLimits[6];
 
     private const int k_UR5NumJoints = 6;
     private ArticulationBody[] m_PlanRobJoints = null;

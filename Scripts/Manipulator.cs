@@ -18,10 +18,13 @@ public class Manipulator : MonoBehaviour
     private Color m_ScalingColor = new(0.8f, 0.8f, 0.8f, 8.0f);
     private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 8.0f);
     private Color m_InvisColor = new(0.2f, 0.2f, 0.2f, 0.0f);
+    private Color m_FlashingColor = new(1.0f, 1.0f, 0.0f, 0.5f);
 
     Coroutine activeCouroutine = null;
 
     private bool m_isScaling = false;
+
+    private Coroutine m_ActiveCoroutine = null;
 
     private void Awake()
     {
@@ -119,5 +122,37 @@ public class Manipulator : MonoBehaviour
             m_ManipulatorMat.color = m_DefaultColor;
         else
             m_ManipulatorMat.color = m_InvisColor;
+    }
+
+    public void Flash(bool value)
+    {
+        if (value)
+            m_ActiveCoroutine ??= StartCoroutine(FlashCoroutine());
+
+        else
+        {
+            if (m_ActiveCoroutine != null)
+                StopCoroutine(m_ActiveCoroutine);
+
+            m_ActiveCoroutine = null;
+            m_ManipulatorMat.color = m_DefaultColor;
+        }
+    }
+
+    private IEnumerator FlashCoroutine()
+    {
+        while (true)
+        {
+            if (m_ManipulationMode.IsInteracting())
+                m_ManipulatorMat.color = m_DefaultColor;
+            else
+            {
+                m_ManipulatorMat.color = m_FlashingColor;
+                yield return new WaitForSeconds(1.0f);
+
+                m_ManipulatorMat.color = m_DefaultColor;
+                yield return new WaitForSeconds(1.0f);
+            }
+        }
     }
 }

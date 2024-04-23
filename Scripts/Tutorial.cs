@@ -38,9 +38,10 @@ public class Tutorial : MonoBehaviour
     private ExperimentManager m_ExperimentManager = null;
 
     private ManipulationMode m_ManipulationMode = null;
-    private SimpleDirectManipulation m_SimpleDirect = null;
-    private ConstrainedDirectManipulation m_Direct = null;
     private SDOFManipulation m_SDOF = null;
+    private GripperControl m_GripperControl = null;
+
+    private GameObject m_Robotiq = null;
 
     private Manipulator m_Manipulator = null;
 
@@ -66,11 +67,11 @@ public class Tutorial : MonoBehaviour
     private void Awake()
     {
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
 
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
-        m_SimpleDirect = m_Manipulator.GetComponent<SimpleDirectManipulation>();
-        m_Direct = m_Manipulator.GetComponent<ConstrainedDirectManipulation>();
         m_SDOF = m_Manipulator.transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
+        m_GripperControl = m_Manipulator.GetComponent<GripperControl>();
 
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_ControllerHints = gameObject.GetComponent<ControllerHints>();
@@ -104,7 +105,7 @@ public class Tutorial : MonoBehaviour
 
         m_ActiveCoroutine = null;
 
-        StartCoroutine(DestroyAllObjects());
+        StartCoroutine(DestroyAllObjectsCoroutine());
     }
 
     private void Update()
@@ -120,17 +121,17 @@ public class Tutorial : MonoBehaviour
         }
 
         if (stage == Stage.SIMPLEDIRECT)
-            m_ActiveCoroutine ??= StartCoroutine(SimpleDirect());
+            m_ActiveCoroutine ??= StartCoroutine(SimpleDirectCoroutine());
 
         if (stage == Stage.DIRECT)
-            m_ActiveCoroutine ??= StartCoroutine(Direct());
+            m_ActiveCoroutine ??= StartCoroutine(ConstrainedDirectCoroutine());
 
         if (stage == Stage.SDOF)
-            m_ActiveCoroutine ??= StartCoroutine(SDOF());
+            m_ActiveCoroutine ??= StartCoroutine(SDOFCoroutine());
 
         if (stage == Stage.PRACTICE)
         {
-            m_ActiveCoroutine ??= StartCoroutine(Practice());
+            m_ActiveCoroutine ??= StartCoroutine(PracticeCoroutine());
 
             if (m_Timer.TimeExhausted() || m_ExperimentManager.m_Continue)
             {
@@ -159,7 +160,7 @@ public class Tutorial : MonoBehaviour
 
         m_ActiveCoroutine = null;
 
-        StartCoroutine(DestroyAllObjects());
+        StartCoroutine(DestroyAllObjectsCoroutine());
     }
 
     private void ChangeText(string instruction)
@@ -174,26 +175,230 @@ public class Tutorial : MonoBehaviour
             renderer.sprite = sprite;
     }
 
-    private IEnumerator SimpleDirect()
+    private IEnumerator ControllerCoroutine()
     {
-        //#######################
-        string text = "Simple Direct Manipulation\n\n" +
-                      "To move the robot with this technique, you need both hands\n" +
-                      "Pull the trigger button with your less dominant hand. This activates control\n\n";
+        string text = "Learn the Controller\n\n" +
+                      "The \"Trigger\" buttons are used to move the robot, and open and close the gripper\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        text += "Look at the controllers in your hands and pull the trigger buttons";
         ChangeText(text);
         m_AudioSource.Play();
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, true);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
-        //yield return new WaitUntil(() => m_SimpleDirect.ActivationHand() != null);
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trigger || m_ControllerHints.handStatus.left.trigger);
 
         m_ControllerHints.ShowTriggerHint(m_RightHand, false);
         m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
 
+        text = "Trigger Buttons\n\n" +
+               "Notice that when you pull the trigger button the hands make a grabbing gesture\n\n" +
+               "Sometimes I might say to \"grab\" an object, what I mean is to place your hand over the object and \"pull the trigger button\"";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        if (m_ManipulationMode.mode != Mode.SIMPLEDIRECT)
+        {
+            text = "Learn the Controller\n\n" +
+                   "The \"Grip\" buttons are used to give more control when moving the the robot";
+
+            if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
+                text += ", and to select objects";
+
+            text += "\n\n";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+            m_ExperimentManager.m_Continue = false;
+
+            text += "Look at the controllers in your hands and squeeze the grip buttons\n\n" +
+                   "The grip buttons should be pressed with your middle fingers";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            m_ControllerHints.ShowGripHint(m_RightHand, true);
+            m_ControllerHints.ShowGripHint(m_LeftHand, true);
+
+            yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
+
+            m_ControllerHints.ShowGripHint(m_RightHand, false);
+            m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+            text = "Grip Buttons\n\n" +
+                   "Notice that when you squeeze the grip button the hands make a pointing gesture\n\n";
+
+            if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
+                text += "Sometimes I might say to \"select\" an object. What I mean is to \"pull the grip button\" and touch the object with your index finger";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+            m_ExperimentManager.m_Continue = false;
+        }
+
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
+        {
+            text = "Learn the Controller\n\n" +
+                   "The \"Trackpad\" is used to select and deselect tools from a menu\n\n";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+            m_ExperimentManager.m_Continue = false;
+
+            text += "Look at the controller in your right hand and touch the trackpad";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            m_ControllerHints.ShowTrackpadHint(true);
+
+            yield return new WaitUntil(() => m_ControllerHints.handStatus.right.trackpad);
+
+            m_ControllerHints.ShowTrackpadHint(false);
+
+            text = "Trackpad\n\n" +
+                   "Notice that when you touch the trackpad, a radial menu appears with two options\n\n" +
+                   "To select an option, slide the cursor over the option and press the trackpad button\n\n";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            yield return new WaitUntil(() => m_ManipulationMode.mode != Mode.CONSTRAINEDDIRECT);
+
+            text += "To deselect an option, slide the cursor over the option and press the trackpad button again";
+            ChangeText(text);
+            m_AudioSource.Play();
+
+            yield return new WaitUntil(() => m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT);
+
+            yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+            m_ExperimentManager.m_Continue = false;
+        }
+    }
+
+    private IEnumerator RobotFeedbackCoroutine()
+    {
+        m_ExperimentManager.m_TeachRobotFeedback = false;
+
+        string text = "Robot Control\n\n" +
+                      "When you move the manipulator, you are telling the robot where you want its gripper to be\n\n" +
+                      "Move the manipulator to the indicated positions when they show up";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        GameObject ghost = Instantiate(m_GhostManipulator);
+        ghost.transform.SetParent(m_Objects.transform);
+        ghost.transform.SetPositionAndRotation(new(-0.1f, 0.39f, -0.4f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
+
+        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+
+        text = "Robot Control\n\n" +
+               "Notice that the robot moves much slower than the manipulator\n\n" +
+               "Keep that in mind when controlling the robot and give the robot time to catch up to the manipulator";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        ghost.transform.position = new(-0.1f, 0.2f, 0.0f);
+
+        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+
+        text = "Movement Feedback\n\n" +
+               "If the manipulator turns red, that means that the robot is incapable of reaching that position due to its limits\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        text += "If this happens, move the manipulator back to the robot gripper's current location and move it again\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        text += "If the robot is close to one of its limits, a robot assistant will appear to guide you in the direction that you need to move the maniplator\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        ghost.transform.position = new Vector3(-0.4f, 0.2f, -0.4f);
+
+        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+
+        GameObject obstacle = Instantiate(m_Obstacle);
+        obstacle.transform.SetParent(m_Objects.transform);
+        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.15f, -0.422f), Quaternion.Euler(new(0.0f, 90.0f, 0.0f)));
+        obstacle.transform.localScale = new(0.3f, 0.3f, 0.025f);
+
+        text = "Movement Feedback\n\n" +
+               "Control the robot to hit the obstacle infront of you\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        text = "Movement Feedback\n\n" +
+               "If the robot hits an object, the part of the robot that is colliding will turn red and you will hear a thump sound\n\n" +
+               "When the robot collides with any object, it will issue an emergency stop command, and will not move for 2 seconds\n\n" +
+               "When controlling the robot, try to avoid collisions as much as possible by guiding the robot around obstacles";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        ghost.transform.position = new Vector3(0.4f, 0.5f, -0.4f);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        Destroy(ghost);
+        Destroy(obstacle);
+    }
+
+    private IEnumerator SimpleDirectCoroutine()
+    {
+        //#######################
+        yield return StartCoroutine(ControllerCoroutine());
+
+        //#######################
+        string text;
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
+            text = "Simple Direct Manipulation\n\n";
+        else
+            text = "Constrained Direct Manipulation\n\n";
+
+        text += "Reach out with either hand and hover the manipulator\n\n" +
+                "When hovering, a highlight appears around the manipulator \n\n" +
+                "While hovering, pull the trigger button to grab the manipulator";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
+        m_Manipulator.Flash(true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
+
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        m_Manipulator.Flash(false);
+
         text = "Move the Robot\n\n" +
-               "The manipulator will now follow the movement of your dominant hand\n\n" +
-               "For better control, place your dominant hand over the manipulator before you activate control\n\n";
+               "The manipulator will now follow the movement of your hand and the robot follows the movement of the manipulator\n\n";
         ChangeText(text);
         m_AudioSource.Play();
 
@@ -210,39 +415,33 @@ public class Tutorial : MonoBehaviour
         ghost.transform.SetParent(m_Objects.transform);
         ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
 
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
+        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
 
         Destroy(ghost);
 
         //#######################
+        if (m_ExperimentManager.m_TeachRobotFeedback)
+            yield return StartCoroutine(RobotFeedbackCoroutine());
+
+        //#######################
         text = "Gripper Control\n\n" +
-               "To control the gripper, first activate control like you did before\n\n";
+               "To operate the gripper, simply pull the trigger button on the other controller\n\n" +
+               "Each pull of the trigger alternates between closing and opening the gripper";
         ChangeText(text);
         m_AudioSource.Play();
 
-        //yield return new WaitUntil(() => m_SimpleDirect.ActivationHand() != null);
+        yield return new WaitUntil(() => m_GripperControl.GrippingHand() != null);
 
-        text = "Gripper Control\n\n" +
-               "Now grab the other trigger to close the gripper";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowSqueezeHint(m_SimpleDirect.InteractingHand(), true);
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
-
-        text = "Gripper Control\n\n" +
-               "Grab it again to open the gripper";
-        ChangeText(text);
-        m_AudioSource.Play();
+        m_ControllerHints.ShowSqueezeHint(m_GripperControl.GrippingHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
         m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
         m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
+
+        if(m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
+            yield break;
 
         //#######################
         text = "Task\n\n" +
@@ -284,132 +483,77 @@ public class Tutorial : MonoBehaviour
         m_ActiveCoroutine = null;
     }
 
-    private IEnumerator Direct()
+    private IEnumerator ConstrainedDirectCoroutine()
     {
         //#######################
-        string text = "Constrained Direct Manipulation\n\n" +
-                      "To move the robot with this technique, you need both hands\n" +
-                      "Pull the trigger button with your less dominant hand. This activates control\n\n";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
-
-        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-
-        text = "Move the Robot\n\n" +
-               "The manipulator will now follow the movement of your dominant hand\n\n" +
-               "For better control, place your dominant hand over the manipulator before you activate control\n\n";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(SimpleDirectCoroutine());
 
         //#######################
-        text = "Task\n\n" +
-               "Place the manipulator on the target";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        GameObject ghost = Instantiate(m_GhostManipulator);
-        ghost.transform.SetParent(m_Objects.transform);
-        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
-
-        Destroy(ghost);
-
-        //#######################
-        text = "Gripper Control\n\n" +
-               "To control the gripper, first activate control like you did before\n\n";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
-
-        text = "Gripper Control\n\n" +
-               "Now grab the other trigger to close the gripper";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowSqueezeHint(m_Direct.InteractingHand(), true);
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
-
-        text = "Gripper Control\n\n" +
-               "Grab it again to open the gripper";
+        string text = "Snapping\n\n" +
+                      "When moving the manipulator, it is very difficult to keep the gripper pointing downwards\n\n" +
+                      "That's where snapping comes in";
         ChangeText(text);
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
-        m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
-
-        //#######################
-        text = "Scaling\n\n" +
-               "This technique can be scaled for precise movement if you want\n\n" +
-               "Begin by activating the control like before";
+        text = "Snapping\n\n" +
+               "To activate snapping, you just have to squeeze ONE of the grip buttons\n\n" +
+               "Then, as you move the manipulator, it will always be snapped to point downwards\n\n";
         ChangeText(text);
         m_AudioSource.Play();
 
-        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
 
-        text = "Scaling\n\n" +
-               "Now squeeze the grip button on that same controller to activate scaling\n\n" +
-               "Release the grip to stop scaling";
-        ChangeText(text);
-        m_AudioSource.Play();
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
-        //m_ControllerHints.ShowTriggerHint(m_Direct.ActivationHand(), true);
-        //m_ControllerHints.ShowGripHint(m_Direct.ActivationHand(), true);
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
 
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
 
-        //#######################
-        text = "Snapping\n\n" +
-               "Additionally, you can activate snapping to make sure that the manipulator is always pointing down\n\n" +
-               "Begin by activating the control like before";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
-
-        text = "Snapping\n\n" +
-               "Now squeeze the grip button on the other controller and make sure the manipulator is pointing downwards\n\n" +
-               "Release the grip to stop snapping";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        //m_ControllerHints.ShowTriggerHint(m_Direct.ActivationHand(), true);
-        m_ControllerHints.ShowGripHint(m_Direct.InteractingHand(), true);
+        if (m_ControllerHints.handStatus.right.grip && m_ControllerHints.handStatus.left.grip)
+        {
+            text += "Only squeeze 1 trigger!";
+            ChangeText(text);
+            m_AudioSource.Play();
+        }    
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        //#######################
+        text = "Scaling\n\n" +
+               "When the robot is close to where you want it to be, but not quite, try scaling for precise control";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        text = "Scaling\n\n" +
+               "To activate scaling, you just have to squeeze BOTH of the grip buttons\n\n" +
+               "Then, as you move the manipulator, the manipulator will move a fraction of the distance\n\n" +
+               "Also, rotation is disabled when scaling";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip && m_ControllerHints.handStatus.left.grip);
+
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
 
         //#######################
         text = "Collision Objects\n\n" +
-               "You can select objects that you want the robot to avoid while controlling it\n\n" +
-               "We call these collision objects";
+               "While controlling the robot, you want to make sure not to collide with objects\n\n" +
+               "Why not select the objects that you want the robot to avoid?";
         ChangeText(text);
         m_AudioSource.Play();
 
@@ -439,21 +583,19 @@ public class Tutorial : MonoBehaviour
 
         text = "Collision Objects\n\n" +
                "Now squeeze the grip button of either controller and select the obstacle\n\n" +
-               "All collision objects turn red once selected";
+               "All collision objects turn red once selected\n\n";
         ChangeText(text);
         m_AudioSource.Play();
 
         m_ControllerHints.ShowGripHint(m_RightHand, true);
         m_ControllerHints.ShowGripHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
 
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
 
-        text = "Collision Objects\n\n" +
-               "Not only can you turn obstacles into collision objects, but the table and glass box can also be turned into collision objects";
+        text += "Not only can you turn obstacles into collision objects, but the table and glove box can also be turned into collision objects";
         ChangeText(text);
         m_AudioSource.Play();
 
@@ -482,14 +624,16 @@ public class Tutorial : MonoBehaviour
 
         //#######################
         text = "Attachable Objects\n\n" +
-               "Sometimes you want to pick up objects, but not crash into them while moving the robot\n\n" +
-               "We call these attachable objects";
+               "What if you want the robot to avoid crashing into an object but you want to be able to pick it up?\n\n";
         ChangeText(text);
         m_AudioSource.Play();
 
         GameObject barrel = Instantiate(m_Barrel);
         barrel.transform.SetParent(m_Objects.transform);
         barrel.GetComponent<Barrel>().SetPosition(new(-0.4f, 0.058f, -0.4f));
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         text = "Attachable Objects\n\n" +
                "Start by selecting the attachable objects tool\n\n" +
@@ -533,27 +677,9 @@ public class Tutorial : MonoBehaviour
 
         m_ControllerHints.ShowTrackpadHint(false);
 
-        text = "Attachable Objects\n\n" +
-               "Now try to move the robot to crash into the barrel\n\n" +
-               "It should avoid it";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
-
-        text = "Attachable Objects\n\n" +
-               "Now try to pick up the barrel";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
-
         //#######################
         text = "Focus Objects\n\n" +
-               "All attachable objects can be turned into focus objects\n\n" +
-               "But there can only be one focus object at a time";
+               "Now that you have an attachable object in the scene, you can tell the robot to \"focus\" on that object";
         ChangeText(text);
         m_AudioSource.Play();
 
@@ -561,7 +687,7 @@ public class Tutorial : MonoBehaviour
         m_ExperimentManager.m_Continue = false;
 
         text = "Focus Objects\n\n" +
-               "Now squeeze the grip button of either controller and select the barrel\n\n" +
+               "Just squeeze the grip button of either controller and select the barrel\n\n" +
                "Focus objects turn yellow once selected";
         ChangeText(text);
         m_AudioSource.Play();
@@ -576,19 +702,28 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
 
         text = "Focus Objects\n\n" +
-               "Alright, now pick up the barrel, but this time, activate snapping\n\n";
+               "The object turned yellow, but nothing happened\n\n" +
+               "Nothing will happen until you try to pick up the barrel and activate snapping";
         ChangeText(text);
         m_AudioSource.Play();
 
-        //yield return new WaitUntil(() => m_Direct.ActivationHand() != null);
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
 
-        m_ControllerHints.ShowGripHint(m_Direct.InteractingHand(), true);
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
+
+        text = "Focus Objects\n\n" +
+               "Now, instead of snapping downwards, the robot snaps to the focus object";
 
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         //#######################
         text = "Task\n\n" +
@@ -617,8 +752,11 @@ public class Tutorial : MonoBehaviour
         m_ActiveCoroutine = null;
     }
 
-    private IEnumerator SDOF()
+    private IEnumerator SDOFCoroutine()
     {
+        //#######################
+        yield return StartCoroutine(ControllerCoroutine());
+
         //#######################
         string text = "Separated Degrees of Freedom Manipulation\n\n" +
                       "To move the robot with this technique, you interact with the balls at the ends of the displayed axes";
@@ -670,26 +808,32 @@ public class Tutorial : MonoBehaviour
         Destroy(ghost);
 
         //#######################
+        if (m_ExperimentManager.m_TeachRobotFeedback)
+            yield return StartCoroutine(RobotFeedbackCoroutine());
+
+        //#######################
         text = "Gripper Control\n\n" +
-               "To control the gripper, first make sure that you aren\'t hovering any of the handles\n\n";
+               "To operate the gripper, simply pull the trigger button on the other controller\n\n" +
+               "Each pull of the trigger alternates between closing and opening the gripper";
         ChangeText(text);
         m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_GripperControl.GrippingHand() != null);
+
+        m_ControllerHints.ShowSqueezeHint(m_GripperControl.GrippingHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        text += "Now grab one of the triggers to activate gripping and squeeze the other to open and close the gripper";
-        ChangeText(text);
-        m_AudioSource.Play();
+        m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
+        m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
 
-        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
 
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+
+
+
+
 
         //#######################
         text = "Scaling\n" +
@@ -762,7 +906,7 @@ public class Tutorial : MonoBehaviour
         m_ActiveCoroutine = null;
     }
 
-    private IEnumerator Practice()
+    private IEnumerator PracticeCoroutine()
     {
         string text = "Practice\n\n" +
                       "Place the barrel on the X as many times as you can\n\n" +
@@ -820,7 +964,7 @@ public class Tutorial : MonoBehaviour
         }
     }
 
-    private IEnumerator DestroyAllObjects()
+    private IEnumerator DestroyAllObjectsCoroutine()
     {
         if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
         {
@@ -836,5 +980,13 @@ public class Tutorial : MonoBehaviour
                 Destroy(obj);
             }
         }
+    }
+
+    private bool CheckRobotiqDistance(GameObject Object)
+    {
+        if (Vector3.Distance(m_Robotiq.transform.position, Object.transform.position) < ManipulationMode.DISTANCETHRESHOLD)
+            return true;
+        else
+            return false;
     }
 }

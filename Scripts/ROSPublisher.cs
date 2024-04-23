@@ -7,13 +7,17 @@ using RosMessageTypes.ChrisUr5Moveit;
 using RosMessageTypes.Robotiq3fGripperArticulated;
 using RosMessageTypes.Std;
 using System.Collections;
+using TMPro;
 
 public class ROSPublisher : MonoBehaviour
 {
     //Change to false if using real robotiq gripper
     public bool m_Gazebo = true;
 
-    [Header("ROS Topics")]
+    [Header("Lock Timer")]
+    [SerializeField] private GameObject m_HUD = null;
+    TextMeshPro m_Text = null;
+
     private readonly string m_ResetPoseTopic = "chris_reset_pose";
     private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
     private readonly string m_ExecPlanTopic = "chris_execute_plan";
@@ -29,7 +33,7 @@ public class ROSPublisher : MonoBehaviour
 
     private ROSConnection m_Ros = null;
 
-    public float m_LockedTime = 2.0f;
+    public float m_TimePenalty = 2.0f;
     private bool m_isLocked = false;
     private Coroutine m_ActiveCoroutine = null;
 
@@ -39,6 +43,8 @@ public class ROSPublisher : MonoBehaviour
             m_RoboticSqueezeTopic = "left_hand/command";
         else
             m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
+
+        m_Text = m_HUD.GetComponentInChildren<TextMeshPro>();
 
         m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose");
 
@@ -63,6 +69,11 @@ public class ROSPublisher : MonoBehaviour
         Invoke(nameof(RemoveAnyCollisionObjects), 0.5f);
     }
 
+    private void OnDestroy()
+    {
+        m_Ros.Disconnect();
+    }
+
     private void RemoveAnyCollisionObjects()
     {
         CollisionObjectMsg colobjmsg = new()
@@ -70,11 +81,6 @@ public class ROSPublisher : MonoBehaviour
             id = "-1"
         };
         PublishAddCollisionObject(colobjmsg);
-    }
-
-    private void OnDestroy()
-    {
-        m_Ros.Disconnect();
     }
 
     public void PublishResetPose()
@@ -158,7 +164,9 @@ public class ROSPublisher : MonoBehaviour
         };
         m_Ros.Publish(m_EmergencyStopTopic, msg);
 
-        yield return new WaitForSeconds(m_LockedTime);
+        yield return StartCoroutine(UpdateTimeCoroutine());
+
+        m_Text.text = "";
 
         msg.data = false;
         m_Ros.Publish(m_EmergencyStopTopic, msg);
@@ -167,6 +175,23 @@ public class ROSPublisher : MonoBehaviour
         print("unlocked");
 
         m_ActiveCoroutine = null;
+    }
+
+    IEnumerator UpdateTimeCoroutine()
+    {
+        float timer = m_TimePenalty;
+        while (timer >= 0)
+        {
+            timer -= Time.deltaTime;
+
+            float seconds = Mathf.FloorToInt(timer % 60);
+            float milliseconds = (timer - Mathf.FloorToInt(timer)) * 1000;
+
+            // Update the UI text
+            m_Text.text = string.Format("{0:00}:{1:000}", seconds, milliseconds);
+
+            yield return null;
+        }
     }
 
     public bool IsLocked()

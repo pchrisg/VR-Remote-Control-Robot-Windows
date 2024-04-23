@@ -30,9 +30,11 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private bool m_Reset = false;
 
     [Header("Start/Stop")]
+    public bool m_TeachRobotFeedback = false;
     [SerializeField] private bool m_Start = false;
 
     [Header("Tutorial Control")]
+    
     public bool m_Continue = false;
 
     [Header("Status")]

@@ -125,4 +125,9 @@ public class GripperControl : MonoBehaviour
         m_ManipulatorAudioSource.clip = m_Detach;
         m_ManipulatorAudioSource.Play();
     }
+
+    public Hand GrippingHand()
+    {
+        return m_GrippingHand;
+    }
 }

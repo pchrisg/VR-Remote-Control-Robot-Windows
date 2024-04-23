@@ -32,23 +32,27 @@ public class EmergencyStop : MonoBehaviour
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
 
         m_OriginalMat[0] = gameObject.transform.Find("Visuals").GetComponentInChildren<Renderer>().material;
-        m_TransparentMat[0] = new Material(m_CollidingMat);
-        m_TransparentMat[0].color = new(m_OriginalMat[0].color.r, m_OriginalMat[0].color.g, m_OriginalMat[0].color.b, 0.3f);
+        m_TransparentMat[0] = new(m_CollidingMat)
+        {
+            color = new(m_OriginalMat[0].color.r, m_OriginalMat[0].color.g, m_OriginalMat[0].color.b, 0.3f)
+        };
 
         foreach (var renderer in m_Renderers)
         {
             if (renderer.materials.Count() > 1)
             {
                 m_OriginalMat[1] = renderer.materials[1];
-                m_TransparentMat[1] = new Material(m_CollidingMat);
-                m_TransparentMat[1].color = new(m_OriginalMat[1].color.r, m_OriginalMat[1].color.g, m_OriginalMat[1].color.b, 0.3f);
+                m_TransparentMat[1] = new(m_CollidingMat)
+                {
+                    color = new(m_OriginalMat[1].color.r, m_OriginalMat[1].color.g, m_OriginalMat[1].color.b, 0.3f)
+                };
             }
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Attachable") && Time.time - m_CollisionTime >= m_ROSPublisher.m_LockedTime)
+        if (!other.CompareTag("Attachable") && Time.time - m_CollisionTime >= m_ROSPublisher.m_TimePenalty)
         {
             m_CollisionTime = Time.time;
             string description = gameObject.name + ",collided with," + other.name + "\n";

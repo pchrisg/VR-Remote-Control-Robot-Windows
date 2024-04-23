@@ -47,8 +47,8 @@ public class SDOFHandle : MonoBehaviour
         {
             m_HandleMat.color = m_FlashingColor;
             yield return new WaitForSeconds(1.0f);
-            m_HandleMat.color = m_OriginalColor;
 
+            m_HandleMat.color = m_OriginalColor;
             yield return new WaitForSeconds(1.0f);
         }
     }

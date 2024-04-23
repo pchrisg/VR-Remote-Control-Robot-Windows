@@ -17,7 +17,7 @@ public class Timer : MonoBehaviour
 
     private void Awake()
     {
-        m_Text = gameObject.GetComponent<Text>();
+        m_Text = gameObject.GetComponentInChildren<Text>();
     }
 
     private void Start()
