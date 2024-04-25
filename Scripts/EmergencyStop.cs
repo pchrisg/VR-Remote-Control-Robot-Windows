@@ -20,6 +20,7 @@ public class EmergencyStop : MonoBehaviour
     private Renderer[] m_Renderers = null;
     private readonly Material[] m_OriginalMat = { null, null };
     private readonly Material[] m_TransparentMat = { null, null };
+    private readonly Material[] m_HighlightMat = { null, null };
 
     float m_CollisionTime = 0.0f;
 
@@ -36,6 +37,10 @@ public class EmergencyStop : MonoBehaviour
         {
             color = new(m_OriginalMat[0].color.r, m_OriginalMat[0].color.g, m_OriginalMat[0].color.b, 0.3f)
         };
+        m_HighlightMat[0] = new(m_CollidingMat)
+        {
+            color = new(m_OriginalMat[0].color.r, m_OriginalMat[0].color.g, 0.0f, m_OriginalMat[0].color.a)
+        };
 
         foreach (var renderer in m_Renderers)
         {
@@ -45,6 +50,10 @@ public class EmergencyStop : MonoBehaviour
                 m_TransparentMat[1] = new(m_CollidingMat)
                 {
                     color = new(m_OriginalMat[1].color.r, m_OriginalMat[1].color.g, m_OriginalMat[1].color.b, 0.3f)
+                };
+                m_HighlightMat[1] = new(m_CollidingMat)
+                {
+                    color = new(m_OriginalMat[1].color.r, 1.0f, m_OriginalMat[1].color.b, m_OriginalMat[1].color.a)
                 };
             }
         }
@@ -101,6 +110,10 @@ public class EmergencyStop : MonoBehaviour
 
             case 2:
                 SetColor(m_TransparentMat);
+                break;
+
+            case 3:
+                SetColor(m_HighlightMat);
                 break;
 
             default:

@@ -36,6 +36,7 @@ public class Tutorial : MonoBehaviour
 
     // Scripts
     private ExperimentManager m_ExperimentManager = null;
+    private RobotAssistant m_RobotAssitant = null;
 
     private ManipulationMode m_ManipulationMode = null;
     private SDOFManipulation m_SDOF = null;
@@ -67,6 +68,7 @@ public class Tutorial : MonoBehaviour
     private void Awake()
     {
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_RobotAssitant = GameObject.FindGameObjectWithTag("RobotAssistant").GetComponent<RobotAssistant>();
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq");
 
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
@@ -283,46 +285,184 @@ public class Tutorial : MonoBehaviour
             yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
             m_ExperimentManager.m_Continue = false;
         }
+
+        text = "Please turn and face the robot to learn the technique";
+        ChangeText(text);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
     }
 
     private IEnumerator RobotFeedbackCoroutine()
     {
         m_ExperimentManager.m_TeachRobotFeedback = false;
 
+        //#######################
         string text = "Robot Control\n\n" +
-                      "When you move the manipulator, you are telling the robot where you want its gripper to be\n\n" +
-                      "Move the manipulator to the indicated positions when they show up";
+                      "When you move the manipulator, you are telling the robot where you want its gripper to be\n\n";
         ChangeText(text);
         m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        text += "Control the robot to the indicated position";
+        ChangeText(text);
 
         GameObject ghost = Instantiate(m_GhostManipulator);
         ghost.transform.SetParent(m_Objects.transform);
-        ghost.transform.SetPositionAndRotation(new(-0.1f, 0.39f, -0.4f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
+        ghost.transform.SetPositionAndRotation(new(-0.11f, 0.39f, -0.49f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
 
-        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
 
-        text = "Robot Control\n\n" +
+        Destroy(ghost);
+
+        m_ExperimentManager.m_AllowUserControl = false;
+
+        text = "Robot Movement\n\n" +
                "Notice that the robot moves much slower than the manipulator\n\n" +
-               "Keep that in mind when controlling the robot and give the robot time to catch up to the manipulator";
+               "Keep that in mind when controlling the robot, and give the robot time to catch up to the manipulator before moving it again";
         ChangeText(text);
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
         m_ExperimentManager.m_Continue = false;
 
-        ghost.transform.position = new(-0.1f, 0.2f, 0.0f);
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The robot has 6 joints that move independently\n\n" +
+               "I will highlight each joint and display what movement they allow";
+        ChangeText(text);
+        m_AudioSource.Play();
 
-        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The \"Base\" of the robot rotates the whole arm to the left or right";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        int modifier = 1;
+        while (!m_ExperimentManager.m_Continue)
+        {
+            yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(true, 0, modifier));
+            modifier *= -1;
+        }
+        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(false, 0));
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The \"Shoulder\" of the robot rotates it up or down";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        modifier = 1;
+        while (!m_ExperimentManager.m_Continue)
+        {
+            yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(true, 1, modifier));
+            modifier *= -1;
+        }
+        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(false, 1));
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The \"Elbow\" of the robot rotates it up or down";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        modifier = 1;
+        while (!m_ExperimentManager.m_Continue)
+        {
+            yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(true, 2, modifier));
+            modifier *= -1;
+        }
+        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(false, 2));
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The \"Wrist 1\" of the robot rotates the gripper up or down";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        modifier = 1;
+        while (!m_ExperimentManager.m_Continue)
+        {
+            yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(true, 3, modifier));
+            modifier *= -1;
+        }
+        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(false, 3));
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The \"Wrist 2\" of the robot rotates the gripper right or left";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        modifier = 1;
+        while (!m_ExperimentManager.m_Continue)
+        {
+            yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(true, 4, modifier));
+            modifier *= -1;
+        }
+        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(false, 4));
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "The \"Wrist 3\" of the robot rotates the fingers of gripper to the right or left";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        modifier = 1;
+        while (!m_ExperimentManager.m_Continue)
+        {
+            yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(true, 5, modifier));
+            modifier *= -1;
+        }
+        m_ExperimentManager.m_Continue = false;
+        yield return StartCoroutine(m_RobotAssitant.DisplayJointMovement(false, 5));
+
+        //#######################
+        text = "Robot Movement\n\n" +
+               "Each joint has a physical limit to how much it can rotate.\n\n" +
+               "The robot arm also has a physical limit to its reach\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
+        m_ExperimentManager.m_Continue = false;
+
+        m_ExperimentManager.m_AllowUserControl = true;
+
+        text += "Place the manipulator on the indicated position";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        ghost = Instantiate(m_GhostManipulator);
+        ghost.transform.SetParent(m_Objects.transform);
+        ghost.transform.SetPositionAndRotation(new(-0.1f, 0.2f, 0.0f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
+
+        yield return new WaitUntil(() => CheckObjectPose(m_Manipulator.gameObject, ghost));
+
+        m_ExperimentManager.m_AllowUserControl = false;
 
         text = "Movement Feedback\n\n" +
-               "If the manipulator turns red, that means that the robot is incapable of reaching that position due to its limits\n\n";
+               "If the manipulator turns red, that means that the robot is incapable of reaching that position either due to its limits or because it will collide with itself\n\n";
         ChangeText(text);
         m_AudioSource.Play();
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
         m_ExperimentManager.m_Continue = false;
 
-        text += "If this happens, move the manipulator back to the robot gripper's current location and move it again\n\n";
+        m_ExperimentManager.m_AllowUserControl = true;
+
+        text += "If this happens, move the manipulator back to the robot gripper and move it again slowly in the direction that you want it to go\n\n";
         ChangeText(text);
         m_AudioSource.Play();
 
@@ -338,41 +478,69 @@ public class Tutorial : MonoBehaviour
 
         ghost.transform.position = new Vector3(-0.4f, 0.2f, -0.4f);
 
-        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        //#######################
+        text = "Movement Feedback\n\n" +
+               "Control the robot to hit the obstacle infront of you\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
 
         GameObject obstacle = Instantiate(m_Obstacle);
         obstacle.transform.SetParent(m_Objects.transform);
         obstacle.transform.SetPositionAndRotation(new(0.0f, 0.15f, -0.422f), Quaternion.Euler(new(0.0f, 90.0f, 0.0f)));
         obstacle.transform.localScale = new(0.3f, 0.3f, 0.025f);
 
-        text = "Movement Feedback\n\n" +
-               "Control the robot to hit the obstacle infront of you\n\n";
-        ChangeText(text);
-        m_AudioSource.Play();
+        ghost.transform.position = new Vector3(0.0f, 0.2f, -0.4f);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
         m_ExperimentManager.m_Continue = false;
 
         text = "Movement Feedback\n\n" +
                "If the robot hits an object, the part of the robot that is colliding will turn red and you will hear a thump sound\n\n" +
-               "When the robot collides with any object, it will issue an emergency stop command, and will not move for 2 seconds\n\n" +
-               "When controlling the robot, try to avoid collisions as much as possible by guiding the robot around obstacles";
+               "An emergency stop command will be issued, and the robot will not move for 2 seconds";
         ChangeText(text);
         m_AudioSource.Play();
-
-        ghost.transform.position = new Vector3(0.4f, 0.5f, -0.4f);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
         m_ExperimentManager.m_Continue = false;
 
-        Destroy(ghost);
         Destroy(obstacle);
+
+        //#######################
+        text = "Explore robot movement\n\n" +
+               "Control the robot to the indicated positions to explore what it can do\n\n" +
+               "Take a second to look at the robot's orientation at each position";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        ghost.transform.SetPositionAndRotation(new(-0.11f, 0.39f, -0.49f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        ghost.transform.SetPositionAndRotation(new(0.19f, 0.7f, 0.0f), Quaternion.Euler(0.0f, -180.0f, 90.0f));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        ghost.transform.SetPositionAndRotation(new(0.48f, 0.13f, 0.4f), Quaternion.Euler(0.0f, 90.0f, 10.0f));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        ghost.transform.SetPositionAndRotation(new(0.4f, 0.4f, -0.04f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        ghost.transform.SetPositionAndRotation(new(0.5f, 0.2f, -0.5f), Quaternion.Euler(0.0f, 0.0f, 90.0f));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        ghost.transform.SetPositionAndRotation(new(-0.11f, 0.39f, -0.49f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
+
+        Destroy(ghost);
     }
 
     private IEnumerator SimpleDirectCoroutine()
     {
         //#######################
+        m_ExperimentManager.m_AllowUserControl = false;
         yield return StartCoroutine(ControllerCoroutine());
+        m_ExperimentManager.m_AllowUserControl = true;
 
         //#######################
         string text;
@@ -407,15 +575,15 @@ public class Tutorial : MonoBehaviour
 
         //#######################
         text = "Task\n\n" +
-               "Place the manipulator on the target";
+               "Control the robot to the indicated position";
         ChangeText(text);
         m_AudioSource.Play();
 
         GameObject ghost = Instantiate(m_GhostManipulator);
         ghost.transform.SetParent(m_Objects.transform);
-        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
+        ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -130.0f, 90.0f)));
 
-        yield return new WaitUntil(() => CheckRobotiqDistance(ghost));
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
 
         Destroy(ghost);
 
@@ -828,43 +996,71 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
         m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
 
-
-
-
-
-
-
-
         //#######################
-        text = "Scaling\n" +
-               "First start by grabbing a handle\n\n";
+        text = "Snapping\n\n" +
+               "When rotating the manipulator, it is very difficult to get the manipulator in line with the world\n\n" +
+               "That's where snapping comes in";
         ChangeText(text);
         m_AudioSource.Play();
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, true);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, true);
-        m_SDOF.Flash(true);
-
-        yield return new WaitUntil(() => m_SDOF.InteractingHand() != null);
-
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
-        m_SDOF.Flash(false);
-
-        text += "Now squeeze the grip button of the other controller to activate scaling";
-        ChangeText(text);
-        m_AudioSource.Play();
-
-        m_ControllerHints.ShowTriggerHint(m_SDOF.InteractingHand(), true);
-        //m_ControllerHints.ShowGripHint(m_SDOF.OtherHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
-        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
+        text = "Snapping\n\n" +
+               "To activate snapping, you just have to squeeze ONE of the grip buttons\n\n" +
+               "Then, as you rotate the manipulator, it will snap to the world axes\n\n";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
+
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+        if (m_ControllerHints.handStatus.right.grip && m_ControllerHints.handStatus.left.grip)
+        {
+            text += "Only squeeze 1 trigger!";
+            ChangeText(text);
+            m_AudioSource.Play();
+        }
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        //#######################
+        text = "Scaling\n\n" +
+               "When the robot is close to where you want it to be, but not quite, try scaling for precise control";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
+
+        text = "Scaling\n\n" +
+               "To activate scaling, you just have to squeeze\n" +
+               "ONE of the grip buttons when translating\n" +
+               "BOTH of the grip buttons when rotating\n\n" +
+               "Then, as you move the manipulator, the manipulator will move a fraction of the distance";
+        ChangeText(text);
+        m_AudioSource.Play();
+
+        m_ControllerHints.ShowGripHint(m_RightHand, true);
+        m_ControllerHints.ShowGripHint(m_LeftHand, true);
+
+        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
+
+        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip && m_ControllerHints.handStatus.left.grip);
+
+        m_ControllerHints.ShowGripHint(m_RightHand, false);
+        m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         //#######################
         text = "Task\n\n" +
@@ -982,9 +1178,10 @@ public class Tutorial : MonoBehaviour
         }
     }
 
-    private bool CheckRobotiqDistance(GameObject Object)
+    private bool CheckObjectPose(GameObject Object, GameObject refObj)
     {
-        if (Vector3.Distance(m_Robotiq.transform.position, Object.transform.position) < ManipulationMode.DISTANCETHRESHOLD)
+        if (Vector3.Distance(Object.transform.position, refObj.transform.position) < ManipulationMode.DISTANCETHRESHOLD &&
+            Quaternion.Angle(Object.transform.rotation, refObj.transform.rotation) < ManipulationMode.ANGLETHRESHOLD)
             return true;
         else
             return false;

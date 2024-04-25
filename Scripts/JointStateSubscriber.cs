@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections;
 using Unity.Robotics.ROSTCPConnector;
 using SensorUnity = RosMessageTypes.Sensor.JointStateMsg;
-using Unity.VisualScripting;
 
 public class JointStateSubscriber : MonoBehaviour
 {

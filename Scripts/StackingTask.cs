@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class StackingTask : MonoBehaviour
@@ -18,8 +19,9 @@ public class StackingTask : MonoBehaviour
     private readonly List<string> m_PlacedBarrels = new();
 
     private GameObject m_Target = null;
-    private bool m_isWithinBounds = false;
 
+    private bool m_BarrelMoved = false;
+    private bool m_WithinBounds = false;
     private float m_Timer = 0.0f;
 
     private void Awake()
@@ -46,37 +48,56 @@ public class StackingTask : MonoBehaviour
             if (barrel.GetComponent<Barrel>().IsMoving())
             {
                 movingBarrel = barrel;
+
+                if(m_BarrelMoved == false)
+                {
+                    m_BarrelMoved = true;
+                    m_ExperimentManager.RecordGrabTime(barrel.gameObject.name);
+                    print(barrel.gameObject.name + " grabbed");
+                }
+
                 break;
             }
         }
 
-        if(movingBarrel != null)
+        if (m_BarrelMoved)
         {
-            m_isWithinBounds = m_Target.GetComponent<Target>().CheckDistance(movingBarrel);
-        }
-        else if (m_isWithinBounds)
-        {
-            m_isWithinBounds = false;
-
-            foreach (Transform barrel in m_Barrels)
+            if (movingBarrel != null)
+                m_WithinBounds = m_Target.GetComponent<Target>().CheckDistance(movingBarrel);
+            else
             {
-                if (m_Target.GetComponent<Target>().IsInBounds(barrel))
+                m_BarrelMoved = false;
+
+                bool knockedOver = false;
+                foreach (Transform barrel in m_Barrels)
                 {
-                    if (!m_PlacedBarrels.Contains(barrel.gameObject.name))
-                        m_PlacedBarrels.Add(barrel.gameObject.name);
+                    if (m_Target.GetComponent<Target>().IsInBounds(barrel))
+                    {
+                        if (!m_PlacedBarrels.Contains(barrel.gameObject.name))
+                            m_PlacedBarrels.Add(barrel.gameObject.name);
+                    }
+                    else
+                    {
+                        if (m_PlacedBarrels.Contains(barrel.gameObject.name))
+                        {
+                            m_PlacedBarrels.Remove(barrel.gameObject.name);
+                            knockedOver = true;
+                        }
+                    }
                 }
-                else
+
+                if (m_WithinBounds)
                 {
-                    if (m_PlacedBarrels.Contains(barrel.gameObject.name))
-                        m_PlacedBarrels.Remove(barrel.gameObject.name);
+                    m_WithinBounds = false;
+                    m_ExperimentManager.RecordPlaceTime(m_PlacedBarrels.Last());
                 }
+
+                if (knockedOver)
+                    m_ExperimentManager.RecordKnockOver();
+
+                if (m_PlacedBarrels.Count() == 5)
+                    m_Timer = 3.0f;
             }
-
-            m_ExperimentManager.RecordBarrelTime(m_PlacedBarrels.Count(), m_PlacedBarrels.Last());
-
-            print("Placed barrel count: " + m_PlacedBarrels.Count());
-            if (m_PlacedBarrels.Count() == 5)
-                m_Timer = 3.0f;
         }
 
         if (m_Timer != 0.0f)
@@ -86,7 +107,6 @@ public class StackingTask : MonoBehaviour
             if(m_Timer <= 0)
             {
                 m_Timer = 0.0f;
-                print("After timer count: " + m_PlacedBarrels.Count());
                 if (m_PlacedBarrels.Count() == 5)
                     m_ExperimentManager.SaveData();
             }
@@ -105,30 +125,35 @@ public class StackingTask : MonoBehaviour
         barrel.name = "barrel_1";
         barrel.GetComponent<Barrel>().SetPosition(new(-0.5f, 0.058f, -0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
+        barrel.GetComponentInChildren<TextMeshProUGUI>().text = "1";
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_2";
         barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, -0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
+        barrel.GetComponentInChildren<TextMeshProUGUI>().text = "2";
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_3";
         barrel.GetComponent<Barrel>().SetPosition(new(0.067f, 0.058f, 0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
+        barrel.GetComponentInChildren<TextMeshProUGUI>().text = "3";
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_4";
         barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, 0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
+        barrel.GetComponentInChildren<TextMeshProUGUI>().text = "4";
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_5";
         barrel.GetComponent<Barrel>().SetPosition(new(-0.44f, 0.058f, 0.4f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
+        barrel.GetComponentInChildren<TextMeshProUGUI>().text = "5";
         m_Barrels.Add(barrel.transform);
 
         //Obstacles

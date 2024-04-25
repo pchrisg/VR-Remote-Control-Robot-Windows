@@ -56,7 +56,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting)// && m_ExperimentManager.IsRunning())
+        if (m_isInteracting && m_ExperimentManager.m_AllowUserControl)
             MoveManipulator();
     }
 
@@ -68,7 +68,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)// && m_ExperimentManager.IsRunning())
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT && m_ExperimentManager.m_AllowUserControl)
         {
             if (!m_isInteracting && m_InteractingHand != null && fromSource == m_InteractingHand.handType && m_InteractingHand.IsStillHovering(m_Interactable))
             {

@@ -17,7 +17,7 @@ public class PlanningCollision : MonoBehaviour
     private void Awake()
     {
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
-        m_PlanningRobot = GameObject.FindGameObjectWithTag("PlanningRobot").GetComponent<PlanningRobot>();
+        m_PlanningRobot = GameObject.FindGameObjectWithTag("RobotAssistant").GetComponent<PlanningRobot>();
     }
 
     private void OnTriggerEnter(Collider other)

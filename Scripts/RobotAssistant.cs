@@ -41,6 +41,8 @@ public class RobotAssistant : MonoBehaviour
     public bool m_DisplayHint = false;
     private Coroutine m_ActiveCoroutine = null;
 
+    private bool m_isDisplayingMovement = false;
+
     private void Awake()
     {
         m_PlanRobJoints = new ArticulationBody[k_UR5NumJoints];
@@ -88,7 +90,8 @@ public class RobotAssistant : MonoBehaviour
 
     private void Update()
     {
-        GoToUR5();
+        if(!m_isDisplayingMovement)
+            GoToUR5();
     }
 
     private void OnDestroy()
@@ -126,9 +129,6 @@ public class RobotAssistant : MonoBehaviour
         List<int> jointHints = new();
         for (var joint = 0; joint < k_UR5NumJoints; joint++)
         {
-            //float threshold = m_RobotLimits[joint].max - m_RobotLimits[joint].min;
-            //threshold /= 30.0f;
-
             if (m_Targets[joint] - m_Thresholds[joint] < m_RobotLimits[joint].min)
             {
                 m_HintTargets[joint] = m_Targets[joint] + (m_Thresholds[joint] * 6);
@@ -207,7 +207,7 @@ public class RobotAssistant : MonoBehaviour
     private IEnumerator DisplayHintCoroutine(List<int> jointHints)
     {
         m_PlanRobMat.color = new(0.8f, 0.8f, 0.8f, 0.4f);
-        yield return StartCoroutine(GoToTarget(jointHints, m_HintTargets));
+        yield return StartCoroutine(GoToTargetCoroutine(jointHints, m_HintTargets));
 
         yield return new WaitForSeconds(1.0f);
 
@@ -225,7 +225,7 @@ public class RobotAssistant : MonoBehaviour
         m_ActiveCoroutine = null;
     }
 
-    private IEnumerator GoToTarget(List<int> jointHints, float[] targets)
+    private IEnumerator GoToTargetCoroutine(List<int> jointHints, float[] targets)
     {
         bool reachedTargets = false;
         while (m_DisplayHint && !reachedTargets)
@@ -251,5 +251,28 @@ public class RobotAssistant : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    public IEnumerator DisplayJointMovement(bool value, int joint, int modifier = 1)
+    {
+        m_isDisplayingMovement = value;
+
+        if (joint != -1)
+        {
+            if (m_isDisplayingMovement)
+            {
+                m_UR5Joints[joint].transform.GetComponent<EmergencyStop>().ChangeAppearance(3);
+                m_HintTargets[joint] = m_Targets[joint] + ((m_Thresholds[joint] * 6) * modifier);
+                DisplayHint(new List<int> { joint });
+            }
+            else
+            {
+                m_UR5Joints[joint].transform.GetComponent<EmergencyStop>().ChangeAppearance(1);
+                m_HintTargets[joint] = m_Targets[joint];
+                DisplayHint(new List<int> { });
+            }
+        }
+
+        yield return new WaitUntil(() => m_ActiveCoroutine == null);
     }
 }

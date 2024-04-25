@@ -58,7 +58,7 @@ public class SDOFManipulation : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting)// && m_ExperimentManager.IsRunning())
+        if (m_isInteracting && m_ExperimentManager.m_AllowUserControl)
             MoveManipulator();
     }
 
@@ -80,7 +80,7 @@ public class SDOFManipulation : MonoBehaviour
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        if (m_ManipulationMode.mode == Mode.SDOF)// && m_ExperimentManager.IsRunning())
+        if (m_ManipulationMode.mode == Mode.SDOF && m_ExperimentManager.m_AllowUserControl)
         {
             if (!m_isInteracting && m_InteractingHand != null && fromSource == m_InteractingHand.handType && m_InteractingHand.IsStillHovering(m_Handle.GetComponent<Interactable>()))
             {
@@ -124,18 +124,31 @@ public class SDOFManipulation : MonoBehaviour
             switch (m_GripCount)
             {
                 case 1:
-                    m_isSnapping = true;
+                    if (isTranslating)
+                    {
+                        m_isScaling = true;
+                        m_Manipulator.IsScaling(true);
 
-                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    }
+                    else
+                    {
+                        m_isSnapping = true;
+
+                        m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    }
                     break;
 
                 case 2:
-                    m_isScaling = true;
-                    m_InitPos = m_Handle.position;
-                    m_InitDir = m_Handle.position - m_Manipulator.transform.position;
-                    m_Manipulator.IsScaling(true);
+                    if (isRotating)
+                    {
+                        m_isScaling = true;
+                        m_InitPos = m_Handle.position;
+                        m_InitDir = m_Handle.position - m_Manipulator.transform.position;
+                        m_Manipulator.IsScaling(true);
 
-                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    }
                     break;
 
                 default:
@@ -153,16 +166,32 @@ public class SDOFManipulation : MonoBehaviour
             switch (m_GripCount)
             {
                 case 0:
-                    m_isSnapping = false;
+                    if (m_isScaling)
+                    {
+                        m_isScaling = false;
+                        m_Manipulator.IsScaling(false);
 
-                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    }
+                    else
+                    {
+                        m_isSnapping = false;
+
+                        m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    }
+                    
                     break;
 
                 case 1:
-                    m_isScaling = false;
-                    m_Manipulator.IsScaling(false);
 
-                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    if (m_isSnapping)
+                    {
+                        m_isScaling = false;
+                        m_Manipulator.IsScaling(false);
+
+                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    }
+                    
                     break;
 
                 default:
@@ -237,7 +266,7 @@ public class SDOFManipulation : MonoBehaviour
         Vector3 projectedConnectingVector = Vector3.Project(connectingVector, m_Handle.parent.up);
         Vector3 offset = m_Handle.position - m_Manipulator.transform.position;
 
-        if (m_isScaling)
+        if (m_isSnapping || m_isScaling)
             projectedConnectingVector *= ManipulationMode.SCALINGFACTOR;
 
         Vector3 movement = m_InitPos + projectedConnectingVector - offset - m_Manipulator.transform.position;

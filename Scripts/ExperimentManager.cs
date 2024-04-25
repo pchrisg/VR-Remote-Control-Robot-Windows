@@ -12,15 +12,16 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private GameObject m_Glassbox = null;
     public GameObject m_Objects = null;
 
+    [Header("Participant")]
+    [SerializeField] private string m_ParticipantNumber = string.Empty;
+    [SerializeField] private bool m_ResetHeight = false;
+
     [Header("Technique")]
     public Mode m_Technique = Mode.IDLE;
 
-    [Header("Participant")]
-    [SerializeField] private bool m_ResetHeight = false;
-    [SerializeField] private string m_ParticipantNumber = string.Empty;
-
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
+    public bool m_AllowUserControl = false;
 
     [Header("Setup")]
     [SerializeField] private bool m_SetupTutorial = false;
@@ -34,7 +35,6 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private bool m_Start = false;
 
     [Header("Tutorial Control")]
-    
     public bool m_Continue = false;
 
     [Header("Status")]
@@ -65,13 +65,17 @@ public class ExperimentManager : MonoBehaviour
     private readonly string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\Experiment2\\";
 
     // ## Data to Store ##
-    private struct PlacedBarrel
+    private class PlacedBarrel
     {
-        public float time;
         public string name;
+        public float grabTime;
+        public float placeTime;
     };
 
     private readonly List<PlacedBarrel> m_PlacedBarrels = new();
+
+    private int m_KnockOverCount = 0;
+    private readonly List<float> m_KnockOverTimes = new();
 
     // Time
     private float m_TimeInDirMan = 0.0f;
@@ -199,6 +203,7 @@ public class ExperimentManager : MonoBehaviour
                 else
                 {
                     m_Running = true;
+                    m_AllowUserControl = true;
                     m_Status = "Running";
                     m_Timer.ResetTimer();
 
@@ -218,6 +223,7 @@ public class ExperimentManager : MonoBehaviour
             if (m_TutorialActive && !m_Start)
             {
                 m_Running = false;
+                m_AllowUserControl = false;
                 m_Status = "Stopped";
                 m_Tutorial.ResetTutorial();
             }
@@ -236,6 +242,7 @@ public class ExperimentManager : MonoBehaviour
                 if (!m_Start)
                 {
                     m_Running = false;
+                    m_AllowUserControl = false;
                     m_Status = "Stopped";
                     m_Timer.StopTimer();
                     m_Task.ResetTask();
@@ -311,11 +318,6 @@ public class ExperimentManager : MonoBehaviour
         m_ErrorDescriptions.Clear();
     }
 
-    public bool IsRunning()
-    {
-        return m_Running;
-    }
-
     public void RecordInteraction(bool value)
     {
         if (m_TaskActive && m_Running)
@@ -341,23 +343,47 @@ public class ExperimentManager : MonoBehaviour
         }
     }
 
-    public void RecordBarrelTime(int count, string name)
+    public void RecordGrabTime(string name)
+    {
+        bool isNew = true;
+        foreach (var barrel in m_PlacedBarrels)
+        {
+            if (barrel.name == name)
+            {
+                isNew = false;
+                break;
+            }
+        }
+
+        if (isNew)
+        {
+            PlacedBarrel barrel = new()
+            {
+                name = name,
+                grabTime = m_Timer.SplitTime(),
+                placeTime = 0.0f
+            };
+
+            m_PlacedBarrels.Add(barrel);
+        }
+    }
+
+    public void RecordPlaceTime(string name)
     {
         if (m_Running)
         {
-            if (count > m_PlacedBarrels.Count)
+            if (m_PlacedBarrels[^1].name == name)
             {
-                PlacedBarrel barrel = new()
-                {
-                    time = m_Timer.SplitTime(),
-                    name = name
-                };
-
-                m_PlacedBarrels.Add(barrel);
+                if (m_PlacedBarrels[^1].placeTime == 0.0f)
+                    m_PlacedBarrels[^1].placeTime = m_Timer.SplitTime();
             }
-
-            print(count + " barrel(s) placed. This barrel: " + name);
         }
+    }
+
+    public void RecordKnockOver()
+    {
+        m_KnockOverCount++;
+        m_KnockOverTimes.Add(m_Timer.SplitTime());
     }
 
     public void RecordModifier(string modifier, bool value)
@@ -399,6 +425,7 @@ public class ExperimentManager : MonoBehaviour
 
             m_Start = false;
             m_Running = false;
+            m_AllowUserControl = false;
             m_TaskActive = false;
             m_Task.Setup(false);
 
@@ -425,42 +452,54 @@ public class ExperimentManager : MonoBehaviour
         // Create first file
         var sr = File.CreateText(path);
 
-        //participant number, technique, barrel1, barrel2, barrel3, barrel4, barrel5, totaltime, interaction count, collision count, scaling count, snapping count, focus object count, collision obj time, attachable obj time, direct time
+        //participant number, technique, barrel1, barrel2, barrel3, barrel4, barrel5, totaltime, interaction count, collision count, knockover count, snapping count, scaling count, focus object count, collision obj time, attachable obj time, direct time, knockover times
         string dataCSV = m_ParticipantNumber +
                          "," + m_Technique.ToString();
 
         if (m_PlacedBarrels.Count > 0)
-            dataCSV += "," + m_PlacedBarrels[0].time.ToString() +
-                       "," + m_PlacedBarrels[0].name;
+            dataCSV += "," + m_PlacedBarrels[0].name +
+                       "," + m_PlacedBarrels[0].grabTime.ToString() +
+                       "," + (m_PlacedBarrels[0].placeTime - m_PlacedBarrels[0].grabTime).ToString();
         else
             dataCSV += ",0.0,";
 
         for (var i = 1; i < 5; i++)
         {
             if (m_PlacedBarrels.Count > i)
-                dataCSV += "," + (m_PlacedBarrels[i].time - m_PlacedBarrels[i-1].time).ToString() + "," + m_PlacedBarrels[i].name;
+            {
+                dataCSV += "," + m_PlacedBarrels[i].name +
+                           "," + (m_PlacedBarrels[i].grabTime - m_PlacedBarrels[i - 1].placeTime).ToString();
+                
+                if (m_PlacedBarrels[i].placeTime > 0.0f)
+                    dataCSV += "," + (m_PlacedBarrels[i].placeTime - m_PlacedBarrels[i].grabTime).ToString();
+            }
             else
-                dataCSV += ",0.0,";
+                dataCSV += ",,0.0,0.0";
         }
 
+        dataCSV += ",Total Time:";
         if (m_PlacedBarrels.Count == 5)
-            dataCSV += "," + m_PlacedBarrels[4].time.ToString();
+            dataCSV += "," + m_PlacedBarrels[4].placeTime.ToString();
         else
             dataCSV += "," + m_TimeLimit.ToString();
 
         // Interaction and Collision Count
-        dataCSV += "," + m_InteractionCount.ToString() +
-                   "," + m_CollisionsCount.ToString();
+        dataCSV += ",Interactions:," + m_InteractionCount.ToString() +
+                   ",Collisions:," + m_CollisionsCount.ToString() +
+                   ",KnockOvers:," + m_KnockOverCount.ToString();
 
         if (m_Technique != Mode.SIMPLEDIRECT)
-            dataCSV += "," + m_ScalingCount.ToString();
+            dataCSV += ",Snapping:," + m_SnappingCount.ToString() +
+                       ",Scaling:," + m_ScalingCount.ToString();
 
         if (m_Technique == Mode.CONSTRAINEDDIRECT)
-            dataCSV += "," + m_SnappingCount.ToString() +
-                       "," + m_FocusObjectCount.ToString() +
-                       "," + m_TimeInColObj.ToString() +
-                       "," + m_TimeInAttObj.ToString() +
-                       "," + m_TimeInDirMan.ToString();
+            dataCSV += ",FocusObjs:," + m_FocusObjectCount.ToString() +
+                       ",ColObjTime:," + m_TimeInColObj.ToString() +
+                       ",AttObjTime:," + m_TimeInAttObj.ToString() +
+                       ",IntTime:," + m_TimeInDirMan.ToString();
+
+        foreach(var time in m_KnockOverTimes)
+            dataCSV += "," + time.ToString();
 
         // Write to file
         sr.WriteLine(dataCSV);
@@ -494,7 +533,7 @@ public class ExperimentManager : MonoBehaviour
             dataCSV += grab;
 
         if (m_PlacedBarrels.Count == 5)
-            dataCSV += m_PlacedBarrels[4].time.ToString();
+            dataCSV += m_PlacedBarrels[4].placeTime.ToString();
         else
             dataCSV += m_TimeLimit.ToString();
 

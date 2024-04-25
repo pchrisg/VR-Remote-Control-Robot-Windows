@@ -16,6 +16,7 @@ public class GripperControl : MonoBehaviour
     private SimpleDirectManipulation m_SimpleDirectManipulation = null;
     private ConstrainedDirectManipulation m_ConstrainedDirectManipulation = null;
     private SDOFManipulation m_SDOFManipulation = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -40,6 +41,7 @@ public class GripperControl : MonoBehaviour
         m_ConstrainedDirectManipulation = manipulator.GetComponent<ConstrainedDirectManipulation>();
         m_SDOFManipulation = manipulator.transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
         m_ManipulatorAudioSource = gameObject.GetComponent<AudioSource>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
 
@@ -54,38 +56,41 @@ public class GripperControl : MonoBehaviour
 
     private void Update()
     {
-        if (m_isInteracting)
+        if (m_isInteracting && m_ExperimentManager.m_AllowUserControl)
             MoveGripper();
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
     {
-        Hand interactingHand = null;
-        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
-            interactingHand = m_SimpleDirectManipulation.InteractingHand();
-            
-        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
-            interactingHand = m_ConstrainedDirectManipulation.InteractingHand();
-
-        if (m_ManipulationMode.mode == Mode.SDOF)
-            interactingHand = m_SDOFManipulation.InteractingHand();
-
-        if (interactingHand != null)
+        if (m_ExperimentManager.m_AllowUserControl)
         {
-            if (m_InteractingHand == null || m_InteractingHand != interactingHand)
-            {
-                m_InteractingHand = interactingHand;
+            Hand interactingHand = null;
+            if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT)
+                interactingHand = m_SimpleDirectManipulation.InteractingHand();
 
-                if (m_InteractingHand == m_LeftHand)
-                    m_GrippingHand = m_RightHand;
-                else
-                    m_GrippingHand = m_LeftHand;
-            }
+            if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
+                interactingHand = m_ConstrainedDirectManipulation.InteractingHand();
 
-            if (fromSource == m_GrippingHand.handType)
+            if (m_ManipulationMode.mode == Mode.SDOF)
+                interactingHand = m_SDOFManipulation.InteractingHand();
+
+            if (interactingHand != null)
             {
-                m_isInteracting = true;
-                m_isGripping = !m_isGripping;
+                if (m_InteractingHand == null || m_InteractingHand != interactingHand)
+                {
+                    m_InteractingHand = interactingHand;
+
+                    if (m_InteractingHand == m_LeftHand)
+                        m_GrippingHand = m_RightHand;
+                    else
+                        m_GrippingHand = m_LeftHand;
+                }
+
+                if (fromSource == m_GrippingHand.handType)
+                {
+                    m_isInteracting = true;
+                    m_isGripping = !m_isGripping;
+                }
             }
         }
     }
