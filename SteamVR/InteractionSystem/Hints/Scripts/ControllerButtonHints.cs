@@ -271,6 +271,8 @@ namespace Valve.VR.InteractionSystem
             buttonDebug.AppendLine(action.GetLocalizedOrigin(inputSource));
 
             string actionComponentName = action.GetRenderModelComponentName(inputSource);
+			if (action.GetLocalizedOrigin(inputSource) == "Left Hand Vive Controller Grip")
+				actionComponentName = "rgrip";
 
             if (componentTransformMap.ContainsKey(actionComponentName))
             {
@@ -361,7 +363,7 @@ namespace Valve.VR.InteractionSystem
 					hintInfo.textEndOffsetDir = -hintInfo.localTransform.forward;
 					break;
 				case OffsetType.Right:
-					hintInfo.textEndOffsetDir = hintInfo.localTransform.right;
+					hintInfo.textEndOffsetDir = hintInfo.localTransform.forward;
 					break;
 				case OffsetType.Up:
 					hintInfo.textEndOffsetDir = hintInfo.localTransform.up;

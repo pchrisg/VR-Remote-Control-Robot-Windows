@@ -11,11 +11,6 @@
       "requirement": "mandatory"
     },
     {
-      "name": "/actions/default/in/SqueezeTrigger",
-      "type": "vector1",
-      "requirement": "mandatory"
-    },
-    {
       "name": "/actions/default/in/TouchTrackpad",
       "type": "boolean",
       "requirement": "mandatory"
@@ -23,16 +18,6 @@
     {
       "name": "/actions/default/in/TouchPosition",
       "type": "vector2",
-      "requirement": "mandatory"
-    },
-    {
-      "name": "/actions/default/in/TouchRight",
-      "type": "boolean",
-      "requirement": "mandatory"
-    },
-    {
-      "name": "/actions/default/in/TouchLeft",
-      "type": "boolean",
       "requirement": "mandatory"
     },
     {
@@ -56,11 +41,6 @@
     },
     {
       "name": "/actions/default/in/PressTrackpad",
-      "type": "boolean",
-      "requirement": "mandatory"
-    },
-    {
-      "name": "/actions/default/in/Teleport",
       "type": "boolean",
       "requirement": "mandatory"
     },
@@ -135,16 +115,12 @@
       "/actions/default/in/HeadsetOnHead": "Headset on head (proximity sensor)",
       "/actions/default/in/GrabGrip": "Grab Grip",
       "/actions/default/in/GrabTrigger": "Grab Trigger",
-      "/actions/default/in/SqueezeTrigger": "Squeeze Trigger",
       "/actions/default/in/TouchTrackpad": "Touch Trackpad",
       "/actions/default/in/TouchPosition": "Touch Position",
       "/actions/default/in/Pose": "Pose",
       "/actions/default/in/SkeletonRightHand": "Skeleton (Right)",
       "/actions/default/in/SkeletonLeftHand": "Skeleton (Left)",
-      "/actions/default/in/TouchRight": "Touch Right",
-      "/actions/default/in/TouchLeft": "Touch Left",
-      "/actions/default/in/PressTrackpad": "Press Trackpad",
-      "/actions/default/in/Teleport": "Teleport"
+      "/actions/default/in/PressTrackpad": "Press Trackpad"
     }
   ]
 }

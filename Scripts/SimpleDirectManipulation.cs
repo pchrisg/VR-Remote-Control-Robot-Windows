@@ -19,6 +19,7 @@ public class SimpleDirectManipulation : MonoBehaviour
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
     private Hand m_InteractingHand = null;
+    private Hand m_OtherHand = null;
 
     private GameObject m_GhostObject = null;
 
@@ -48,8 +49,21 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void OnHandHoverBegin(Hand hand)
     {
-        if (!m_isInteracting)
+        if (m_ManipulationMode.mode == Mode.SIMPLEDIRECT && !m_isInteracting)
+        {
             m_InteractingHand = hand;
+
+            if (hand == m_RightHand)
+                m_OtherHand = m_LeftHand;
+            else
+                m_OtherHand = m_RightHand;
+
+            if (m_ExperimentManager.m_ShowHints)
+            {
+                ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+            }
+        }
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
@@ -67,6 +81,9 @@ public class SimpleDirectManipulation : MonoBehaviour
 
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
+
+                if (m_ExperimentManager.m_ShowHints)
+                    ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
             }
         }
     }
@@ -86,6 +103,9 @@ public class SimpleDirectManipulation : MonoBehaviour
                 m_RightHand.GetComponent<Hand>().Show();
 
                 m_ROSPublisher.PublishMoveArm();
+
+                if (m_ExperimentManager.m_ShowHints)
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
             }
         }
     }

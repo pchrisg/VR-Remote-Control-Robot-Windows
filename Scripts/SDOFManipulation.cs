@@ -17,6 +17,7 @@ public class SDOFManipulation : MonoBehaviour
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
     private Hand m_InteractingHand = null;
+    private Hand m_Otherand = null;
     private bool m_isInteracting = false;
 
     private Transform m_Handle = null;
@@ -69,8 +70,22 @@ public class SDOFManipulation : MonoBehaviour
 
     public void SetInteractingHand(Hand hand, Transform handle)
     {
-        m_InteractingHand = hand;
-        m_Handle = handle;
+        if (m_ManipulationMode.mode == Mode.SDOF)
+        {
+            m_InteractingHand = hand;
+            if (hand == m_RightHand)
+                m_Otherand = m_LeftHand;
+            else
+                m_Otherand = m_RightHand;
+
+            m_Handle = handle;
+
+            if (m_ExperimentManager.m_ShowHints)
+            {
+                ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
+            }
+        }
     }
 
     public bool IsInteracting()
@@ -91,6 +106,9 @@ public class SDOFManipulation : MonoBehaviour
 
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
+
+                if (m_ExperimentManager.m_ShowHints)
+                    ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
             }
         }
     }
@@ -111,6 +129,14 @@ public class SDOFManipulation : MonoBehaviour
                 m_RightHand.GetComponent<Hand>().Show();
 
                 m_ROSPublisher.PublishMoveArm();
+
+                if (m_ExperimentManager.m_ShowHints)
+                {
+                    ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+                    ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                    ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
+                }
             }
         }
     }
@@ -129,13 +155,36 @@ public class SDOFManipulation : MonoBehaviour
                         m_isScaling = true;
                         m_Manipulator.IsScaling(true);
 
+                        m_InitPos = m_Handle.position;
+
                         m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+
+                        if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                        {
+                            ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                            ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
+                        }
                     }
                     else
                     {
                         m_isSnapping = true;
 
                         m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+
+                        if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                        {
+                            if (fromSource == m_InteractingHand.handType)
+                            {
+                                ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                                ControllerButtonHints.ShowTextHint(m_Otherand, m_Grip, "Scaling", false);
+                            }
+                            else
+                            {
+                                ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
+                                ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
+                                ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Scaling", false);
+                            }
+                        }
                     }
                     break;
 
@@ -143,11 +192,16 @@ public class SDOFManipulation : MonoBehaviour
                     if (isRotating)
                     {
                         m_isScaling = true;
-                        m_InitPos = m_Handle.position;
                         m_InitDir = m_Handle.position - m_Manipulator.transform.position;
                         m_Manipulator.IsScaling(true);
 
                         m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+
+                        if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                        {
+                            ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                            ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
+                        }
                     }
                     break;
 
@@ -210,6 +264,14 @@ public class SDOFManipulation : MonoBehaviour
                 m_RightHand.GetComponent<Hand>().Show();
 
                 m_ROSPublisher.PublishMoveArm();
+
+                if (m_ExperimentManager.m_ShowHints && m_InteractingHand != null)
+                {
+                    ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+                    ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                    ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
+                }
             }
         }
     }
@@ -239,6 +301,12 @@ public class SDOFManipulation : MonoBehaviour
                     m_InitDir = m_Handle.position - m_Manipulator.transform.position;
 
                     m_ExperimentManager.RecordModifier("ROTATING", isRotating);
+
+                    if (m_ExperimentManager.m_ShowHints)
+                    {
+                        ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Snapping", false);
+                        ControllerButtonHints.ShowTextHint(m_Otherand, m_Grip, "Snapping", false);
+                    }
                 }
                 else
                 {
@@ -247,6 +315,12 @@ public class SDOFManipulation : MonoBehaviour
                     m_InitPos = m_Handle.position;
 
                     m_ExperimentManager.RecordModifier("TRANSLATING", isTranslating);
+
+                    if (m_ExperimentManager.m_ShowHints)
+                    {
+                        ControllerButtonHints.ShowTextHint(m_RightHand, m_Grip, "Scaling", false);
+                        ControllerButtonHints.ShowTextHint(m_LeftHand, m_Grip, "Scaling", false);
+                    }
                 }
             }
         }
@@ -324,5 +398,10 @@ public class SDOFManipulation : MonoBehaviour
     public Hand InteractingHand()
     {
         return m_InteractingHand;
+    }
+
+    public bool IsTranslating()
+    {
+        return isTranslating;
     }
 }

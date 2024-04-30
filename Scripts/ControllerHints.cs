@@ -10,8 +10,6 @@ public class ControllerHints : MonoBehaviour
     private SteamVR_Action_Boolean m_Grip = null;
     private SteamVR_Action_Boolean m_Trigger = null;
     private SteamVR_Action_Boolean m_Trackpad = null;
-    private SteamVR_Action_Boolean m_TouchRight = null;
-    private SteamVR_Action_Boolean m_TouchLeft = null;
 
     private Coroutine m_RightCoroutine = null;
     private Coroutine m_LeftCoroutine = null;
@@ -83,8 +81,6 @@ public class ControllerHints : MonoBehaviour
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
         m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
         m_Trackpad = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchTrackpad");
-        m_TouchRight = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchRight");
-        m_TouchLeft = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("TouchLeft");
     }
 
     private IEnumerator ShowTextHints(Hand hand, ISteamVR_Action_In action, string text, Func<bool> lambda)
@@ -174,15 +170,5 @@ public class ControllerHints : MonoBehaviour
     public void ShowTrackpadHint(bool value)
     {
         ShowHint(Player.instance.rightHand, value, m_Trackpad, "Touch the Trackpad");
-    }
-
-    public void ShowTouchRightHint(bool value)
-    {
-        ShowHint(Player.instance.leftHand, value, m_TouchRight, "Touch the Trackpad on the right");
-    }
-
-    public void ShowTouchLeftHint(bool value)
-    {
-        ShowHint(Player.instance.leftHand, value, m_TouchLeft, "Touch the Trackpad on the left");
     }
 }

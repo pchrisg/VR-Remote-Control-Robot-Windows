@@ -600,13 +600,13 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => m_GripperControl.GrippingHand() != null);
 
-        m_ControllerHints.ShowSqueezeHint(m_GripperControl.GrippingHand(), true);
+        m_ControllerHints.ShowTriggerHint(m_GripperControl.GrippingHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
-        m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
 
         if(m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT)
             yield break;
@@ -970,7 +970,7 @@ public class Tutorial : MonoBehaviour
         ghost.transform.SetParent(m_Objects.transform);
         ghost.transform.SetPositionAndRotation(new(0.3f, 0.4f, -0.4f), Quaternion.Euler(new(0.0f, -115.0f, 90.0f)));
 
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
         m_ExperimentManager.m_Continue = false;
 
         Destroy(ghost);
@@ -988,13 +988,13 @@ public class Tutorial : MonoBehaviour
 
         yield return new WaitUntil(() => m_GripperControl.GrippingHand() != null);
 
-        m_ControllerHints.ShowSqueezeHint(m_GripperControl.GrippingHand(), true);
+        m_ControllerHints.ShowTriggerHint(m_GripperControl.GrippingHand(), true);
 
         yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
         m_ExperimentManager.m_Continue = false;
 
-        m_ControllerHints.ShowSqueezeHint(m_RightHand, false);
-        m_ControllerHints.ShowSqueezeHint(m_LeftHand, false);
+        m_ControllerHints.ShowTriggerHint(m_RightHand, false);
+        m_ControllerHints.ShowTriggerHint(m_LeftHand, false);
 
         //#######################
         text = "Snapping\n\n" +

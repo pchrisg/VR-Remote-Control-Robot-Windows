@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using ManipulationModes;
+using Valve.VR;
 using Valve.VR.InteractionSystem;
 
 public class ExperimentManager : MonoBehaviour
@@ -22,6 +23,7 @@ public class ExperimentManager : MonoBehaviour
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
     public bool m_AllowUserControl = false;
+    public bool m_ShowHints = false;
 
     [Header("Setup")]
     [SerializeField] private bool m_SetupTutorial = false;
@@ -57,6 +59,7 @@ public class ExperimentManager : MonoBehaviour
     private readonly float m_TimeLimit = 600.0f;
 
     // Control
+    private bool m_HintsActive = false;
     private bool m_TutorialActive = false;
     private bool m_TaskActive = false;
     private bool m_Running = false;
@@ -124,6 +127,24 @@ public class ExperimentManager : MonoBehaviour
         {
             m_ResetHeight = false;
             ResetHeight();
+        }
+
+        if (m_ShowHints != m_HintsActive)
+        {
+            m_HintsActive = m_ShowHints;
+
+            if(!m_HintsActive)
+            {
+                Hand right = Player.instance.rightHand;
+                Hand left = Player.instance.leftHand;
+                SteamVR_Action_Boolean trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
+                SteamVR_Action_Boolean grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
+
+                ControllerButtonHints.HideTextHint(right, trigger);
+                ControllerButtonHints.HideTextHint(left, trigger);
+                ControllerButtonHints.HideTextHint(right, grip);
+                ControllerButtonHints.HideTextHint(left, grip);
+            }
         }
 
         // Reset Robot Pose

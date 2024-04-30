@@ -21,15 +21,9 @@ namespace Valve.VR
         
         private static SteamVR_Action_Boolean p_default_GrabTrigger;
         
-        private static SteamVR_Action_Single p_default_SqueezeTrigger;
-        
         private static SteamVR_Action_Boolean p_default_TouchTrackpad;
         
         private static SteamVR_Action_Vector2 p_default_TouchPosition;
-        
-        private static SteamVR_Action_Boolean p_default_TouchRight;
-        
-        private static SteamVR_Action_Boolean p_default_TouchLeft;
         
         private static SteamVR_Action_Pose p_default_Pose;
         
@@ -40,8 +34,6 @@ namespace Valve.VR
         private static SteamVR_Action_Boolean p_default_HeadsetOnHead;
         
         private static SteamVR_Action_Boolean p_default_PressTrackpad;
-        
-        private static SteamVR_Action_Boolean p_default_Teleport;
         
         private static SteamVR_Action_Vibration p_default_Haptic;
         
@@ -61,14 +53,6 @@ namespace Valve.VR
             }
         }
         
-        public static SteamVR_Action_Single default_SqueezeTrigger
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_SqueezeTrigger.GetCopy<SteamVR_Action_Single>();
-            }
-        }
-        
         public static SteamVR_Action_Boolean default_TouchTrackpad
         {
             get
@@ -82,22 +66,6 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.p_default_TouchPosition.GetCopy<SteamVR_Action_Vector2>();
-            }
-        }
-        
-        public static SteamVR_Action_Boolean default_TouchRight
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_TouchRight.GetCopy<SteamVR_Action_Boolean>();
-            }
-        }
-        
-        public static SteamVR_Action_Boolean default_TouchLeft
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_TouchLeft.GetCopy<SteamVR_Action_Boolean>();
             }
         }
         
@@ -141,14 +109,6 @@ namespace Valve.VR
             }
         }
         
-        public static SteamVR_Action_Boolean default_Teleport
-        {
-            get
-            {
-                return SteamVR_Actions.p_default_Teleport.GetCopy<SteamVR_Action_Boolean>();
-            }
-        }
-        
         public static SteamVR_Action_Vibration default_Haptic
         {
             get
@@ -162,32 +122,24 @@ namespace Valve.VR
             Valve.VR.SteamVR_Input.actions = new Valve.VR.SteamVR_Action[] {
                     SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_GrabTrigger,
-                    SteamVR_Actions.default_SqueezeTrigger,
                     SteamVR_Actions.default_TouchTrackpad,
                     SteamVR_Actions.default_TouchPosition,
-                    SteamVR_Actions.default_TouchRight,
-                    SteamVR_Actions.default_TouchLeft,
                     SteamVR_Actions.default_Pose,
                     SteamVR_Actions.default_SkeletonRightHand,
                     SteamVR_Actions.default_SkeletonLeftHand,
                     SteamVR_Actions.default_HeadsetOnHead,
                     SteamVR_Actions.default_PressTrackpad,
-                    SteamVR_Actions.default_Teleport,
                     SteamVR_Actions.default_Haptic};
             Valve.VR.SteamVR_Input.actionsIn = new Valve.VR.ISteamVR_Action_In[] {
                     SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_GrabTrigger,
-                    SteamVR_Actions.default_SqueezeTrigger,
                     SteamVR_Actions.default_TouchTrackpad,
                     SteamVR_Actions.default_TouchPosition,
-                    SteamVR_Actions.default_TouchRight,
-                    SteamVR_Actions.default_TouchLeft,
                     SteamVR_Actions.default_Pose,
                     SteamVR_Actions.default_SkeletonRightHand,
                     SteamVR_Actions.default_SkeletonLeftHand,
                     SteamVR_Actions.default_HeadsetOnHead,
-                    SteamVR_Actions.default_PressTrackpad,
-                    SteamVR_Actions.default_Teleport};
+                    SteamVR_Actions.default_PressTrackpad};
             Valve.VR.SteamVR_Input.actionsOut = new Valve.VR.ISteamVR_Action_Out[] {
                     SteamVR_Actions.default_Haptic};
             Valve.VR.SteamVR_Input.actionsVibration = new Valve.VR.SteamVR_Action_Vibration[] {
@@ -198,13 +150,9 @@ namespace Valve.VR
                     SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_GrabTrigger,
                     SteamVR_Actions.default_TouchTrackpad,
-                    SteamVR_Actions.default_TouchRight,
-                    SteamVR_Actions.default_TouchLeft,
                     SteamVR_Actions.default_HeadsetOnHead,
-                    SteamVR_Actions.default_PressTrackpad,
-                    SteamVR_Actions.default_Teleport};
-            Valve.VR.SteamVR_Input.actionsSingle = new Valve.VR.SteamVR_Action_Single[] {
-                    SteamVR_Actions.default_SqueezeTrigger};
+                    SteamVR_Actions.default_PressTrackpad};
+            Valve.VR.SteamVR_Input.actionsSingle = new Valve.VR.SteamVR_Action_Single[0];
             Valve.VR.SteamVR_Input.actionsVector2 = new Valve.VR.SteamVR_Action_Vector2[] {
                     SteamVR_Actions.default_TouchPosition};
             Valve.VR.SteamVR_Input.actionsVector3 = new Valve.VR.SteamVR_Action_Vector3[0];
@@ -214,31 +162,23 @@ namespace Valve.VR
             Valve.VR.SteamVR_Input.actionsNonPoseNonSkeletonIn = new Valve.VR.ISteamVR_Action_In[] {
                     SteamVR_Actions.default_GrabGrip,
                     SteamVR_Actions.default_GrabTrigger,
-                    SteamVR_Actions.default_SqueezeTrigger,
                     SteamVR_Actions.default_TouchTrackpad,
                     SteamVR_Actions.default_TouchPosition,
-                    SteamVR_Actions.default_TouchRight,
-                    SteamVR_Actions.default_TouchLeft,
                     SteamVR_Actions.default_HeadsetOnHead,
-                    SteamVR_Actions.default_PressTrackpad,
-                    SteamVR_Actions.default_Teleport};
+                    SteamVR_Actions.default_PressTrackpad};
         }
         
         private static void PreInitActions()
         {
             SteamVR_Actions.p_default_GrabGrip = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/GrabGrip")));
             SteamVR_Actions.p_default_GrabTrigger = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/GrabTrigger")));
-            SteamVR_Actions.p_default_SqueezeTrigger = ((SteamVR_Action_Single)(SteamVR_Action.Create<SteamVR_Action_Single>("/actions/default/in/SqueezeTrigger")));
             SteamVR_Actions.p_default_TouchTrackpad = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/TouchTrackpad")));
             SteamVR_Actions.p_default_TouchPosition = ((SteamVR_Action_Vector2)(SteamVR_Action.Create<SteamVR_Action_Vector2>("/actions/default/in/TouchPosition")));
-            SteamVR_Actions.p_default_TouchRight = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/TouchRight")));
-            SteamVR_Actions.p_default_TouchLeft = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/TouchLeft")));
             SteamVR_Actions.p_default_Pose = ((SteamVR_Action_Pose)(SteamVR_Action.Create<SteamVR_Action_Pose>("/actions/default/in/Pose")));
             SteamVR_Actions.p_default_SkeletonRightHand = ((SteamVR_Action_Skeleton)(SteamVR_Action.Create<SteamVR_Action_Skeleton>("/actions/default/in/SkeletonRightHand")));
             SteamVR_Actions.p_default_SkeletonLeftHand = ((SteamVR_Action_Skeleton)(SteamVR_Action.Create<SteamVR_Action_Skeleton>("/actions/default/in/SkeletonLeftHand")));
             SteamVR_Actions.p_default_HeadsetOnHead = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/HeadsetOnHead")));
             SteamVR_Actions.p_default_PressTrackpad = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/PressTrackpad")));
-            SteamVR_Actions.p_default_Teleport = ((SteamVR_Action_Boolean)(SteamVR_Action.Create<SteamVR_Action_Boolean>("/actions/default/in/Teleport")));
             SteamVR_Actions.p_default_Haptic = ((SteamVR_Action_Vibration)(SteamVR_Action.Create<SteamVR_Action_Vibration>("/actions/default/out/Haptic")));
         }
     }

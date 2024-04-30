@@ -33,14 +33,6 @@ namespace Valve.VR
             }
         }
         
-        public virtual SteamVR_Action_Single SqueezeTrigger
-        {
-            get
-            {
-                return SteamVR_Actions.default_SqueezeTrigger;
-            }
-        }
-        
         public virtual SteamVR_Action_Boolean TouchTrackpad
         {
             get
@@ -54,22 +46,6 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.default_TouchPosition;
-            }
-        }
-        
-        public virtual SteamVR_Action_Boolean TouchRight
-        {
-            get
-            {
-                return SteamVR_Actions.default_TouchRight;
-            }
-        }
-        
-        public virtual SteamVR_Action_Boolean TouchLeft
-        {
-            get
-            {
-                return SteamVR_Actions.default_TouchLeft;
             }
         }
         
@@ -110,14 +86,6 @@ namespace Valve.VR
             get
             {
                 return SteamVR_Actions.default_PressTrackpad;
-            }
-        }
-        
-        public virtual SteamVR_Action_Boolean Teleport
-        {
-            get
-            {
-                return SteamVR_Actions.default_Teleport;
             }
         }
         

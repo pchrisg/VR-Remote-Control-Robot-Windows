@@ -21,6 +21,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
     private Hand m_InteractingHand = null;
+    private Hand m_OtherHand = null;
     private bool m_isInteracting = false;
 
     private Vector3 m_InitPos = new();
@@ -62,8 +63,21 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
     private void OnHandHoverBegin(Hand hand)
     {
-        if (!m_isInteracting)
+        if (m_ManipulationMode.mode == Mode.CONSTRAINEDDIRECT && !m_isInteracting)
+        {
             m_InteractingHand = hand;
+
+            if (hand == m_RightHand)
+                m_OtherHand = m_LeftHand;
+            else
+                m_OtherHand = m_RightHand;
+
+            if (m_ExperimentManager.m_ShowHints)
+            {
+                ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+            }
+        }
     }
 
     private void TriggerGrabbed(SteamVR_Action_Boolean fromAction, SteamVR_Input_Sources fromSource)
@@ -81,6 +95,13 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
+
+                if (m_ExperimentManager.m_ShowHints)
+                {
+                    ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Snapping", false);
+                    ControllerButtonHints.ShowTextHint(m_OtherHand, m_Grip, "Snapping", false);
+                }
             }
         }
     }
@@ -100,6 +121,14 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                 m_RightHand.GetComponent<Hand>().Show();
 
                 m_ROSPublisher.PublishMoveArm();
+
+                if (m_ExperimentManager.m_ShowHints)
+                {
+                    ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+                    ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                    ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+                }
             }
         }
     }
@@ -116,6 +145,21 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                     m_isSnapping = true;
 
                     m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+
+                    if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                    {
+                        if (fromSource == m_InteractingHand.handType)
+                        {
+                            ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                            ControllerButtonHints.ShowTextHint(m_OtherHand, m_Grip, "Scaling", false);
+                        }
+                        else
+                        {
+                            ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
+                            ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+                            ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Scaling", false);
+                        }
+                    }
                     break;
 
                 case 2:
@@ -124,6 +168,13 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                     gameObject.GetComponent<Manipulator>().IsScaling(true);
 
                     m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+
+                    if (m_ExperimentManager.m_ShowHints)
+                    {
+                        ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                        ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
+                        ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+                    }
                     break;
 
                 default:
@@ -168,6 +219,14 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                 m_RightHand.GetComponent<Hand>().Show();
 
                 m_ROSPublisher.PublishMoveArm();
+
+                if (m_ExperimentManager.m_ShowHints)
+                {
+                    ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+                    ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
+                    ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+                }
             }
         }
     }
