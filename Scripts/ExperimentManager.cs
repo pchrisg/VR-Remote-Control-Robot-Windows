@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using ManipulationModes;
-using Valve.VR;
 using Valve.VR.InteractionSystem;
 
 public class ExperimentManager : MonoBehaviour
@@ -72,7 +71,9 @@ public class ExperimentManager : MonoBehaviour
     {
         public string name;
         public float grabTime;
+        public int grabCollisions;
         public float placeTime;
+        public int placeCollisions;
     };
 
     private readonly List<PlacedBarrel> m_PlacedBarrels = new();
@@ -132,19 +133,7 @@ public class ExperimentManager : MonoBehaviour
         if (m_ShowHints != m_HintsActive)
         {
             m_HintsActive = m_ShowHints;
-
-            if(!m_HintsActive)
-            {
-                Hand right = Player.instance.rightHand;
-                Hand left = Player.instance.leftHand;
-                SteamVR_Action_Boolean trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
-                SteamVR_Action_Boolean grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
-
-                ControllerButtonHints.HideTextHint(right, trigger);
-                ControllerButtonHints.HideTextHint(left, trigger);
-                ControllerButtonHints.HideTextHint(right, grip);
-                ControllerButtonHints.HideTextHint(left, grip);
-            }
+            m_ManipulationMode.ShowHints(m_ShowHints);
         }
 
         // Reset Robot Pose
@@ -382,7 +371,9 @@ public class ExperimentManager : MonoBehaviour
             {
                 name = name,
                 grabTime = m_Timer.SplitTime(),
-                placeTime = 0.0f
+                grabCollisions = m_CollisionsCount,
+                placeTime = 0.0f,
+                placeCollisions = 0 
             };
 
             m_PlacedBarrels.Add(barrel);
@@ -396,7 +387,10 @@ public class ExperimentManager : MonoBehaviour
             if (m_PlacedBarrels[^1].name == name)
             {
                 if (m_PlacedBarrels[^1].placeTime == 0.0f)
+                {
                     m_PlacedBarrels[^1].placeTime = m_Timer.SplitTime();
+                    m_PlacedBarrels[^1].placeCollisions = m_CollisionsCount;
+                }
             }
         }
     }
@@ -449,12 +443,10 @@ public class ExperimentManager : MonoBehaviour
             m_AllowUserControl = false;
             m_TaskActive = false;
             m_Task.Setup(false);
+            m_ShowHints = false;
 
             m_Active = "None";
             m_Status = "Finished";
-
-            if (m_Timer.TimeExhausted() && m_PlacedBarrels.Count == 5)
-                m_PlacedBarrels.RemoveAt(4);
 
             StartCoroutine(WriteToFileRoutine());
         }
@@ -480,46 +472,61 @@ public class ExperimentManager : MonoBehaviour
         if (m_PlacedBarrels.Count > 0)
             dataCSV += "," + m_PlacedBarrels[0].name +
                        "," + m_PlacedBarrels[0].grabTime.ToString() +
-                       "," + (m_PlacedBarrels[0].placeTime - m_PlacedBarrels[0].grabTime).ToString();
+                       "," + m_PlacedBarrels[0].grabCollisions.ToString() +
+                       "," + (m_PlacedBarrels[0].placeTime - m_PlacedBarrels[0].grabTime).ToString() +
+                       "," + (m_PlacedBarrels[0].placeCollisions - m_PlacedBarrels[0].grabCollisions).ToString();
         else
-            dataCSV += ",0.0,";
+            dataCSV += ",,0.0,0,0.0,0";
 
         for (var i = 1; i < 5; i++)
         {
             if (m_PlacedBarrels.Count > i)
             {
                 dataCSV += "," + m_PlacedBarrels[i].name +
-                           "," + (m_PlacedBarrels[i].grabTime - m_PlacedBarrels[i - 1].placeTime).ToString();
-                
+                           "," + (m_PlacedBarrels[i].grabTime - m_PlacedBarrels[i - 1].placeTime).ToString() +
+                           "," + (m_PlacedBarrels[i].grabCollisions - m_PlacedBarrels[i - 1].placeCollisions).ToString();
+
                 if (m_PlacedBarrels[i].placeTime > 0.0f)
-                    dataCSV += "," + (m_PlacedBarrels[i].placeTime - m_PlacedBarrels[i].grabTime).ToString();
+                    dataCSV += "," + (m_PlacedBarrels[i].placeTime - m_PlacedBarrels[i].grabTime).ToString() +
+                               "," + (m_PlacedBarrels[i].placeCollisions - m_PlacedBarrels[i].grabCollisions).ToString();
+                else
+                    dataCSV += ",0.0,0";
             }
             else
-                dataCSV += ",,0.0,0.0";
+                dataCSV += ",,0.0,0,0.0,0";
         }
 
         dataCSV += ",Total Time:";
-        if (m_PlacedBarrels.Count == 5)
+        if (m_PlacedBarrels.Count == 5 && m_PlacedBarrels[4].placeTime > 0.0f)
             dataCSV += "," + m_PlacedBarrels[4].placeTime.ToString();
         else
             dataCSV += "," + m_TimeLimit.ToString();
 
         // Interaction and Collision Count
-        dataCSV += ",Interactions:," + m_InteractionCount.ToString() +
-                   ",Collisions:," + m_CollisionsCount.ToString() +
-                   ",KnockOvers:," + m_KnockOverCount.ToString();
+        dataCSV += ",TotalCollisions:," + m_CollisionsCount.ToString() +
+                   ",Interactions:," + m_InteractionCount.ToString();
 
         if (m_Technique != Mode.SIMPLEDIRECT)
             dataCSV += ",Snapping:," + m_SnappingCount.ToString() +
                        ",Scaling:," + m_ScalingCount.ToString();
+        else
+            dataCSV += ",Snapping:,null" +
+                       ",Scaling:,null";
 
         if (m_Technique == Mode.CONSTRAINEDDIRECT)
             dataCSV += ",FocusObjs:," + m_FocusObjectCount.ToString() +
                        ",ColObjTime:," + m_TimeInColObj.ToString() +
                        ",AttObjTime:," + m_TimeInAttObj.ToString() +
                        ",IntTime:," + m_TimeInDirMan.ToString();
+        else
+            dataCSV += ",FocusObjs:,null" +
+                       ",ColObjTime:,null" +
+                       ",AttObjTime:,null" +
+                       ",IntTime:,null";
 
-        foreach(var time in m_KnockOverTimes)
+
+        dataCSV += ",KnockOvers:," + m_KnockOverCount.ToString();
+        foreach (var time in m_KnockOverTimes)
             dataCSV += "," + time.ToString();
 
         // Write to file

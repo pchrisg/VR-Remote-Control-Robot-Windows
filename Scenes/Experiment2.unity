@@ -7744,6 +7744,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mode: 0
+  m_ShowHints: 0
 --- !u!114 &621543382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19911,7 +19912,7 @@ MonoBehaviour:
   m_Table: {fileID: 237820305}
   m_Glassbox: {fileID: 492438394}
   m_Objects: {fileID: 1711905459}
-  m_ParticipantNumber: Test
+  m_ParticipantNumber: 7
   m_ResetHeight: 0
   m_Technique: 0
   m_ResetRobotPose: 0

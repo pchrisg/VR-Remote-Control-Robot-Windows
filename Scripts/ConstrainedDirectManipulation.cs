@@ -72,7 +72,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
             else
                 m_OtherHand = m_RightHand;
 
-            if (m_ExperimentManager.m_ShowHints)
+            if (m_ManipulationMode.m_ShowHints)
             {
                 ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
                 ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
@@ -96,7 +96,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                 {
                     ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
                     ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Snapping", false);
@@ -122,10 +122,10 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                 m_ROSPublisher.PublishMoveArm();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                 {
-                    ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
-                    ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Focus Object", false);
+                    ControllerButtonHints.ShowTextHint(m_OtherHand, m_Grip, "Focus Object", false);
                     ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
                     ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
                 }
@@ -146,18 +146,34 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                     m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
 
-                    if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                    if (m_ManipulationMode.m_ShowHints)
                     {
-                        if (fromSource == m_InteractingHand.handType)
+                        if (m_isInteracting)
                         {
-                            ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
-                            ControllerButtonHints.ShowTextHint(m_OtherHand, m_Grip, "Scaling", false);
+                            if (fromSource == m_InteractingHand.handType)
+                            {
+                                ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                                ControllerButtonHints.ShowTextHint(m_OtherHand, m_Grip, "Scaling", false);
+                            }
+                            else
+                            {
+                                ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
+                                ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+                                ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Scaling", false);
+                            }
                         }
                         else
                         {
-                            ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
-                            ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
-                            ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Scaling", false);
+                            if (fromSource == m_InteractingHand.handType)
+                            {
+                                ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
+                                ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                            }
+                            else
+                            {
+                                ControllerButtonHints.HideTextHint(m_OtherHand, m_Trigger);
+                                ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
+                            }
                         }
                     }
                     break;
@@ -169,11 +185,15 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                     m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
 
-                    if (m_ExperimentManager.m_ShowHints)
+                    if (m_ManipulationMode.m_ShowHints)
                     {
                         ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
                         ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
-                        ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+
+                        if(m_isInteracting)
+                            ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
+                        else
+                            ControllerButtonHints.HideTextHint(m_OtherHand, m_Trigger);
                     }
                     break;
 
@@ -220,10 +240,10 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
                 m_ROSPublisher.PublishMoveArm();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                 {
-                    ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
-                    ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+                    ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Focus Object", false);
+                    ControllerButtonHints.ShowTextHint(m_OtherHand, m_Grip, "Focus Object", false);
                     ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
                     ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
                 }

@@ -144,14 +144,14 @@ public class StackingTask : MonoBehaviour
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_4";
-        barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, 0.5f));
+        barrel.GetComponent<Barrel>().SetPosition(new(-0.44f, 0.058f, 0.4f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         barrel.GetComponentInChildren<TextMeshProUGUI>().text = "4";
         m_Barrels.Add(barrel.transform);
 
         barrel = Instantiate(m_BarrelPrefab);
         barrel.name = "barrel_5";
-        barrel.GetComponent<Barrel>().SetPosition(new(-0.44f, 0.058f, 0.4f));
+        barrel.GetComponent<Barrel>().SetPosition(new(0.5f, 0.058f, 0.5f));
         barrel.transform.SetParent(m_ObjectsContainer.transform);
         barrel.GetComponentInChildren<TextMeshProUGUI>().text = "5";
         m_Barrels.Add(barrel.transform);
@@ -195,7 +195,7 @@ public class StackingTask : MonoBehaviour
 
         obstacle = Instantiate(m_ObstaclePrefab);
         obstacle.name = "obstacle_7";
-        obstacle.transform.SetPositionAndRotation(new(0.352f, 0.25f, 0.473f), Quaternion.Euler(0.0f, -92, 0.0f));
+        obstacle.transform.SetPositionAndRotation(new(0.352f, 0.25f, 0.5f), Quaternion.Euler(0.0f, -92, 0.0f));
         obstacle.transform.localScale = new Vector3(0.2f, 0.5f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
 

@@ -448,7 +448,7 @@ public class Tutorial : MonoBehaviour
         ghost.transform.SetParent(m_Objects.transform);
         ghost.transform.SetPositionAndRotation(new(-0.1f, 0.2f, 0.0f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
 
-        yield return new WaitUntil(() => CheckObjectPose(m_Manipulator.gameObject, ghost));
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue);
 
         m_ExperimentManager.m_AllowUserControl = false;
 
@@ -523,13 +523,7 @@ public class Tutorial : MonoBehaviour
         ghost.transform.SetPositionAndRotation(new(0.48f, 0.13f, 0.4f), Quaternion.Euler(0.0f, 90.0f, 10.0f));
         yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
 
-        ghost.transform.SetPositionAndRotation(new(0.4f, 0.4f, -0.04f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
-        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
-
         ghost.transform.SetPositionAndRotation(new(0.5f, 0.2f, -0.5f), Quaternion.Euler(0.0f, 0.0f, 90.0f));
-        yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
-
-        ghost.transform.SetPositionAndRotation(new(-0.11f, 0.39f, -0.49f), Quaternion.Euler(0.0f, -90.0f, 90.0f));
         yield return new WaitUntil(() => CheckObjectPose(m_Robotiq, ghost));
 
         Destroy(ghost);
@@ -675,22 +669,11 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowGripHint(m_RightHand, true);
         m_ControllerHints.ShowGripHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
-
-        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip || m_ControllerHints.handStatus.left.grip);
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
-
-        if (m_ControllerHints.handStatus.right.grip && m_ControllerHints.handStatus.left.grip)
-        {
-            text += "Only squeeze 1 trigger!";
-            ChangeText(text);
-            m_AudioSource.Play();
-        }    
-
-        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
-        m_ExperimentManager.m_Continue = false;
 
         //#######################
         text = "Scaling\n\n" +
@@ -711,12 +694,14 @@ public class Tutorial : MonoBehaviour
         m_ControllerHints.ShowGripHint(m_RightHand, true);
         m_ControllerHints.ShowGripHint(m_LeftHand, true);
 
-        yield return new WaitUntil(() => m_ManipulationMode.IsInteracting());
-
-        yield return new WaitUntil(() => m_ControllerHints.handStatus.right.grip && m_ControllerHints.handStatus.left.grip);
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         m_ControllerHints.ShowGripHint(m_RightHand, false);
         m_ControllerHints.ShowGripHint(m_LeftHand, false);
+
+        yield return new WaitUntil(() => m_ExperimentManager.m_Continue == true);
+        m_ExperimentManager.m_Continue = false;
 
         //#######################
         text = "Collision Objects\n\n" +
@@ -1104,6 +1089,8 @@ public class Tutorial : MonoBehaviour
 
     private IEnumerator PracticeCoroutine()
     {
+        m_ExperimentManager.m_ShowHints = true;
+
         string text = "Practice\n\n" +
                       "Place the barrel on the X as many times as you can\n\n" +
                       "Take this time to practice what you just learnt";

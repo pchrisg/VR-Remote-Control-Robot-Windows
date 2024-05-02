@@ -1,5 +1,6 @@
 using UnityEngine;
 using ManipulationModes;
+using Valve.VR;
 using Valve.VR.InteractionSystem;
 using Unity.VisualScripting;
 
@@ -20,6 +21,10 @@ namespace ManipulationModes
 
 public class ManipulationMode : MonoBehaviour
 {
+    [HideInInspector] public const float ANGLETHRESHOLD = 10.0f;     //10deg
+    [HideInInspector] public const float DISTANCETHRESHOLD = 0.03f; //3cm
+    [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
+
     [Header("Technique")]
     public Mode mode = Mode.IDLE;
 
@@ -30,9 +35,11 @@ public class ManipulationMode : MonoBehaviour
 
     private bool m_isInteracting = false;
 
-    [HideInInspector] public const float ANGLETHRESHOLD = 10.0f;     //10deg
-    [HideInInspector] public const float DISTANCETHRESHOLD = 0.03f; //3cm
-    [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
+    private Hand m_RightHand = null;
+    private Hand m_LeftHand = null;
+    private SteamVR_Action_Boolean m_Trigger = null;
+    private SteamVR_Action_Boolean m_Grip = null;
+    [HideInInspector] public bool m_ShowHints = false;
 
     private void Awake()
     {
@@ -40,12 +47,23 @@ public class ManipulationMode : MonoBehaviour
         m_SDOFManipulation = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("SDOFWidget").GetComponent<SDOFManipulation>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+
+
+        m_RightHand = Player.instance.rightHand;
+        m_LeftHand = Player.instance.leftHand;
+        m_Trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabTrigger");
+        m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     }
 
     private void Update()
     {
         if (mode != m_ExperimentManager.m_Technique)
         {
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+
             if (mode == Mode.IDLE)
             {
                 if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
@@ -93,6 +111,18 @@ public class ManipulationMode : MonoBehaviour
         }
     }
 
+    public void ShowHints(bool value)
+    {
+        m_ShowHints = value;
+        if (!m_ShowHints)
+        {
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+        }
+    }
+
     public void IsInteracting(bool isInteracting)
     {
         m_isInteracting = isInteracting;
@@ -135,14 +165,21 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.CONSTRAINEDDIRECT)
         {
-            m_isInteracting = true;
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+
             m_InteractableObjects.IsCreating(true);
             mode = Mode.ATTOBJCREATOR;
         }
 
         else if (mode == Mode.ATTOBJCREATOR)
         {
-            m_isInteracting = false;
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
             m_InteractableObjects.IsCreating(false);
             mode = Mode.CONSTRAINEDDIRECT;
         }
@@ -152,14 +189,20 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.CONSTRAINEDDIRECT)
         {
-            m_isInteracting = true;
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
             m_InteractableObjects.IsCreating(true);
             mode = Mode.COLOBJCREATOR;
         }
 
         else if (mode == Mode.COLOBJCREATOR)
         {
-            m_isInteracting = false;
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
             m_InteractableObjects.IsCreating(false);
             mode = Mode.CONSTRAINEDDIRECT;
         }

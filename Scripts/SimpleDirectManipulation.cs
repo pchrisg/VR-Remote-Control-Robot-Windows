@@ -58,7 +58,7 @@ public class SimpleDirectManipulation : MonoBehaviour
             else
                 m_OtherHand = m_RightHand;
 
-            if (m_ExperimentManager.m_ShowHints)
+            if (m_ManipulationMode.m_ShowHints)
             {
                 ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
                 ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
@@ -82,7 +82,7 @@ public class SimpleDirectManipulation : MonoBehaviour
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                     ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
             }
         }
@@ -104,7 +104,7 @@ public class SimpleDirectManipulation : MonoBehaviour
 
                 m_ROSPublisher.PublishMoveArm();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                     ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
             }
         }

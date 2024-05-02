@@ -80,7 +80,7 @@ public class SDOFManipulation : MonoBehaviour
 
             m_Handle = handle;
 
-            if (m_ExperimentManager.m_ShowHints)
+            if (m_ManipulationMode.m_ShowHints)
             {
                 ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
                 ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
@@ -107,7 +107,7 @@ public class SDOFManipulation : MonoBehaviour
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                     ControllerButtonHints.HideTextHint(m_InteractingHand, m_Trigger);
             }
         }
@@ -130,7 +130,7 @@ public class SDOFManipulation : MonoBehaviour
 
                 m_ROSPublisher.PublishMoveArm();
 
-                if (m_ExperimentManager.m_ShowHints)
+                if (m_ManipulationMode.m_ShowHints)
                 {
                     ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
                     ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
@@ -150,58 +150,37 @@ public class SDOFManipulation : MonoBehaviour
             switch (m_GripCount)
             {
                 case 1:
-                    if (isTranslating)
+                    m_isSnapping = true;
+
+                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+
+                    if (m_ManipulationMode.m_ShowHints && m_isInteracting)
                     {
-                        m_isScaling = true;
-                        m_Manipulator.IsScaling(true);
-
-                        m_InitPos = m_Handle.position;
-
-                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
-
-                        if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                        if (fromSource == m_InteractingHand.handType)
                         {
                             ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
-                            ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
+                            ControllerButtonHints.ShowTextHint(m_Otherand, m_Grip, "Scaling", false);
                         }
-                    }
-                    else
-                    {
-                        m_isSnapping = true;
-
-                        m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
-
-                        if (m_ExperimentManager.m_ShowHints && m_isInteracting)
+                        else
                         {
-                            if (fromSource == m_InteractingHand.handType)
-                            {
-                                ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
-                                ControllerButtonHints.ShowTextHint(m_Otherand, m_Grip, "Scaling", false);
-                            }
-                            else
-                            {
-                                ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
-                                ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
-                                ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Scaling", false);
-                            }
+                            ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
+                            ControllerButtonHints.ShowTextHint(m_Otherand, m_Trigger, "Operate Gripper", false);
+                            ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Scaling", false);
                         }
                     }
                     break;
 
                 case 2:
-                    if (isRotating)
+                    m_isScaling = true;
+                    m_InitDir = m_Handle.position - m_Manipulator.transform.position;
+                    m_Manipulator.IsScaling(true);
+
+                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+
+                    if (m_ManipulationMode.m_ShowHints && m_isInteracting)
                     {
-                        m_isScaling = true;
-                        m_InitDir = m_Handle.position - m_Manipulator.transform.position;
-                        m_Manipulator.IsScaling(true);
-
-                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
-
-                        if (m_ExperimentManager.m_ShowHints && m_isInteracting)
-                        {
-                            ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
-                            ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
-                        }
+                        ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
+                        ControllerButtonHints.HideTextHint(m_Otherand, m_Grip);
                     }
                     break;
 
@@ -265,7 +244,7 @@ public class SDOFManipulation : MonoBehaviour
 
                 m_ROSPublisher.PublishMoveArm();
 
-                if (m_ExperimentManager.m_ShowHints && m_InteractingHand != null)
+                if (m_ManipulationMode.m_ShowHints && m_InteractingHand != null)
                 {
                     ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
                     ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
@@ -302,7 +281,7 @@ public class SDOFManipulation : MonoBehaviour
 
                     m_ExperimentManager.RecordModifier("ROTATING", isRotating);
 
-                    if (m_ExperimentManager.m_ShowHints)
+                    if (m_ManipulationMode.m_ShowHints)
                     {
                         ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Grip, "Snapping", false);
                         ControllerButtonHints.ShowTextHint(m_Otherand, m_Grip, "Snapping", false);
@@ -316,7 +295,7 @@ public class SDOFManipulation : MonoBehaviour
 
                     m_ExperimentManager.RecordModifier("TRANSLATING", isTranslating);
 
-                    if (m_ExperimentManager.m_ShowHints)
+                    if (m_ManipulationMode.m_ShowHints)
                     {
                         ControllerButtonHints.ShowTextHint(m_RightHand, m_Grip, "Scaling", false);
                         ControllerButtonHints.ShowTextHint(m_LeftHand, m_Grip, "Scaling", false);
