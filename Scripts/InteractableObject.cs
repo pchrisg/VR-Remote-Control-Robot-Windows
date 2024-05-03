@@ -13,7 +13,8 @@ public class InteractableObject : MonoBehaviour
 
     private Vector3 m_PreviousPosition = new();
 
-    private bool m_isMoving = false;
+    private bool m_isTouching = false;
+    private bool m_Removed = false;
 
     private readonly float modifier = 0.005f; //5mm
 
@@ -26,15 +27,24 @@ public class InteractableObject : MonoBehaviour
 
     private void Update()
     {
-        if (m_isMoving)
+        bool isMoving = false;
+        if (m_isTouching)
+            isMoving = true;
+
+        if (!isMoving && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) > 0.001f)
+            isMoving = true;
+
+        m_PreviousPosition = gameObject.transform.position;
+
+        if (isMoving && !m_Removed)
         {
-            if (!gameObject.GetComponent<CollisionHandling>().m_isAttached && Vector3.Distance(gameObject.transform.position, m_PreviousPosition) < 0.001f)
-            {
-                m_isMoving = false;
-                AddInteractableObject();
-            }
-            else
-                m_PreviousPosition = gameObject.transform.position;
+            m_Removed = true;
+            RemoveInteractableObject();
+        }
+        else if (!isMoving && m_Removed)
+        {
+            m_Removed = false;
+            AddInteractableObject();
         }
     }
 
@@ -146,12 +156,17 @@ public class InteractableObject : MonoBehaviour
         m_ROSPublisher.PublishRemoveCollisionObject(m_ColisionObjectMsg);
     }
 
-    public void IsMoving()
+    public void IsTouching(bool value)
     {
-        if(!m_isMoving)
+        if (m_isTouching != value)
         {
-            m_isMoving = true;
-            RemoveInteractableObject();
+            m_isTouching = value;
+
+            if (m_isTouching)
+            {
+                m_Removed = true;
+                RemoveInteractableObject();
+            }
         }
     }
 }

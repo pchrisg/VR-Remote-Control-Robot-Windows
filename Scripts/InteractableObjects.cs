@@ -98,7 +98,6 @@ public class InteractableObjects : MonoBehaviour
 
     public void AddInteractableObject(Collider collider)
     {
-        print("yea");
         bool isAttachable = false;
         if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
             isAttachable = true;
@@ -137,14 +136,12 @@ public class InteractableObjects : MonoBehaviour
         {
             m_FocusObject = collider.gameObject;
             m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(true);
-            m_FocusObject.GetComponent<InteractableObject>().RemoveInteractableObject();
             m_ExperimentManager.RecordFocusObject(m_FocusObject.name, true);
         }
 
         else if (m_FocusObject == collider.gameObject)
         {
             m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(false);
-            m_FocusObject.GetComponent<InteractableObject>().AddInteractableObject();
             m_ExperimentManager.RecordFocusObject(m_FocusObject.name, false);
             m_FocusObject = null;
         }

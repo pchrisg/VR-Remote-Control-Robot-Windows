@@ -112,15 +112,15 @@ public class CollisionHandling : MonoBehaviour
             }
         }
 
+        if (m_FingerMTouching + m_Finger1Touching + m_Finger2Touching > 0)
+            gameObject.GetComponent<InteractableObject>().IsTouching(true);
+
         if (m_isAttachable && !m_isAttached)
         {
             if (m_FingerMTouching > 0 && (m_Finger1Touching > 0 || m_Finger2Touching > 0))
             {
                 m_isAttached = true;
                 m_GripperControl.PlayAttachSound();
-
-                if (!m_isFocusObject)
-                    gameObject.GetComponent<InteractableObject>().IsMoving();
 
                 SetMaterial();
             }
@@ -190,6 +190,9 @@ public class CollisionHandling : MonoBehaviour
                 }
             }
         }
+
+        if (m_FingerMTouching + m_Finger1Touching + m_Finger2Touching == 0)
+            gameObject.GetComponent<InteractableObject>().IsTouching(false);
 
         if (m_isAttached)
         {

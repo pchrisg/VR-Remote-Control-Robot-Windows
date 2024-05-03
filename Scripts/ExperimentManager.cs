@@ -326,6 +326,10 @@ public class ExperimentManager : MonoBehaviour
         // Errors
         m_CollisionsCount = 0;
         m_ErrorDescriptions.Clear();
+
+        // Knockovers
+        m_KnockOverCount = 0;
+        m_KnockOverTimes.Clear();
     }
 
     public void RecordInteraction(bool value)
