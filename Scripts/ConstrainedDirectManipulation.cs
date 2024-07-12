@@ -11,13 +11,14 @@ public class ConstrainedDirectManipulation : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
     private ExperimentManager m_ExperimentManager = null;
+    private RobotFeedback m_RobotFeedback = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
     private SteamVR_Action_Boolean m_Grip = null;
     private int m_GripCount = 0;
-    
+
     private Interactable m_Interactable = null;
-    
+
     private Hand m_RightHand = null;
     private Hand m_LeftHand = null;
     private Hand m_InteractingHand = null;
@@ -26,7 +27,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
     private Vector3 m_InitPos = new();
     private GameObject m_GhostObject = null;
-    
+
     private bool m_isScaling = false;
     private bool m_isSnapping = false;
 
@@ -36,6 +37,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
 
         m_Interactable = GetComponent<Interactable>();
 
@@ -190,7 +192,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                         ControllerButtonHints.HideTextHint(m_InteractingHand, m_Grip);
                         ControllerButtonHints.HideTextHint(m_OtherHand, m_Grip);
 
-                        if(m_isInteracting)
+                        if (m_isInteracting)
                             ControllerButtonHints.ShowTextHint(m_OtherHand, m_Trigger, "Operate Gripper", false);
                         else
                             ControllerButtonHints.HideTextHint(m_OtherHand, m_Trigger);
@@ -238,6 +240,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
 
+                m_RobotFeedback.RequestTrajectory();
                 m_ROSPublisher.PublishMoveArm();
 
                 if (m_ManipulationMode.m_ShowHints)
@@ -253,9 +256,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
 
     private void MoveManipulator()
     {
-        Vector3 position = m_GhostObject.transform.position;
-        Quaternion rotation = m_GhostObject.transform.rotation;
-
+        m_GhostObject.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
         if (m_isScaling)
         {
             Vector3 connectingVector = m_GhostObject.transform.position - m_InitPos;
@@ -278,6 +279,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
         }
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, rotation);
+        m_RobotFeedback.RequestTrajectory();
         m_ROSPublisher.PublishMoveArm();
     }
 
@@ -320,10 +322,10 @@ public class ConstrainedDirectManipulation : MonoBehaviour
         //angle = Vector3.Angle(m_GhostObject.transform.right, right);
         //if (angle < ManipulationMode.ANGLETHRESHOLD)
         //{
-            up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, right);
-            forward = Vector3.Cross(right.normalized, up.normalized);
+        up = Vector3.ProjectOnPlane(m_GhostObject.transform.up, right);
+        forward = Vector3.Cross(right.normalized, up.normalized);
 
-            return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
+        return m_GhostObject.transform.rotation = Quaternion.LookRotation(forward, up);
         //}
 
         //return m_GhostObject.transform.rotation;

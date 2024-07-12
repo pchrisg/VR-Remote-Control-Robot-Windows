@@ -61,7 +61,7 @@ public class EmergencyStop : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!other.CompareTag("Attachable") && Time.time - m_CollisionTime >= m_ROSPublisher.m_TimePenalty)
+        if (!other.CompareTag("Moveable") && Time.time - m_CollisionTime >= m_ROSPublisher.m_TimePenalty)
         {
             m_CollisionTime = Time.time;
             string description = gameObject.name + ",collided with," + other.name + "\n";

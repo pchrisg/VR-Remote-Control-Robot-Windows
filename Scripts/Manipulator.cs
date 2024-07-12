@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using FeedBackModes;
 
 public class Manipulator : MonoBehaviour
 {
@@ -10,13 +11,15 @@ public class Manipulator : MonoBehaviour
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
     private Indicator m_Indicator = null;
+    private RobotFeedback m_RobotFeedback = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     private Transform m_Robotiq = null;
 
     //Colors
-    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 8.0f);
-    private Color m_ScalingColor = new(0.8f, 0.8f, 0.8f, 8.0f);
-    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 8.0f);
+    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 0.5f);
+    private Color m_ScalingColor = new(0.8f, 0.8f, 0.8f, 0.5f);
+    private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 0.5f);
     private Color m_InvisColor = new(0.2f, 0.2f, 0.2f, 0.0f);
     private Color m_FlashingColor = new(1.0f, 1.0f, 0.0f, 0.5f);
 
@@ -32,6 +35,8 @@ public class Manipulator : MonoBehaviour
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_Indicator = gameObject.transform.Find("Indicator").GetComponent<Indicator>();
+        m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
@@ -68,6 +73,8 @@ public class Manipulator : MonoBehaviour
 
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
         ShowManipulator(true);
+
+        m_RobotFeedback.ResetPositionAndRotation();
     }
 
     private void CheckSnapping()
@@ -90,14 +97,17 @@ public class Manipulator : MonoBehaviour
 
     public void IsColliding(bool value)
     {
-        if (value)
-            m_ManipulatorMat.color = m_CollidingColor;
-        else
+        if (m_ExperimentManager.m_FeedbackMode == Mode.NONE)
         {
-            if (m_isScaling)
-                m_ManipulatorMat.color = m_ScalingColor;
+            if (value)
+                m_ManipulatorMat.color = m_CollidingColor;
             else
-                m_ManipulatorMat.color = m_DefaultColor;
+            {
+                if (m_isScaling)
+                    m_ManipulatorMat.color = m_ScalingColor;
+                else
+                    m_ManipulatorMat.color = m_DefaultColor;
+            }
         }
     }
 

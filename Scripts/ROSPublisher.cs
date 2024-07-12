@@ -14,18 +14,20 @@ public class ROSPublisher : MonoBehaviour
     //Change to false if using real robotiq gripper
     public bool m_Gazebo = true;
 
+    private RobotFeedback m_RobotFeedback = null;
+
     [Header("Lock Timer")]
     [SerializeField] private GameObject m_HUD = null;
     TextMeshPro m_Text = null;
 
-    private readonly string m_ResetPoseTopic = "chris_reset_pose";
-    private readonly string m_PlanTrajTopic = "chris_plan_trajectory";
-    private readonly string m_ExecPlanTopic = "chris_execute_plan";
-    private readonly string m_StopArmTopic = "chris_stop_arm";
-    private readonly string m_MoveArmTopic = "chris_move_arm";
-    private readonly string m_EmergencyStopTopic = "chris_emergency_stop";
-    private readonly string m_AddCollisionObjectTopic = "chris_add_collision_object";
-    private readonly string m_RemoveCollisionObjectTopic = "chris_remove_collision_object";
+    private readonly string m_ResetPoseTopic = "/chris_reset_pose";
+    private readonly string m_PlanTrajTopic = "/chris_plan_trajectory";
+    //private readonly string m_ExecPlanTopic = "/chris_execute_plan";
+    private readonly string m_StopArmTopic = "/chris_stop_arm";
+    private readonly string m_MoveArmTopic = "/chris_move_arm";
+    private readonly string m_EmergencyStopTopic = "/chris_emergency_stop";
+    private readonly string m_AddCollisionObjectTopic = "/chris_add_collision_object";
+    private readonly string m_RemoveCollisionObjectTopic = "/chris_remove_collision_object";
 
     [SerializeField] private string m_RoboticSqueezeTopic = string.Empty;
 
@@ -39,6 +41,8 @@ public class ROSPublisher : MonoBehaviour
 
     private void Awake()
     {
+        m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
+
         if (m_Gazebo)
             m_RoboticSqueezeTopic = "left_hand/command";
         else
@@ -56,7 +60,7 @@ public class ROSPublisher : MonoBehaviour
         m_Ros.RegisterRosService<TrajectoryPlannerServiceRequest, TrajectoryPlannerServiceResponse>(m_PlanTrajTopic);
 
         m_Ros.RegisterPublisher<EmptyMsg>(m_ResetPoseTopic);
-        m_Ros.RegisterPublisher<RobotTrajectoryMsg>(m_ExecPlanTopic);
+        //m_Ros.RegisterPublisher<RobotTrajectoryMsg>(m_ExecPlanTopic);
         m_Ros.RegisterPublisher<EmptyMsg>(m_StopArmTopic);
         m_Ros.RegisterPublisher<PoseMsg>(m_MoveArmTopic);
         m_Ros.RegisterPublisher<BoolMsg>(m_EmergencyStopTopic);
@@ -89,10 +93,9 @@ public class ROSPublisher : MonoBehaviour
         Robotiq3FGripperRobotOutputMsg outputMessage = new()
         {
             rACT = 1,
-            rPRA = (byte)(0.0f)
+            rPRA = (byte)(120.0f)
         };
 
-        PublishRobotiqSqueeze(outputMessage);
         PublishRobotiqSqueeze(outputMessage);
 
         EmptyMsg msg = new();
@@ -121,14 +124,14 @@ public class ROSPublisher : MonoBehaviour
 
     public void HandleTrajectoryResponse(TrajectoryPlannerServiceResponse response)
     {
-        //if (response.trajectory != null)
-        //    m_PlanningRobot.DisplayTrajectory(response.trajectory);
+        if (response.trajectory != null)
+            m_RobotFeedback.DisplayTrajectory(response.trajectory);
     }
 
-    public void PublishExecutePlan(RobotTrajectoryMsg trajectory)
-    {
-        m_Ros.Publish(m_ExecPlanTopic, trajectory);
-    }
+    // public void PublishExecutePlan(RobotTrajectoryMsg trajectory)
+    // {
+    //     m_Ros.Publish(m_ExecPlanTopic, trajectory);
+    // }
 
     public void PublishStopArm()
     {
@@ -212,10 +215,10 @@ public class ROSPublisher : MonoBehaviour
 
     public void PublishRobotiqSqueeze(Robotiq3FGripperRobotOutputMsg outputMessage)
     {
-        if(!m_isLocked)
+        if (!m_isLocked)
         {
             m_Ros.Publish(m_RoboticSqueezeTopic, outputMessage);
         }
-            
+
     }
 }

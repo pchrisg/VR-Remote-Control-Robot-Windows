@@ -10,6 +10,7 @@ public class SimpleDirectManipulation : MonoBehaviour
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private ExperimentManager m_ExperimentManager = null;
+    private RobotFeedback m_RobotFeedback = null;
 
     private SteamVR_Action_Boolean m_Trigger = null;
 
@@ -28,6 +29,7 @@ public class SimpleDirectManipulation : MonoBehaviour
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
 
         m_RightHand = Player.instance.rightHand;
         m_LeftHand = Player.instance.leftHand;
@@ -102,8 +104,9 @@ public class SimpleDirectManipulation : MonoBehaviour
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
 
+                m_RobotFeedback.RequestTrajectory();
                 m_ROSPublisher.PublishMoveArm();
-
+                
                 if (m_ManipulationMode.m_ShowHints)
                     ControllerButtonHints.ShowTextHint(m_InteractingHand, m_Trigger, "Move Manipulator", false);
             }
@@ -113,6 +116,8 @@ public class SimpleDirectManipulation : MonoBehaviour
     private void MoveManipulator()
     {
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, m_GhostObject.transform.rotation);
+
+        m_RobotFeedback.RequestTrajectory();
         m_ROSPublisher.PublishMoveArm();
     }
 

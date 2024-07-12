@@ -57,10 +57,55 @@ public class InteractableObjects : MonoBehaviour
         leftIndex.GetComponent<InteractableObjectCreator>().Setup("left");
     }
 
+    public void IsCreating(bool value)
+    {
+        foreach (var iObj in m_InteractableObjects)
+            iObj.gameObj.GetComponent<CollisionHandling>().IsCreating(value);
+    }
+
     private int GetFreeID()
     {
         m_Id++;
         return m_Id - 1;
+    }
+
+    public void AddAllInteractableObjects(List<Collider> colliders)
+    {
+        StartCoroutine(AddAllInteractableObjectsRoutine(colliders));
+    }
+
+    private IEnumerator AddAllInteractableObjectsRoutine(List<Collider> colliders)
+    {
+        if (colliders != null && colliders.Count > 0)
+        {
+            foreach (var col in colliders)
+            {
+                AddInteractableObject(col);
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+    }
+
+    public void AddInteractableObject(Collider collider)
+    {
+        bool isAttachable = false;
+        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
+            isAttachable = true;
+
+        collider.AddComponent<CollisionHandling>();
+        collider.GetComponent<CollisionHandling>().SetupCollisionHandling(isAttachable, m_CollidingMat, m_AttachedMat, m_FocusObjectMat);
+
+        collider.AddComponent<InteractableObject>();
+        collider.GetComponent<InteractableObject>().AddInteractableObject(isAttachable, GetFreeID().ToString(), collider);
+
+        IObject iObj = new()
+        {
+            parent = collider.transform.parent,
+            gameObj = collider.gameObject
+        };
+
+        m_InteractableObjects.Add(iObj);
+        collider.transform.SetParent(gameObject.transform);
     }
 
     public void RemoveAllInteractableObjects()
@@ -88,34 +133,6 @@ public class InteractableObjects : MonoBehaviour
 
         iObj.gameObj.transform.SetParent(iObj.parent);
         m_InteractableObjects.Remove(iObj);
-    }
-
-    public void IsCreating(bool value)
-    {
-        foreach (var iObj in m_InteractableObjects)
-            iObj.gameObj.GetComponent<CollisionHandling>().IsCreating(value);
-    }
-
-    public void AddInteractableObject(Collider collider)
-    {
-        bool isAttachable = false;
-        if (m_ManipulationMode.mode == Mode.ATTOBJCREATOR)
-            isAttachable = true;
-
-        collider.AddComponent<CollisionHandling>();
-        collider.GetComponent<CollisionHandling>().SetupCollisionHandling(isAttachable, m_CollidingMat, m_AttachedMat, m_FocusObjectMat);
-
-        collider.AddComponent<InteractableObject>();
-        collider.GetComponent<InteractableObject>().AddInteractableObject(isAttachable, GetFreeID().ToString(), collider);
-
-        IObject iObj = new()
-        {
-            parent = collider.transform.parent,
-            gameObj = collider.gameObject
-        };
-
-        m_InteractableObjects.Add(iObj);
-        collider.transform.SetParent(gameObject.transform);
     }
 
     public void RemoveInteractableObject(Collider collider)

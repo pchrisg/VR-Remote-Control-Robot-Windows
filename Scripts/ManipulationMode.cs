@@ -2,7 +2,6 @@ using UnityEngine;
 using ManipulationModes;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
-using Unity.VisualScripting;
 
 namespace ManipulationModes
 {
@@ -26,7 +25,7 @@ public class ManipulationMode : MonoBehaviour
     [HideInInspector] public const float SCALINGFACTOR = 0.25f;     //25%
 
     [Header("Technique")]
-    public Mode mode = Mode.IDLE;
+    public Mode mode = Mode.CONSTRAINEDDIRECT;
 
     private Manipulator m_Manipulator = null;
     private SDOFManipulation m_SDOFManipulation = null;
@@ -55,61 +54,61 @@ public class ManipulationMode : MonoBehaviour
         m_Grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     }
 
-    private void Update()
-    {
-        if (mode != m_ExperimentManager.m_Technique)
-        {
-            ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
-            ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
-            ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
-            ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
+    //private void Update()
+    //{
+    //    if (mode != m_ExperimentManager.m_Technique)
+    //    {
+    //        ControllerButtonHints.HideTextHint(m_RightHand, m_Trigger);
+    //        ControllerButtonHints.HideTextHint(m_LeftHand, m_Trigger);
+    //        ControllerButtonHints.HideTextHint(m_RightHand, m_Grip);
+    //        ControllerButtonHints.HideTextHint(m_LeftHand, m_Grip);
 
-            if (mode == Mode.IDLE)
-            {
-                if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
-                    mode = Mode.SIMPLEDIRECT;
-                else if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
-                    ToggleDirect();
-                else if (m_ExperimentManager.m_Technique == Mode.SDOF)
-                    ToggleSDOF();
-            }
-            else if (mode == Mode.SIMPLEDIRECT)
-            {
-                if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
-                    ToggleDirect();
-                else if (m_ExperimentManager.m_Technique == Mode.SDOF)
-                    ToggleSDOF();
-            }
-            else if (mode == Mode.CONSTRAINEDDIRECT)
-            {
-                if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
-                {
-                    ToggleDirect();
-                    mode = Mode.SIMPLEDIRECT;
-                }
-                else if (m_ExperimentManager.m_Technique == Mode.SDOF)
-                {
-                    ToggleDirect();
-                    ToggleSDOF();
-                }
-            }
-            else if (mode == Mode.SDOF)
-            {
-                if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
-                {
-                    ToggleSDOF();
-                    mode = Mode.SIMPLEDIRECT;
-                }
-                else if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
-                {
-                    ToggleSDOF();
-                    ToggleDirect();
-                }
-            }
+    //        if (mode == Mode.IDLE)
+    //        {
+    //            if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
+    //                mode = Mode.SIMPLEDIRECT;
+    //            else if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
+    //                ToggleDirect();
+    //            else if (m_ExperimentManager.m_Technique == Mode.SDOF)
+    //                ToggleSDOF();
+    //        }
+    //        else if (mode == Mode.SIMPLEDIRECT)
+    //        {
+    //            if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
+    //                ToggleDirect();
+    //            else if (m_ExperimentManager.m_Technique == Mode.SDOF)
+    //                ToggleSDOF();
+    //        }
+    //        else if (mode == Mode.CONSTRAINEDDIRECT)
+    //        {
+    //            if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
+    //            {
+    //                ToggleDirect();
+    //                mode = Mode.SIMPLEDIRECT;
+    //            }
+    //            else if (m_ExperimentManager.m_Technique == Mode.SDOF)
+    //            {
+    //                ToggleDirect();
+    //                ToggleSDOF();
+    //            }
+    //        }
+    //        else if (mode == Mode.SDOF)
+    //        {
+    //            if (m_ExperimentManager.m_Technique == Mode.SIMPLEDIRECT)
+    //            {
+    //                ToggleSDOF();
+    //                mode = Mode.SIMPLEDIRECT;
+    //            }
+    //            else if (m_ExperimentManager.m_Technique == Mode.CONSTRAINEDDIRECT)
+    //            {
+    //                ToggleSDOF();
+    //                ToggleDirect();
+    //            }
+    //        }
 
-            m_Manipulator.ResetPositionAndRotation();
-        }
-    }
+    //        m_Manipulator.ResetPositionAndRotation();
+    //    }
+    //}
 
     public void ShowHints(bool value)
     {

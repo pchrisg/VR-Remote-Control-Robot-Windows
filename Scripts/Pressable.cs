@@ -13,14 +13,14 @@ public class Pressable : MonoBehaviour
     [SerializeField] private UnityEvent m_OnButtonIsPressed;
 
     [Header("Properties")]
-    [SerializeField] private bool m_isMultiPress = false;
+    public bool m_isMultiPress = false;
     [Range(0, 1)]
-    [SerializeField] private float m_EngageAtPercent = 0.95f;
+    public float m_EngageAtPercent = 0.95f;
     [Range(0, 1)]
-    [SerializeField] private float m_DisengageAtPercent = 0.9f;
+    public float m_DisengageAtPercent = 0.9f;
 
     private AudioSource m_AudioSource = null;
-    private Vector3 m_LocalMoveDistance = new Vector3(0, -0.4f, 0);
+    private Vector3 m_LocalMoveDistance = new(0, -0.4f, 0);
 
     private bool m_Engaged = false;
     //private bool m_ButtonDown = false;

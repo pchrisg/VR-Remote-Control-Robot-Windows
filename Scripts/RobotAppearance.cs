@@ -34,8 +34,8 @@ public class RobotAppearance : MonoBehaviour
             foreach (var joint in m_UR5.GetComponentsInChildren<EmergencyStop>())
                 joint.ChangeAppearance(2);
 
-            foreach (var joint in m_Robotiq.GetComponentsInChildren<EmergencyStop>())
-                joint.ChangeAppearance(1);
+            //foreach (var joint in m_Robotiq.GetComponentsInChildren<EmergencyStop>())
+            //    joint.ChangeAppearance(1);
 
             m_Appearance = Appearance.TRANSPARENT;
         }

@@ -1,11 +1,13 @@
 using Unity.VisualScripting;
 using UnityEngine;
+using FeedBackModes;
 
 public class CollisionHandling : MonoBehaviour
 {
     //Scripts
     private Manipulator m_Manipulator = null;
     private GripperControl m_GripperControl = null;
+    private ExperimentManager m_ExperimentManager = null;
 
     //Properties
     public bool m_isAttachable = false;
@@ -41,6 +43,7 @@ public class CollisionHandling : MonoBehaviour
     {
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_GripperControl = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<GripperControl>();
+        m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_ManipulatorColliders = m_Manipulator.transform.Find("palm").GetComponentsInChildren<Collider>();
         GameObject robotiq = GameObject.FindGameObjectWithTag("Robotiq");
@@ -99,15 +102,18 @@ public class CollisionHandling : MonoBehaviour
             }
         }
 
-        if (!colliderFound)
+        if (m_ExperimentManager.m_FeedbackMode == Mode.NONE)
         {
-            foreach (var collider in m_ManipulatorColliders)
+            if (!colliderFound)
             {
-                if (other == collider)
+                foreach (var collider in m_ManipulatorColliders)
                 {
-                    m_ManipulatorTouching++;
-                    colliderFound = true;
-                    break;
+                    if (other == collider)
+                    {
+                        m_ManipulatorTouching++;
+                        colliderFound = true;
+                        break;
+                    }
                 }
             }
         }
@@ -178,15 +184,18 @@ public class CollisionHandling : MonoBehaviour
             }
         }
 
-        if (!colliderFound)
+        if (m_ExperimentManager.m_FeedbackMode == Mode.NONE)
         {
-            foreach (var collider in m_ManipulatorColliders)
+            if (!colliderFound)
             {
-                if (other == collider)
+                foreach (var collider in m_ManipulatorColliders)
                 {
-                    m_ManipulatorTouching--;
-                    colliderFound = true;
-                    break;
+                    if (other == collider)
+                    {
+                        m_ManipulatorTouching--;
+                        colliderFound = true;
+                        break;
+                    }
                 }
             }
         }
@@ -256,7 +265,7 @@ public class CollisionHandling : MonoBehaviour
 
     public void SetupCollisionHandling(bool isAttachable, Material collidingMat, Material attachedMat, Material focusObjectMat)
     {
-        m_isCreating = true;
+        //m_isCreating = true;
 
         if(gameObject.GetComponent<Renderer>() != null)
             m_OriginalMat = gameObject.GetComponent<Renderer>().material;

@@ -6,8 +6,8 @@ using RosMessageTypes.Std;
 public class ResultSubscriber : MonoBehaviour
 {
     private ROSConnection m_Ros = null;
-    private readonly string m_FeedbackTopic = "/move_group/feedback";
-    private readonly string m_PlanSuccessTopic = "chris_plan_success";
+    private readonly string m_FeedbackTopic = "/ur5/move_group/feedback";
+    private readonly string m_PlanSuccessTopic = "/chris_plan_success";
 
     private Manipulator m_Manipulator = null;
     public bool m_isPlanExecuted = true;
