@@ -69,19 +69,19 @@ public class InteractableObjects : MonoBehaviour
         return m_Id - 1;
     }
 
-    public void AddAllInteractableObjects(List<Collider> colliders)
+    public void AddAllInteractableObjects(List<BoxCollider> colliders)
     {
         StartCoroutine(AddAllInteractableObjectsRoutine(colliders));
     }
 
-    private IEnumerator AddAllInteractableObjectsRoutine(List<Collider> colliders)
+    private IEnumerator AddAllInteractableObjectsRoutine(List<BoxCollider> colliders)
     {
         if (colliders != null && colliders.Count > 0)
         {
             foreach (var col in colliders)
             {
                 AddInteractableObject(col);
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(0.3f);
             }
         }
     }

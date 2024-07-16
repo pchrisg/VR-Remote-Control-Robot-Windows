@@ -7522,7 +7522,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &492438395
 Transform:
   m_ObjectHideFlags: 0
@@ -20995,10 +20995,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Table: {fileID: 237820305}
+  m_GlassBox: {fileID: 492438394}
   m_Objects: {fileID: 1711905459}
   m_ParticipantNumber: 1
   m_ResetHeight: 0
-  m_FeedbackMode: 1
+  m_FeedbackMode: 2
   m_ResetRobotPose: 0
   m_AllowUserControl: 1
   m_ShowHints: 0
@@ -31173,7 +31174,39 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_FeedbackMat: {fileID: 2100000, guid: 887d752552820cb4d86aff03095a4095, type: 2}
-  isPlanning: 0
+  m_Thresholds:
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  - 5
+  m_Targets:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  m_ShoulderPan:
+  - -210
+  - 210
+  m_ShoulderLift:
+  - -180
+  - -30
+  m_ElbowJoint:
+  - -160
+  - 15
+  m_Wrist1:
+  - -180
+  - 70
+  m_Wrist2:
+  - 0
+  - 145
+  m_Wrist3:
+  - -300
+  - 120
+  m_DisplayHint: 0
 --- !u!1 &2543227102718750380
 GameObject:
   m_ObjectHideFlags: 0
@@ -37569,15 +37602,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 746405724547235838, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 746405724547235838, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 746405724547235838, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 746405724547235838, guid: ee1221619ce55ed4ea547051f3badf82, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -46891,8 +46924,8 @@ SceneRoots:
   - {fileID: 1390926849}
   - {fileID: 933266415}
   - {fileID: 2135094565}
-  - {fileID: 3760782067635346087}
   - {fileID: 8905729222109062423}
   - {fileID: 1792098998505176610}
   - {fileID: 8844717456705735135}
   - {fileID: 4592749633025995490}
+  - {fileID: 3760782067635346087}

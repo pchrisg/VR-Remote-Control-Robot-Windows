@@ -90,7 +90,7 @@ public class InteractableObject : MonoBehaviour
 
         var poseMsg = new PoseMsg
         {
-            position = gameObject.transform.position.To<FLU>(),//collider.bounds.center.To<FLU>(),
+            position = collider.bounds.center.To<FLU>(),
             orientation = gameObject.transform.rotation.To<FLU>()
         };
 

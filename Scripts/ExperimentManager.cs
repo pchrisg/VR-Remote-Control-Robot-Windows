@@ -11,6 +11,7 @@ public class ExperimentManager : MonoBehaviour
 {
     [Header("Scene Objects")]
     [SerializeField] private GameObject m_Table = null;
+    [SerializeField] private GameObject m_GlassBox = null;
     public GameObject m_Objects = null;
 
     [Header("Participant")]
@@ -110,6 +111,7 @@ public class ExperimentManager : MonoBehaviour
         m_Task = transform.Find("Task").GetComponent<ButtonTask>();
 
         m_Table.SetActive(false);
+        m_GlassBox.SetActive(false);
         m_Objects.SetActive(false);
 
         m_Active = "None";
@@ -288,6 +290,7 @@ public class ExperimentManager : MonoBehaviour
         yield return new WaitForSeconds(1.0f);
 
         m_Table.SetActive(false);
+        m_GlassBox.SetActive(false);
         m_Objects.SetActive(false);
 
         m_ROSPublisher.PublishResetPose();
@@ -296,8 +299,16 @@ public class ExperimentManager : MonoBehaviour
         GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>().ResetPositionAndRotation();
 
         m_Table.SetActive(true);
-        m_InteractableObjects.AddInteractableObject(m_Table.transform.Find("TableTop").GetComponent<Collider>());
+        m_GlassBox.SetActive(true);
         m_Objects.SetActive(true);
+        //List<BoxCollider> colliders = new ();
+        //colliders.Add(m_Table.transform.Find("TableTop").GetComponent<BoxCollider>());
+        //foreach (var side in m_GlassBox.GetComponentsInChildren<BoxCollider>())
+        //    colliders.Add(side);
+        //foreach (var obj in m_Objects.GetComponentsInChildren<BoxCollider>())
+        //    colliders.Add(obj);
+
+        //m_InteractableObjects.AddAllInteractableObjects(colliders);
     }
 
     private void ClearData()
