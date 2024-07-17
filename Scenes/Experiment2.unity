@@ -8214,7 +8214,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011d656c8b8540d4196f1cbeac8aa231, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mode: 2
+  mode: 1
   m_ShowHints: 0
 --- !u!114 &621543382
 MonoBehaviour:

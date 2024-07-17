@@ -10,7 +10,6 @@ public class RobotFeedbackCollision : MonoBehaviour
 {
     [Header("Materials")]
     [SerializeField] private Material m_FeebackMat = null;
-    [SerializeField] private Material m_CollidingMat = null;
     private ExperimentManager m_ExperimentManager = null;
 
     private Renderer[] m_Renderers = null;

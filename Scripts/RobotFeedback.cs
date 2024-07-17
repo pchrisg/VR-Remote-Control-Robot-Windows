@@ -78,8 +78,6 @@ public class RobotFeedback : MonoBehaviour
         m_ManipulatorPose = m_Manipulator.transform.Find("Pose");
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
-        m_Mode = m_ExperimentManager.m_FeedbackMode;
-
         m_FeedbackJoints = new ArticulationBody[k_UR5NumJoints];
         m_UR5Joints = new ArticulationBody[k_UR5NumJoints];
 
@@ -134,6 +132,11 @@ public class RobotFeedback : MonoBehaviour
         m_Thresholds[5] = (m_RobotLimits[5].max - m_RobotLimits[5].min) / 14;
     }
 
+    private void Start()
+    {
+        ChangeMode();
+    }
+
     private void OnDestroy()
     {
         m_FeedbackMat.color = m_HideColor;
@@ -142,19 +145,22 @@ public class RobotFeedback : MonoBehaviour
     private void Update()
     {
         if (m_Mode != m_ExperimentManager.m_FeedbackMode)
+            ChangeMode();
+    }
+
+    private void ChangeMode()
+    {
+        if (m_ExperimentManager.m_FeedbackMode == Mode.ALWAYS)
         {
-            if (m_ExperimentManager.m_FeedbackMode == Mode.ALWAYS)
-            {
-                m_FeedbackMat.color = m_ShowColor;
-            }
-            else
-                m_FeedbackMat.color = m_HideColor;
-
-            foreach (var joint in m_FeedbackJoints)
-                joint.GetComponent<RobotFeedbackCollision>().ResetColor();
-
-            m_Mode = m_ExperimentManager.m_FeedbackMode;
+            m_FeedbackMat.color = m_ShowColor;
         }
+        else
+            m_FeedbackMat.color = m_HideColor;
+
+        foreach (var joint in m_FeedbackJoints)
+            joint.GetComponent<RobotFeedbackCollision>().ResetColor();
+
+        m_Mode = m_ExperimentManager.m_FeedbackMode;
     }
 
     public void ResetPositionAndRotation()

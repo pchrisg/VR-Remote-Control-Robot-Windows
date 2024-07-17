@@ -94,9 +94,6 @@ public class InteractableObject : MonoBehaviour
             orientation = gameObject.transform.rotation.To<FLU>()
         };
 
-        print("center: "+ gameObject.transform.position);
-        print("rotation: " + gameObject.transform.rotation);
-
         AddInteractableObject(id, poseMsg, GetSolidPrimitiveMsg(collider));
     }
 
@@ -133,10 +130,6 @@ public class InteractableObject : MonoBehaviour
             float width = gameObject.transform.lossyScale.z * boxCollider.size.z + modifier;
             float depth = gameObject.transform.lossyScale.x * boxCollider.size.x + modifier;
             float height = gameObject.transform.lossyScale.y * boxCollider.size.y + modifier;
-
-            print("width: " + width);
-            print("depth: " + depth);
-            print("height: " + height);
 
             solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.BOX_X] = width;
             solidPrimitiveMsg.dimensions[SolidPrimitiveMsg.BOX_Y] = depth;

@@ -74,11 +74,11 @@ public class EmergencyStop : MonoBehaviour
             Material[] colidingMat = { m_CollidingMat, m_CollidingMat };
             SetColor(colidingMat);
 
-            m_AudioSource.clip = m_CollisionClip;
-            m_AudioSource.Play();
+            //m_AudioSource.clip = m_CollisionClip;
+            //m_AudioSource.Play();
 
-            if (!m_ROSPublisher.IsLocked())
-                m_ROSPublisher.PublishEmergencyStop();
+            //if (!m_ROSPublisher.IsLocked())
+            //    m_ROSPublisher.PublishEmergencyStop();
         }
     }
 

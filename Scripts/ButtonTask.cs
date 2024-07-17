@@ -14,7 +14,7 @@ public class ButtonTask : MonoBehaviour
     private GameObject m_ObjectsContainer = null;
 
     private readonly List<Pressable> m_Buttons = new ();
-    private readonly List<BoxCollider> m_Obstacles = new();
+    private readonly List<Collider> m_Obstacles = new();
 
     private void Awake()
     {
@@ -26,17 +26,12 @@ public class ButtonTask : MonoBehaviour
     public void Setup(bool value)
     {
         if (value)
-            SetupTask();
+            StartCoroutine(SetupTask());
         else
             StartCoroutine(DestroyAllObjects());
     }
 
-    //private void Update()
-    //{
-        
-    //}
-
-    private void SetupTask()
+    private IEnumerator SetupTask()
     {
         //Buttons
         GameObject button = Instantiate(m_ButtonPrefab);
@@ -59,18 +54,24 @@ public class ButtonTask : MonoBehaviour
 
         //Obstacles
         GameObject obstacle = Instantiate(m_ObstaclePrefab);
-        obstacle.name = "obstacle_1";
-        obstacle.transform.SetPositionAndRotation(new(0.045f, 0.228f, -0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
-        obstacle.transform.localScale = new Vector3(0.68f, 0.45f, 0.025f);
+        obstacle.name = "obstacle_0";
+        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.63f, 0.0f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.8f, 0.1f, 0.8f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
-        m_Obstacles.Add(obstacle.GetComponent<BoxCollider>());
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if(collider.isTrigger)
+                m_Obstacles.Add(collider);
 
-        GameObject obstacle2 = Instantiate(m_ObstaclePrefab);
-        obstacle2.name = "obstacle_2";
-        obstacle2.transform.SetPositionAndRotation(new(0.045f, 0.616f, -0.2f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
-        obstacle2.transform.localScale = new Vector3(0.68f, 0.1f, 0.025f);
-        obstacle2.transform.SetParent(m_ObjectsContainer.transform);
-        m_Obstacles.Add(obstacle2.GetComponent<BoxCollider>());
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_1";
+        obstacle.transform.SetPositionAndRotation(new(0.045f, 0.235f, -0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.68f, 0.47f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        yield return new WaitForFixedUpdate();
 
         m_InteractableObjects.AddAllInteractableObjects(m_Obstacles);
     }

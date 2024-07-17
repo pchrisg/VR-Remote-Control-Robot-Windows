@@ -23,6 +23,8 @@ public class ExperimentManager : MonoBehaviour
 
     [Header("Robot Control")]
     [SerializeField] private bool m_ResetRobotPose = false;
+    [SerializeField] private bool m_AddColObjs = false;
+    private List<Collider> m_SceneObjects = new ();
     public bool m_AllowUserControl = false;
     public bool m_ShowHints = false;
 
@@ -116,6 +118,13 @@ public class ExperimentManager : MonoBehaviour
 
         m_Active = "None";
         m_Status = "Standby";
+
+        foreach (var collider in m_Table.transform.Find("TableTop").GetComponents<Collider>())
+            if (collider.isTrigger)
+                m_SceneObjects.Add(collider);
+        foreach (var collider in m_GlassBox.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_SceneObjects.Add(collider);
     }
 
     private void Start()
@@ -143,6 +152,13 @@ public class ExperimentManager : MonoBehaviour
         {
             m_ResetRobotPose = false;
             ResetRobotPose();
+        }
+
+        // Reset Robot Pose
+        if (m_AddColObjs)
+        {
+            m_AddColObjs = false;
+            AddCollisionObjects();
         }
 
         // If no tutorial or task is running
@@ -301,14 +317,11 @@ public class ExperimentManager : MonoBehaviour
         m_Table.SetActive(true);
         m_GlassBox.SetActive(true);
         m_Objects.SetActive(true);
-        //List<BoxCollider> colliders = new ();
-        //colliders.Add(m_Table.transform.Find("TableTop").GetComponent<BoxCollider>());
-        //foreach (var side in m_GlassBox.GetComponentsInChildren<BoxCollider>())
-        //    colliders.Add(side);
-        //foreach (var obj in m_Objects.GetComponentsInChildren<BoxCollider>())
-        //    colliders.Add(obj);
+    }
 
-        //m_InteractableObjects.AddAllInteractableObjects(colliders);
+    private void AddCollisionObjects()
+    {
+        m_InteractableObjects.AddAllInteractableObjects(m_SceneObjects);
     }
 
     private void ClearData()

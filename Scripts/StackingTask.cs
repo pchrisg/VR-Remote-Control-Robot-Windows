@@ -29,7 +29,7 @@ public class StackingTask : MonoBehaviour
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
 
-        m_ObjectsContainer = m_ExperimentManager.m_Objects;
+        //m_ObjectsContainer = m_ExperimentManager.m_Objects;
     }
 
     public void Setup(bool value)
