@@ -152,7 +152,7 @@ public class SDOFManipulation : MonoBehaviour
                 case 1:
                     m_isSnapping = true;
 
-                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    //m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
 
                     if (m_ManipulationMode.m_ShowHints && m_isInteracting)
                     {
@@ -175,7 +175,7 @@ public class SDOFManipulation : MonoBehaviour
                     m_InitDir = m_Handle.position - m_Manipulator.transform.position;
                     m_Manipulator.IsScaling(true);
 
-                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    //m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
 
                     if (m_ManipulationMode.m_ShowHints && m_isInteracting)
                     {
@@ -204,13 +204,13 @@ public class SDOFManipulation : MonoBehaviour
                         m_isScaling = false;
                         m_Manipulator.IsScaling(false);
 
-                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                        //m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
                     }
                     else
                     {
                         m_isSnapping = false;
 
-                        m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                        //m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
                     }
                     
                     break;
@@ -222,7 +222,7 @@ public class SDOFManipulation : MonoBehaviour
                         m_isScaling = false;
                         m_Manipulator.IsScaling(false);
 
-                        m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                        //m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
                     }
                     
                     break;
@@ -279,7 +279,7 @@ public class SDOFManipulation : MonoBehaviour
 
                     m_InitDir = m_Handle.position - m_Manipulator.transform.position;
 
-                    m_ExperimentManager.RecordModifier("ROTATING", isRotating);
+                    //m_ExperimentManager.RecordModifier("ROTATING", isRotating);
 
                     if (m_ManipulationMode.m_ShowHints)
                     {
@@ -293,7 +293,7 @@ public class SDOFManipulation : MonoBehaviour
 
                     m_InitPos = m_Handle.position;
 
-                    m_ExperimentManager.RecordModifier("TRANSLATING", isTranslating);
+                    //m_ExperimentManager.RecordModifier("TRANSLATING", isTranslating);
 
                     if (m_ManipulationMode.m_ShowHints)
                     {

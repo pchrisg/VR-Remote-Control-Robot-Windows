@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class ButtonTask : MonoBehaviour
 {
@@ -33,6 +34,8 @@ public class ButtonTask : MonoBehaviour
 
     private IEnumerator SetupTask()
     {
+        UnityAction action = new (() => m_ExperimentManager.RecordTime());
+
         //Buttons
         GameObject button = Instantiate(m_ButtonPrefab);
         button.name = "button_1";
@@ -40,6 +43,7 @@ public class ButtonTask : MonoBehaviour
         button.transform.SetParent(m_ObjectsContainer.transform);
         button.GetComponentInChildren<TextMeshProUGUI>().text = "1";
         var pressable = button.GetComponentInChildren<Pressable>();
+        pressable.SetEvent(action);
         pressable.m_isMultiPress = false;
         m_Buttons.Add(pressable);
 
@@ -49,23 +53,107 @@ public class ButtonTask : MonoBehaviour
         button.transform.SetParent(m_ObjectsContainer.transform);
         button.GetComponentInChildren<TextMeshProUGUI>().text = "2";
         pressable = button.GetComponentInChildren<Pressable>();
+        pressable.SetEvent(action);
+        pressable.m_isMultiPress = false;
+        m_Buttons.Add(pressable);
+
+        button = Instantiate(m_ButtonPrefab);
+        button.name = "button_3";
+        button.transform.position = new(0.5f, 0.025f, 0.5f);
+        button.transform.SetParent(m_ObjectsContainer.transform);
+        button.GetComponentInChildren<TextMeshProUGUI>().text = "3";
+        pressable = button.GetComponentInChildren<Pressable>();
+        pressable.SetEvent(action);
+        pressable.m_isMultiPress = false;
+        m_Buttons.Add(pressable);
+
+        button = Instantiate(m_ButtonPrefab);
+        button.name = "button_4";
+        button.transform.position = new(-0.5f, 0.025f, 0.5f);
+        button.transform.SetParent(m_ObjectsContainer.transform);
+        button.GetComponentInChildren<TextMeshProUGUI>().text = "4";
+        pressable = button.GetComponentInChildren<Pressable>();
+        pressable.SetEvent(new UnityAction(()=> m_ExperimentManager.SaveData()));
         pressable.m_isMultiPress = false;
         m_Buttons.Add(pressable);
 
         //Obstacles
         GameObject obstacle = Instantiate(m_ObstaclePrefab);
-        obstacle.name = "obstacle_0";
-        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.63f, 0.0f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
-        obstacle.transform.localScale = new Vector3(0.8f, 0.1f, 0.8f);
+        obstacle.name = "obstacle_1_1";
+        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.63f, -0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.8f, 0.1f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
         foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
             if(collider.isTrigger)
                 m_Obstacles.Add(collider);
 
         obstacle = Instantiate(m_ObstaclePrefab);
-        obstacle.name = "obstacle_1";
-        obstacle.transform.SetPositionAndRotation(new(0.045f, 0.235f, -0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
-        obstacle.transform.localScale = new Vector3(0.68f, 0.47f, 0.025f);
+        obstacle.name = "obstacle_1_2";
+        obstacle.transform.SetPositionAndRotation(new(0.045f, 0.225f, -0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.68f, 0.45f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_2_1";
+        obstacle.transform.SetPositionAndRotation(new(0.4f, 0.6f, 0.01f), Quaternion.Euler(0.0f, 90.0f, -15.0f));
+        obstacle.transform.localScale = new Vector3(0.5f, 0.15f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_2_2";
+        obstacle.transform.SetPositionAndRotation(new(0.4f, 0.25f, 0.0f), Quaternion.Euler(0.0f, 90.0f, -15.0f));
+        obstacle.transform.localScale = new Vector3(0.6f, 0.15f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_3_1";
+        obstacle.transform.SetPositionAndRotation(new(0.0f, 0.63f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.8f, 0.1f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_3_2";
+        obstacle.transform.SetPositionAndRotation(new(0.25f, 0.2f, 0.42f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.1f, 0.4f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_3_3";
+        obstacle.transform.SetPositionAndRotation(new(-0.05f, 0.5f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.1f, 0.15f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_3_4";
+        obstacle.transform.SetPositionAndRotation(new(-0.05f, 0.15f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.1f, 0.3f, 0.025f);
+        obstacle.transform.SetParent(m_ObjectsContainer.transform);
+        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
+            if (collider.isTrigger)
+                m_Obstacles.Add(collider);
+
+        obstacle = Instantiate(m_ObstaclePrefab);
+        obstacle.name = "obstacle_3_5";
+        obstacle.transform.SetPositionAndRotation(new(-0.32f, 0.2f, 0.35f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.1f, 0.4f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
         foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
             if (collider.isTrigger)

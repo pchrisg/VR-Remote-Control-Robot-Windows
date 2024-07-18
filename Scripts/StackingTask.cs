@@ -52,7 +52,7 @@ public class StackingTask : MonoBehaviour
                 if(m_BarrelMoved == false)
                 {
                     m_BarrelMoved = true;
-                    m_ExperimentManager.RecordGrabTime(barrel.gameObject.name);
+                    //m_ExperimentManager.RecordGrabTime(barrel.gameObject.name);
                     print(barrel.gameObject.name + " grabbed");
                 }
 
@@ -89,11 +89,11 @@ public class StackingTask : MonoBehaviour
                 if (m_WithinBounds)
                 {
                     m_WithinBounds = false;
-                    m_ExperimentManager.RecordPlaceTime(m_PlacedBarrels.Last());
+                    //m_ExperimentManager.RecordPlaceTime(m_PlacedBarrels.Last());
                 }
 
                 if (knockedOver)
-                    m_ExperimentManager.RecordKnockOver();
+                    //m_ExperimentManager.RecordKnockOver();
 
                 if (m_PlacedBarrels.Count() == 5)
                     m_Timer = 3.0f;

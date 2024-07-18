@@ -10,7 +10,7 @@ public class Pressable : MonoBehaviour
     [Header ("Events")]
     //[SerializeField] private UnityEvent m_OnButtonDown;
     //[SerializeField] private UnityEvent m_OnButtonUp;
-    [SerializeField] private UnityEvent m_OnButtonIsPressed;
+    [SerializeField] private UnityEvent m_OnButtonIsPressed = new();
 
     [Header("Properties")]
     public bool m_isMultiPress = false;
@@ -95,6 +95,11 @@ public class Pressable : MonoBehaviour
 
             InvokeEvents(wasEngaged, m_Engaged);
         }
+    }
+
+    public void SetEvent(UnityAction call)
+    {
+        m_OnButtonIsPressed.AddListener(call);
     }
 
     private void InvokeEvents(bool wasEngaged, bool isEngaged)

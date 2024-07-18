@@ -146,7 +146,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                 case 1:
                     m_isSnapping = true;
 
-                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    //m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
 
                     if (m_ManipulationMode.m_ShowHints)
                     {
@@ -185,7 +185,7 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                     m_InitPos = gameObject.transform.position;
                     gameObject.GetComponent<Manipulator>().IsScaling(true);
 
-                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    //m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
 
                     if (m_ManipulationMode.m_ShowHints)
                     {
@@ -216,14 +216,14 @@ public class ConstrainedDirectManipulation : MonoBehaviour
                 case 0:
                     m_isSnapping = false;
 
-                    m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
+                    //m_ExperimentManager.RecordModifier("SNAPPING", m_isSnapping);
                     break;
 
                 case 1:
                     m_isScaling = false;
                     gameObject.GetComponent<Manipulator>().IsScaling(false);
 
-                    m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
+                    //m_ExperimentManager.RecordModifier("SCALING", m_isScaling);
                     break;
 
                 default:

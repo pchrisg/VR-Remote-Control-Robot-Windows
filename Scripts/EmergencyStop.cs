@@ -22,7 +22,7 @@ public class EmergencyStop : MonoBehaviour
     private readonly Material[] m_TransparentMat = { null, null };
     private readonly Material[] m_HighlightMat = { null, null };
 
-    float m_CollisionTime = 0.0f;
+    //float m_CollisionTime = 0.0f;
 
     private void Awake()
     {
@@ -59,28 +59,28 @@ public class EmergencyStop : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag("Moveable") && Time.time - m_CollisionTime >= m_ROSPublisher.m_TimePenalty)
-        {
-            m_CollisionTime = Time.time;
-            string description = gameObject.name + ",collided with," + other.name + "\n";
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (!other.CompareTag("Moveable") && Time.time - m_CollisionTime >= m_ROSPublisher.m_TimePenalty)
+    //    {
+    //        m_CollisionTime = Time.time;
+    //        string description = gameObject.name + ",collided with," + other.name + "\n";
 
-            if (m_ExperimentManager != null)
-                m_ExperimentManager.RecordCollision(description);
+    //        if (m_ExperimentManager != null)
+    //            m_ExperimentManager.RecordCollision(description);
 
-            print(Time.time.ToString() + " Enter - " + description);
+    //        print(Time.time.ToString() + " Enter - " + description);
 
-            Material[] colidingMat = { m_CollidingMat, m_CollidingMat };
-            SetColor(colidingMat);
+    //        Material[] colidingMat = { m_CollidingMat, m_CollidingMat };
+    //        SetColor(colidingMat);
 
-            //m_AudioSource.clip = m_CollisionClip;
-            //m_AudioSource.Play();
+    //        m_AudioSource.clip = m_CollisionClip;
+    //        m_AudioSource.Play();
 
-            //if (!m_ROSPublisher.IsLocked())
-            //    m_ROSPublisher.PublishEmergencyStop();
-        }
-    }
+    //        if (!m_ROSPublisher.IsLocked())
+    //            m_ROSPublisher.PublishEmergencyStop();
+    //    }
+    //}
 
     //private void OnTriggerStay(Collider other)
     //{
@@ -94,11 +94,11 @@ public class EmergencyStop : MonoBehaviour
     //    }
     //}
 
-    private void OnTriggerExit(Collider other)
-    {
-        if (!other.CompareTag("Attachable"))
-            SetColor(m_OriginalMat);
-    }
+    //private void OnTriggerExit(Collider other)
+    //{
+    //    if (!other.CompareTag("Attachable"))
+    //        SetColor(m_OriginalMat);
+    //}
 
     public void ChangeAppearance(int material)
     {

@@ -153,13 +153,13 @@ public class InteractableObjects : MonoBehaviour
         {
             m_FocusObject = collider.gameObject;
             m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(true);
-            m_ExperimentManager.RecordFocusObject(m_FocusObject.name, true);
+            //m_ExperimentManager.RecordFocusObject(m_FocusObject.name, true);
         }
 
         else if (m_FocusObject == collider.gameObject)
         {
             m_FocusObject.GetComponent<CollisionHandling>().IsFocusObject(false);
-            m_ExperimentManager.RecordFocusObject(m_FocusObject.name, false);
+            //m_ExperimentManager.RecordFocusObject(m_FocusObject.name, false);
             m_FocusObject = null;
         }
     }
