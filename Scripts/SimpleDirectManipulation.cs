@@ -2,13 +2,18 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using ManipulationModes;
+using static UnityEngine.ParticleSystem;
 
 [RequireComponent(typeof(Interactable))]
 
 public class SimpleDirectManipulation : MonoBehaviour
 {
+    [SerializeField] private GameObject m_TetherPrefab = null;
+    public float m_TetherDistance = 0.25f;
+
     private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
+    private GameObject m_EndEffector = null;
     private ExperimentManager m_ExperimentManager = null;
     private RobotFeedback m_RobotFeedback = null;
 
@@ -23,11 +28,13 @@ public class SimpleDirectManipulation : MonoBehaviour
     private Hand m_OtherHand = null;
 
     private GameObject m_GhostObject = null;
+    private GameObject m_Tether = null;
 
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
+        m_EndEffector = GameObject.FindGameObjectWithTag("Robotiq");
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
         m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
 
@@ -81,6 +88,10 @@ public class SimpleDirectManipulation : MonoBehaviour
                 m_GhostObject.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
                 m_GhostObject.transform.SetParent(m_InteractingHand.transform);
 
+                m_Tether = Instantiate(m_TetherPrefab);
+                m_Tether.transform.SetPositionAndRotation(gameObject.transform.position, gameObject.transform.rotation);
+                m_Tether.transform.localScale = new Vector3(0.0025f, 0.0f, 0.0025f);
+
                 m_LeftHand.GetComponent<Hand>().Hide();
                 m_RightHand.GetComponent<Hand>().Hide();
 
@@ -100,11 +111,11 @@ public class SimpleDirectManipulation : MonoBehaviour
                 m_ManipulationMode.IsInteracting(m_isInteracting);
 
                 Destroy(m_GhostObject);
+                Destroy(m_Tether);
 
                 m_LeftHand.GetComponent<Hand>().Show();
                 m_RightHand.GetComponent<Hand>().Show();
 
-                m_RobotFeedback.RequestTrajectory();
                 m_ROSPublisher.PublishMoveArm();
                 
                 if (m_ManipulationMode.m_ShowHints)
@@ -115,7 +126,18 @@ public class SimpleDirectManipulation : MonoBehaviour
 
     private void MoveManipulator()
     {
-        gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, m_GhostObject.transform.rotation);
+        Vector3 connectingVector = m_GhostObject.transform.position - m_EndEffector.transform.position;
+        if(connectingVector.magnitude < m_TetherDistance)
+            gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_GhostObject.transform.position, m_GhostObject.transform.rotation);
+        else
+        {
+            Vector3 position = m_EndEffector.transform.position + connectingVector.normalized * m_TetherDistance;
+            gameObject.GetComponent<ArticulationBody>().TeleportRoot(position, m_GhostObject.transform.rotation);
+        }
+
+        connectingVector = gameObject.transform.position - m_EndEffector.transform.position;
+        m_Tether.transform.SetPositionAndRotation(m_EndEffector.transform.position + connectingVector * 0.5f, Quaternion.FromToRotation(Vector3.up, connectingVector));
+        m_Tether.transform.localScale = new(0.0025f, connectingVector.magnitude * 0.5f, 0.0025f);
 
         m_RobotFeedback.RequestTrajectory();
         m_ROSPublisher.PublishMoveArm();

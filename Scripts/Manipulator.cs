@@ -7,75 +7,89 @@ public class Manipulator : MonoBehaviour
     [Header("Material")]
     [SerializeField] private Material m_ManipulatorMat = null;
 
-    private ROSPublisher m_ROSPublisher = null;
+    //private ROSPublisher m_ROSPublisher = null;
     private ManipulationMode m_ManipulationMode = null;
     private InteractableObjects m_InteractableObjects = null;
     private Indicator m_Indicator = null;
-    private RobotFeedback m_RobotFeedback = null;
+    //private RobotFeedback m_RobotFeedback = null;
     private ExperimentManager m_ExperimentManager = null;
 
     private Transform m_Robotiq = null;
 
     //Colors
-    private Color m_DefaultColor = new(0.2f, 0.2f, 0.2f, 0.5f);
+    private Color m_ShowColor = new(0.2f, 0.2f, 0.2f, 0.5f);
     private Color m_ScalingColor = new(0.8f, 0.8f, 0.8f, 0.5f);
     private Color m_CollidingColor = new(1.0f, 0.0f, 0.0f, 0.5f);
-    private Color m_InvisColor = new(0.2f, 0.2f, 0.2f, 0.0f);
+    private Color m_HideColor = new(0.2f, 0.2f, 0.2f, 0.0f);
     private Color m_FlashingColor = new(1.0f, 1.0f, 0.0f, 0.5f);
-
-    Coroutine activeCouroutine = null;
 
     private bool m_isScaling = false;
 
     private Coroutine m_ActiveCoroutine = null;
 
+    private bool m_isInteracting = false;
+
     private void Awake()
     {
-        m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        //m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
         m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_InteractableObjects = GameObject.FindGameObjectWithTag("InteractableObjects").GetComponent<InteractableObjects>();
         m_Indicator = gameObject.transform.Find("Indicator").GetComponent<Indicator>();
-        m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
+        //m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
 
         m_Robotiq = GameObject.FindGameObjectWithTag("Robotiq").transform;
 
-        m_ManipulatorMat.color = m_DefaultColor;
+        m_ManipulatorMat.color = m_ShowColor;
 
         ShowManipulator(false);
     }
 
     private void OnDestroy()
     {
-        m_ManipulatorMat.color = m_DefaultColor;
+        m_ManipulatorMat.color = m_ShowColor;
     }
 
     private void Update()
     {
-        if (m_ManipulationMode.mode == ManipulationModes.Mode.CONSTRAINEDDIRECT)
-            CheckSnapping();
+        if (m_isInteracting != m_ManipulationMode.IsInteracting())
+        {
+            m_isInteracting = m_ManipulationMode.IsInteracting();
+            ShowManipulator(m_isInteracting);
+        }
+
+        if (m_isInteracting)
+        {
+            if (m_ManipulationMode.mode == ManipulationModes.Mode.CONSTRAINEDDIRECT)
+                CheckSnapping();
+        }
+        else
+            ResetPositionAndRotation();
+        
     }
 
     public void ResetPositionAndRotation()
     {
-        if (activeCouroutine != null)
-            StopCoroutine(activeCouroutine);
-
-        activeCouroutine = StartCoroutine(ResetPositionAndRotationRoutine());
-    }
-
-    private IEnumerator ResetPositionAndRotationRoutine()
-    {
-        ShowManipulator(false);
-
-        yield return new WaitForSeconds(0.3f);
-        yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
-
         gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
-        ShowManipulator(true);
 
-        m_RobotFeedback.ResetPositionAndRotation();
+        //if (m_ActiveCoroutine != null)
+        //    StopCoroutine(m_ActiveCoroutine);
+
+        //m_ActiveCoroutine = StartCoroutine(ResetPositionAndRotationRoutine());
     }
+
+    //private IEnumerator ResetPositionAndRotationRoutine()
+    //{
+    //    ShowManipulator(false);
+
+    //    yield return new WaitForSeconds(0.3f);
+    //    yield return new WaitUntil(() => m_ROSPublisher.GetComponent<ResultSubscriber>().m_RobotState == "IDLE");
+
+    //    gameObject.GetComponent<ArticulationBody>().TeleportRoot(m_Robotiq.position, m_Robotiq.rotation);
+    //    ShowManipulator(true);
+
+    //    m_RobotFeedback.ResetPositionAndRotation();
+    //}
 
     private void CheckSnapping()
     {
@@ -106,7 +120,7 @@ public class Manipulator : MonoBehaviour
                 if (m_isScaling)
                     m_ManipulatorMat.color = m_ScalingColor;
                 else
-                    m_ManipulatorMat.color = m_DefaultColor;
+                    m_ManipulatorMat.color = m_ShowColor;
             }
         }
     }
@@ -118,7 +132,7 @@ public class Manipulator : MonoBehaviour
         if (value)
             m_ManipulatorMat.color = m_ScalingColor;
         else
-            m_ManipulatorMat.color = m_DefaultColor;
+            m_ManipulatorMat.color = m_ShowColor;
     }
 
     public void ShowManipulator(bool value)
@@ -129,9 +143,9 @@ public class Manipulator : MonoBehaviour
             m_Indicator.Show(value);
 
         if (value)
-            m_ManipulatorMat.color = m_DefaultColor;
+            m_ManipulatorMat.color = m_ShowColor;
         else
-            m_ManipulatorMat.color = m_InvisColor;
+            m_ManipulatorMat.color = m_HideColor;
     }
 
     public void Flash(bool value)
@@ -145,7 +159,7 @@ public class Manipulator : MonoBehaviour
                 StopCoroutine(m_ActiveCoroutine);
 
             m_ActiveCoroutine = null;
-            m_ManipulatorMat.color = m_DefaultColor;
+            m_ManipulatorMat.color = m_ShowColor;
         }
     }
 
@@ -154,13 +168,13 @@ public class Manipulator : MonoBehaviour
         while (true)
         {
             if (m_ManipulationMode.IsInteracting())
-                m_ManipulatorMat.color = m_DefaultColor;
+                m_ManipulatorMat.color = m_ShowColor;
             else
             {
                 m_ManipulatorMat.color = m_FlashingColor;
                 yield return new WaitForSeconds(1.0f);
 
-                m_ManipulatorMat.color = m_DefaultColor;
+                m_ManipulatorMat.color = m_ShowColor;
                 yield return new WaitForSeconds(1.0f);
             }
         }

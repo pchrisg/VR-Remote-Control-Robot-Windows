@@ -21,9 +21,10 @@ public class RobotFeedback : MonoBehaviour
     [SerializeField] private Material m_FeedbackMat = null;
 
     private ROSPublisher m_ROSPublisher = null;
+    private ManipulationMode m_ManipulationMode = null;
     private Manipulator m_Manipulator = null;
     private Transform m_ManipulatorPose = null;
-    private Mode m_Mode = Mode.NONE;
+    //private Mode m_Mode = Mode.NONE;
     private ExperimentManager m_ExperimentManager = null;
 
     private const int k_UR5NumJoints = 6;
@@ -71,9 +72,14 @@ public class RobotFeedback : MonoBehaviour
 
     private Coroutine m_ActiveCoroutine = null;
 
+    private bool m_isInteracting = false;
+    private readonly List<GameObject> m_CollidingParts = new();
+    private bool m_isOutOfBounds = false;
+
     private void Awake()
     {
         m_ROSPublisher = GameObject.FindGameObjectWithTag("ROS").GetComponent<ROSPublisher>();
+        m_ManipulationMode = GameObject.FindGameObjectWithTag("ManipulationMode").GetComponent<ManipulationMode>();
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
         m_ManipulatorPose = m_Manipulator.transform.Find("Pose");
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
@@ -132,10 +138,10 @@ public class RobotFeedback : MonoBehaviour
         m_Thresholds[5] = (m_RobotLimits[5].max - m_RobotLimits[5].min) / 14;
     }
 
-    private void Start()
-    {
-        ChangeMode();
-    }
+    //private void Start()
+    //{
+    //    ChangeMode();
+    //}
 
     private void OnDestroy()
     {
@@ -144,23 +150,40 @@ public class RobotFeedback : MonoBehaviour
 
     private void Update()
     {
-        if (m_Mode != m_ExperimentManager.m_FeedbackMode)
-            ChangeMode();
+        if (m_isInteracting != m_ManipulationMode.IsInteracting())
+        {
+            m_isInteracting = m_ManipulationMode.IsInteracting();
+            ShowFeedback(m_isInteracting);
+        }
+
+        if (!m_isInteracting)
+            ResetPositionAndRotation();
+
+        //if (m_Mode != m_ExperimentManager.m_FeedbackMode)
+        //    ChangeMode();
     }
 
-    private void ChangeMode()
+    //private void ChangeMode()
+    //{
+    //    m_Mode = m_ExperimentManager.m_FeedbackMode;
+
+    //    if (m_Mode == Mode.ALWAYS)
+    //        m_FeedbackMat.color = m_ShowColor;
+    //    else
+    //        m_FeedbackMat.color = m_HideColor;
+
+        
+    //}
+
+    private void ShowFeedback(bool value)
     {
-        if (m_ExperimentManager.m_FeedbackMode == Mode.ALWAYS)
-        {
+        if(value && m_ExperimentManager.m_FeedbackMode == Mode.ALWAYS)
             m_FeedbackMat.color = m_ShowColor;
-        }
         else
             m_FeedbackMat.color = m_HideColor;
 
         foreach (var joint in m_FeedbackJoints)
             joint.GetComponent<RobotFeedbackCollision>().ResetColor();
-
-        m_Mode = m_ExperimentManager.m_FeedbackMode;
     }
 
     public void ResetPositionAndRotation()
@@ -204,11 +227,16 @@ public class RobotFeedback : MonoBehaviour
     {
         if (trajectory.joint_trajectory.points.Length > 0)
         {
+            m_isOutOfBounds = false;
             m_Targets = GetTargets(trajectory);
             GoToManipulator();
         }
-        else if(m_Mode != Mode.NONE)
-            NoPlan();
+        else
+        {
+            m_isOutOfBounds = true;
+            if (m_ExperimentManager.m_FeedbackMode != Mode.NONE)
+                NoPlan();
+        }
 
         m_busFree = true;
     }
@@ -331,7 +359,7 @@ public class RobotFeedback : MonoBehaviour
         //        jointHints.Add(3);
         //}
 
-        if (jointHints.Count > 0)
+        if (jointHints.Count > 0 && m_ExperimentManager.m_FeedbackMode != Mode.NONE)
         {
             m_DisplayHint = true;
             m_ActiveCoroutine ??= StartCoroutine(DisplayHintCoroutine(jointHints));
@@ -414,5 +442,25 @@ public class RobotFeedback : MonoBehaviour
             collision = m_FeedGripJoints[joint].GetComponent<RobotFeedbackCollision>();
             collision.ChangeAppearance(2);
         }
+    }
+
+    public void AddCollidingPart(GameObject part)
+    {
+        m_CollidingParts.Add(part);
+    }
+
+    public void RemoveCollidingPart(GameObject part)
+    {
+        m_CollidingParts.Remove(part);
+    }
+
+    public bool IsColliding()
+    {
+        return m_CollidingParts.Count > 0;
+    }
+
+    public bool IsOutOfBounds()
+    {
+        return m_isOutOfBounds;
     }
 }

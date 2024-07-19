@@ -49,7 +49,7 @@ public class ROSPublisher : MonoBehaviour
             m_RoboticSqueezeTopic = "Robotiq3FGripperRobotOutput";
 
         m_Text = m_HUD.GetComponentInChildren<TextMeshPro>();
-        m_Text.GetComponent<Renderer>().material.color = new(255.0f, 0.0f, 0.0f);
+        //m_Text.GetComponent<Renderer>().material.color = new(255.0f, 0.0f, 0.0f);
 
         m_ManipulatorPose = GameObject.FindGameObjectWithTag("Manipulator").transform.Find("Pose");
 

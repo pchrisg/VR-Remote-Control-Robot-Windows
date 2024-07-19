@@ -11,6 +11,7 @@ public class RobotFeedbackCollision : MonoBehaviour
     [Header("Materials")]
     [SerializeField] private Material m_FeebackMat = null;
     private ExperimentManager m_ExperimentManager = null;
+    private RobotFeedback m_RobotFeedback = null;
 
     private Renderer[] m_Renderers = null;
     private readonly Material[] m_OriginalMat = { null, null };
@@ -22,6 +23,7 @@ public class RobotFeedbackCollision : MonoBehaviour
     private void Awake()
     {
         m_ExperimentManager = GameObject.FindGameObjectWithTag("Experiment").GetComponent<ExperimentManager>();
+        m_RobotFeedback = GameObject.FindGameObjectWithTag("RobotFeedback").GetComponent<RobotFeedback>();
 
         m_Renderers = gameObject.transform.Find("Visuals").GetComponentsInChildren<Renderer>();
 
@@ -35,19 +37,21 @@ public class RobotFeedbackCollision : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (m_ExperimentManager.m_FeedbackMode != Mode.NONE && !other.CompareTag("Moveable"))
+        if (!other.CompareTag("Moveable"))
         {
             m_isColliding = true;
             SetColor(m_DisplayErrorMat);
+            m_RobotFeedback.AddCollidingPart(gameObject);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (m_ExperimentManager.m_FeedbackMode != Mode.NONE && !other.CompareTag("Moveable"))
+        if (!other.CompareTag("Moveable"))
         {
             m_isColliding = false;
             SetColor(m_OriginalMat);
+            m_RobotFeedback.RemoveCollidingPart(gameObject);
         }
     }
 
@@ -79,12 +83,15 @@ public class RobotFeedbackCollision : MonoBehaviour
 
     private void SetColor(Material[] material)
     {
-        foreach (Renderer renderer in m_Renderers)
+        if (m_ExperimentManager.m_FeedbackMode != Mode.NONE)
         {
-            if (renderer.materials.Count() == 1)
-                renderer.material = material[0];
-            else
-                renderer.materials = material;
+            foreach (Renderer renderer in m_Renderers)
+            {
+                if (renderer.materials.Count() == 1)
+                    renderer.material = material[0];
+                else
+                    renderer.materials = material;
+            }
         }
     }
 

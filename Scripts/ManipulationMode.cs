@@ -146,14 +146,14 @@ public class ManipulationMode : MonoBehaviour
     {
         if (mode == Mode.IDLE || mode == Mode.SIMPLEDIRECT)
         {
-            m_Manipulator.ResetPositionAndRotation();
+            //m_Manipulator.ResetPositionAndRotation();
             m_Manipulator.GetComponent<Interactable>().highlightOnHover = false;
             m_SDOFManipulation.Show(true);
             mode = Mode.SDOF;
         }
         else if (mode == Mode.SDOF)
         {
-            m_Manipulator.ResetPositionAndRotation();
+            //m_Manipulator.ResetPositionAndRotation();
             m_Manipulator.GetComponent<Interactable>().highlightOnHover = true;
             m_SDOFManipulation.Show(false);
             mode = Mode.IDLE;

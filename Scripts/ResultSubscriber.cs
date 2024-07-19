@@ -5,6 +5,8 @@ using RosMessageTypes.Std;
 
 public class ResultSubscriber : MonoBehaviour
 {
+    private PlanningFeedback m_PlanningFeedback = null;
+
     private ROSConnection m_Ros = null;
     private readonly string m_FeedbackTopic = "/ur5/move_group/feedback";
     private readonly string m_PlanSuccessTopic = "/chris_plan_success";
@@ -16,6 +18,8 @@ public class ResultSubscriber : MonoBehaviour
 
     private void Awake()
     {
+        m_PlanningFeedback = GameObject.FindGameObjectWithTag("PlanningFeedback").GetComponent<PlanningFeedback>();
+
         m_Ros = ROSConnection.GetOrCreateInstance();
 
         m_Manipulator = GameObject.FindGameObjectWithTag("Manipulator").GetComponent<Manipulator>();
@@ -42,14 +46,16 @@ public class ResultSubscriber : MonoBehaviour
     {
         if (!message.data && m_isPlanExecuted)
         {
-            m_Manipulator.IsColliding(true);
             m_isPlanExecuted = false;
+            m_Manipulator.IsColliding(true);
+            m_PlanningFeedback.TimedOut(true);
         }
 
         if (message.data && !m_isPlanExecuted)
         {
-            m_Manipulator.IsColliding(false);
             m_isPlanExecuted = true;
+            m_Manipulator.IsColliding(false);
+            m_PlanningFeedback.TimedOut(false);
         }
     }
 }
