@@ -11,7 +11,7 @@ namespace FeedBackModes
     {
         NONE,
         ERROR,
-        ALWAYS
+        CONSTANT
     };
 }
 
@@ -177,7 +177,7 @@ public class RobotFeedback : MonoBehaviour
 
     private void ShowFeedback(bool value)
     {
-        if(value && m_ExperimentManager.m_FeedbackMode == Mode.ALWAYS)
+        if(value && m_ExperimentManager.m_FeedbackMode == Mode.CONSTANT)
             m_FeedbackMat.color = m_ShowColor;
         else
             m_FeedbackMat.color = m_HideColor;

@@ -11,7 +11,7 @@ public class EmergencyStop : MonoBehaviour
     [SerializeField] private Material m_CollidingMat = null;
 
     [Header("Sounds")]
-    [SerializeField] private AudioClip m_CollisionClip = null;
+    //[SerializeField] private AudioClip m_CollisionClip = null;
 
     private ROSPublisher m_ROSPublisher = null;
     private ExperimentManager m_ExperimentManager = null;

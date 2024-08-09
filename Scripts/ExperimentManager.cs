@@ -34,7 +34,7 @@ public class ExperimentManager : MonoBehaviour
     [SerializeField] private bool m_Reset = false;
 
     [Header("Start/Stop")]
-    public bool m_TeachRobotFeedback = false;
+    public bool m_TeachRobotControl = false;
     [SerializeField] private bool m_Start = false;
 
     [Header("Tutorial Control")]
@@ -66,7 +66,7 @@ public class ExperimentManager : MonoBehaviour
     private bool m_Running = false;
 
     // File Path
-    private readonly string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\Experiment2\\";
+    private readonly string m_FilePathName = "C:\\Users\\Chris\\Dropbox\\Deg_PhD\\Experiments\\Experiment3\\";
 
     // ## Data to Store ##
     private readonly List<float> m_PressTimes = new ();

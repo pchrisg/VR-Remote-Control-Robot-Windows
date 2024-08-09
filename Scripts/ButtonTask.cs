@@ -125,8 +125,8 @@ public class ButtonTask : MonoBehaviour
 
         obstacle = Instantiate(m_ObstaclePrefab);
         obstacle.name = "obstacle_3_2";
-        obstacle.transform.SetPositionAndRotation(new(0.25f, 0.2f, 0.42f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
-        obstacle.transform.localScale = new Vector3(0.1f, 0.4f, 0.025f);
+        obstacle.transform.SetPositionAndRotation(new(0.2f, 0.225f, 0.42f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.localScale = new Vector3(0.1f, 0.45f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
         foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
             if (collider.isTrigger)
@@ -134,7 +134,7 @@ public class ButtonTask : MonoBehaviour
 
         obstacle = Instantiate(m_ObstaclePrefab);
         obstacle.name = "obstacle_3_3";
-        obstacle.transform.SetPositionAndRotation(new(-0.05f, 0.5f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.SetPositionAndRotation(new(-0.15f, 0.5f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
         obstacle.transform.localScale = new Vector3(0.1f, 0.15f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
         foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
@@ -143,17 +143,8 @@ public class ButtonTask : MonoBehaviour
 
         obstacle = Instantiate(m_ObstaclePrefab);
         obstacle.name = "obstacle_3_4";
-        obstacle.transform.SetPositionAndRotation(new(-0.05f, 0.15f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
+        obstacle.transform.SetPositionAndRotation(new(-0.15f, 0.15f, 0.4f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
         obstacle.transform.localScale = new Vector3(0.1f, 0.3f, 0.025f);
-        obstacle.transform.SetParent(m_ObjectsContainer.transform);
-        foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
-            if (collider.isTrigger)
-                m_Obstacles.Add(collider);
-
-        obstacle = Instantiate(m_ObstaclePrefab);
-        obstacle.name = "obstacle_3_5";
-        obstacle.transform.SetPositionAndRotation(new(-0.32f, 0.2f, 0.35f), Quaternion.Euler(0.0f, 0.0f, 0.0f));
-        obstacle.transform.localScale = new Vector3(0.1f, 0.4f, 0.025f);
         obstacle.transform.SetParent(m_ObjectsContainer.transform);
         foreach (var collider in obstacle.GetComponentsInChildren<Collider>())
             if (collider.isTrigger)
